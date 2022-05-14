@@ -1,12 +1,13 @@
-from util import Vector
+from util import Vector, ns_to_s
 import time
 
 
 class Robot:
     radius = 15
-    position = Vector(0, 0)
-    rotation = 0
-    velocity = Vector(0, 0) # in px/s
+    position = Vector(0.0, 0.0)
+    rotation = 0.0
+    velocity = Vector(0.0, 0.0)  # in px/s
+    ang_velocity = 0.0  # in deg/s
     __last_move_time_ns = 0
 
     def __init__(self, position=0, rotation=0):
@@ -18,4 +19,8 @@ class Robot:
         print("Drawing robot...")
 
     def update(self):
-        self.position.add(self.velocity.mult(self.__last_move_time_ns / 1000000))
+        time_diff = ns_to_s(time.time_ns() - self.__last_move_time_ns)
+        self.position.add(self.velocity.mult(time_diff))
+        self.rotation += self.ang_velocity * time_diff
+
+        self.__last_move_time_ns = time.time_ns()

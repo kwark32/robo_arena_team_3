@@ -29,3 +29,7 @@ class Vector:
     def div(self, other):
         self.x /= other
         self.y /= other
+
+
+def ns_to_s(ns):
+    return ns / 1000000.0

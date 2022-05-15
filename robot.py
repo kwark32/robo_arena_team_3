@@ -28,6 +28,7 @@ class Robot:
 
     def update(self):
         time_diff = ns_to_s(time.time_ns() - self._last_move_time_ns)
+        self._last_move_time_ns = time.time_ns()
         move = Vector(other=self.velocity)
         move.mult(time_diff)
         self.position.add(move)
@@ -36,5 +37,3 @@ class Robot:
             self.rotation -= math.tau
         while self.rotation < 0:
             self.rotation += math.tau
-
-        self._last_move_time_ns = time.time_ns()

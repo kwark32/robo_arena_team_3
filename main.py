@@ -24,6 +24,24 @@ class ArenaWindow(QWidget):
         for i in range(tile_count):
             for j in range(tile_count):
                 self.arena.tiles[i][j] = Tile(TileTypes.WALL_TILE)
+        for i in range(1, self.arena.tile_count - 1):
+            for j in range(1, self.arena.tile_count - 1):
+                self.arena.tiles[i][j] = Tile(TileTypes.GROUND_TILE)
+        for i in range(5, 10):
+            for j in range(10, 20):
+                self.arena.tiles[i][j] = Tile(TileTypes.WATER_TILE)
+        for i in range(15, 20):
+            for j in range(10, 20):
+                self.arena.tiles[i][j] = Tile(TileTypes.FIRE_TILE)
+        for i in range(25, 30):
+            for j in range(10, 20):
+                self.arena.tiles[i][j] = Tile(TileTypes.EARTH_TILE)
+        for i in range(35, 40):
+            for j in range(10, 20):
+                self.arena.tiles[i][j] = Tile(TileTypes.AIR_TILE)
+        for i in range(45, 50):
+            for j in range(10, 20):
+                self.arena.tiles[i][j] = Tile(TileTypes.PORTAL_TILE)
 
     def paintEvent(self, event):
         qp = QPainter()

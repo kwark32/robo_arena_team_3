@@ -12,6 +12,7 @@ main menu
 in-game
 
   - full map shown on screen
+  - dfferent textures for tiles
   - countdown to start
   - exit on esc
 

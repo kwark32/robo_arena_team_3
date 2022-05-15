@@ -32,7 +32,7 @@ class Robot:
         move.mult(time_diff)
         self.position.add(move)
         self.rotation += self.ang_velocity * time_diff
-        while self.rotation > math.tau:
+        while self.rotation >= math.tau:
             self.rotation -= math.tau
         while self.rotation < 0:
             self.rotation += math.tau

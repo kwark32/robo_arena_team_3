@@ -28,7 +28,6 @@ class Arena:
         self.tile_size = tile_size
         self.tile_count = round(self.size / self.tile_size)
         self.tiles = np.empty((self.tile_count, self.tile_count), dtype=Tile)
-        print("Created arena!\n")
 
     def draw(self, qp):
         for i in range(self.tile_count):

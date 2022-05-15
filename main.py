@@ -1,35 +1,33 @@
-#!/usr/bin/python
-
-# Imports
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget
+
+from PyQt5.QtGui import QPainter
+from PyQt5.QtWidgets import QWidget, QApplication
 
 
-# Main function
+class ArenaWindow(QWidget):
+
+    def __init__(self):
+        super().__init__()
+
+        self.initUI()
+
+    def initUI(self):
+        self.setGeometry(0, 0, 1000, 1000)
+        self.setWindowTitle('RoboArena')
+        self.show()
+
+    def paintEvent(self, e):
+        qp = QPainter()
+        qp.begin(self)
+        # self.drawPoints(qp)
+        qp.end()
+
+
 def main():
-
-    # Get QT Application
     app = QApplication(sys.argv)
-
-    # Get screen and resolution from it
-    screen = app.primaryScreen()
-    width = screen.size().width()
-    height = screen.size().height()
-
-    # Create window as QWidget
-    w = QWidget()
-    # Resize and move window dynamically
-    w.resize(int(width/2), int(height/2))
-    w.move(int(width/4), int(height/4))
-    # Set window title
-    w.setWindowTitle('RoboArena')
-    # Make the window visible
-    w.show()
-
-    # Exit when window is closed
+    window = ArenaWindow()
     sys.exit(app.exec_())
 
 
-# Run main, and only if we want it to run
 if __name__ == '__main__':
     main()

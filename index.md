@@ -1,3 +1,7 @@
+## Week 3
+
+
+
 ## Week 2
 
 We created the repository and Github.io pages and invited all team members and the tutors.

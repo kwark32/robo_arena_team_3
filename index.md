@@ -16,6 +16,7 @@ in-game
   - countdown to start
   - exit on esc
 
+Further documntation will be published here with slight delay.
 
 ## Week 2
 

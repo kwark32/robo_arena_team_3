@@ -3,6 +3,8 @@ import sys
 from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import QWidget, QApplication
 from arena import Arena, Tile, TileTypes
+from robot import Robot
+from util import Vector
 
 
 class ArenaWindow(QWidget):
@@ -11,10 +13,13 @@ class ArenaWindow(QWidget):
 
         self.arena = Arena()
 
-        self.init_ui()
-        self.init_arena()
+        self.robot = None
 
-    def init_ui(self):
+        self.initUI()
+        self.init_arena()
+        self.init_robots()
+
+    def initUI(self):
         self.setGeometry(0, 0, self.arena.size, self.arena.size)
         self.setWindowTitle("Robo Arena")
         self.show()
@@ -43,18 +48,26 @@ class ArenaWindow(QWidget):
             for j in range(10, 20):
                 self.arena.tiles[i][j] = Tile(TileTypes.PORTAL_TILE)
 
+    def init_robots(self):
+        self.robot = Robot(position=Vector(500, 500))
+        self.robot.velocity.x = 10.0
+        print(self.robot.position.x)
+        print("\n")
+
     def paintEvent(self, event):
         qp = QPainter()
         qp.begin(self)
         if self.size().height() > 1 and self.size().height() > 1:
             self.arena.draw(qp)
+            self.robot.update()
+            self.robot.draw(qp)
         qp.end()
 
 
 def main():
     app = QApplication(sys.argv)
     window = ArenaWindow()
-    window.setWindowTitle("Robo Arena")  # get rid of var not used flake8 error
+    window.show()  # get rid of var not used flake8 error
     sys.exit(app.exec_())
 
 

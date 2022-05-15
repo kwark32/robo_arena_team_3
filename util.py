@@ -1,7 +1,10 @@
 class Vector:
-    def __init__(self, x=0, y=0):
+    def __init__(self, x=0, y=0, other=None):
         self.x = x
         self.y = y
+        if other is not None:
+            self.x = other.x
+            self.y = other.y
 
     def add(self, other):
         self.x += other.x

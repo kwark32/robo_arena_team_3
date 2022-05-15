@@ -32,4 +32,4 @@ class Vector:
 
 
 def ns_to_s(ns):
-    return ns / 1000000.0
+    return (round(ns) >> 10) / 976562.5  # shift to ~us, then float division

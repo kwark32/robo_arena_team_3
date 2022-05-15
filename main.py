@@ -11,6 +11,8 @@ class ArenaWindow(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.closed = 0
+
         self.arena = Arena()
 
         self.robot = None
@@ -18,6 +20,10 @@ class ArenaWindow(QWidget):
         self.initUI()
         self.init_arena()
         self.init_robots()
+
+    def closeEvent(self, event):
+        self.closed = 1
+        event.accept()
 
     def initUI(self):
         self.setGeometry(0, 0, self.arena.size, self.arena.size)
@@ -50,9 +56,6 @@ class ArenaWindow(QWidget):
 
     def init_robots(self):
         self.robot = Robot(position=Vector(500, 500))
-        self.robot.velocity.x = 10.0
-        print(self.robot.position.x)
-        print("\n")
 
     def paintEvent(self, event):
         qp = QPainter()
@@ -68,7 +71,11 @@ def main():
     app = QApplication(sys.argv)
     window = ArenaWindow()
     window.show()  # get rid of var not used flake8 error
-    sys.exit(app.exec_())
+    while window.closed == 0:  # main loop
+        app.processEvents()
+        window.update()
+
+    sys.exit(0)
 
 
 if __name__ == '__main__':

@@ -92,9 +92,8 @@ class ArenaWindow(QWidget):
     def paintEvent(self, event):
         qp = QPainter()
         qp.begin(self)
-        if self.size().height() > 1 and self.size().height() > 1:
+        if self.size().width() > 1 and self.size().height() > 1:
             self.arena.draw(qp)
-            self.robot.update()
             self.robot.draw(qp)
         qp.end()
 
@@ -104,8 +103,9 @@ def main():
     window = ArenaWindow()
     window.show()  # get rid of var not used flake8 error
     while window.running:  # main loop
-        app.processEvents()
+        window.robot.update()
         window.update()
+        app.processEvents()
 
     sys.exit(0)
 

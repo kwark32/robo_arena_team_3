@@ -1,5 +1,19 @@
 ## Week 3
 
+How the game could be structured:
+
+main menu
+
+  - singleplayer
+  - multiplayer (2players on one keyboard, wasd, arrow keys,...)
+  - settings (general movement speed, robot health, damage,...)
+  - quit game
+
+in-game
+
+  - full map shown on screen
+  - countdown to start
+  - exit on esc
 
 
 ## Week 2

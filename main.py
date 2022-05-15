@@ -1,7 +1,9 @@
+import math
 import sys
 
 from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import QWidget, QApplication
+from PyQt5.QtCore import Qt
 from arena import Arena, Tile, TileTypes
 from robot import Robot
 from util import Vector
@@ -11,7 +13,7 @@ class ArenaWindow(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.closed = 0
+        self.running = True
 
         self.arena = Arena()
 
@@ -22,8 +24,38 @@ class ArenaWindow(QWidget):
         self.init_robots()
 
     def closeEvent(self, event):
-        self.closed = 1
+        self.running = False
         event.accept()
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_W:
+            self.robot.velocity.y = -self.robot.move_speed
+        elif event.key() == Qt.Key_S:
+            self.robot.velocity.y = self.robot.move_speed
+        elif event.key() == Qt.Key_D:
+            self.robot.velocity.x = self.robot.move_speed
+        elif event.key() == Qt.Key_A:
+            self.robot.velocity.x = -self.robot.move_speed
+        event.accept()
+        if math.fabs(self.robot.velocity.x) > 0 or math.fabs(self.robot.velocity.y) > 0:
+            self.robot.rotation = math.atan2(self.robot.velocity.x, -self.robot.velocity.y)
+        else:
+            self.robot.rotation = 0
+
+    def keyReleaseEvent(self, event):
+        if event.key() == Qt.Key_W:
+            self.robot.velocity.y = 0
+        elif event.key() == Qt.Key_S:
+            self.robot.velocity.y = 0
+        elif event.key() == Qt.Key_D:
+            self.robot.velocity.x = 0
+        elif event.key() == Qt.Key_A:
+            self.robot.velocity.x = 0
+        event.accept()
+        if math.fabs(self.robot.velocity.x) > 0 or math.fabs(self.robot.velocity.y) > 0:
+            self.robot.rotation = math.atan2(self.robot.velocity.x, -self.robot.velocity.y)
+        else:
+            self.robot.rotation = 0
 
     def initUI(self):
         self.setGeometry(0, 0, self.arena.size, self.arena.size)
@@ -71,7 +103,7 @@ def main():
     app = QApplication(sys.argv)
     window = ArenaWindow()
     window.show()  # get rid of var not used flake8 error
-    while window.closed == 0:  # main loop
+    while window.running:  # main loop
         app.processEvents()
         window.update()
 

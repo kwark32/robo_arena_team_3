@@ -7,13 +7,16 @@ from util import Vector, ns_to_s
 
 
 class Robot:
-    def __init__(self, radius=15, position=Vector(0.0, 0.0), rotation=0.0, move_speed=60):
+    def __init__(self, radius=15,
+                 position=Vector(0.0, 0.0), rotation=0.0,
+                 move_speed=60, turn_speed=2):
         self.radius = radius
         self.position = position
         self.rotation = rotation  # in rad
         self.velocity = Vector(0.0, 0.0)  # in px/s
         self.ang_velocity = 0.0  # in rad/s
         self.move_speed = move_speed
+        self.turn_speed = turn_speed
         self._last_move_time_ns = time.time_ns()
 
     def draw(self, qp):

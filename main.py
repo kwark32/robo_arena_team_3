@@ -37,8 +37,10 @@ class ArenaWindow(QWidget):
         elif event.key() == Qt.Key_A:
             self.robot.velocity.x = -self.robot.move_speed
         event.accept()
-        if math.fabs(self.robot.velocity.x) > 0 or math.fabs(self.robot.velocity.y) > 0:
-            self.robot.rotation = math.atan2(self.robot.velocity.x, -self.robot.velocity.y)
+        if math.fabs(self.robot.velocity.x) > 0\
+                or math.fabs(self.robot.velocity.y) > 0:
+            self.robot.rotation = math.atan2(self.robot.velocity.x,
+                                             -self.robot.velocity.y)
         else:
             self.robot.rotation = 0
 
@@ -52,8 +54,10 @@ class ArenaWindow(QWidget):
         elif event.key() == Qt.Key_A:
             self.robot.velocity.x = 0
         event.accept()
-        if math.fabs(self.robot.velocity.x) > 0 or math.fabs(self.robot.velocity.y) > 0:
-            self.robot.rotation = math.atan2(self.robot.velocity.x, -self.robot.velocity.y)
+        if math.fabs(self.robot.velocity.x) > 0\
+                or math.fabs(self.robot.velocity.y) > 0:
+            self.robot.rotation = math.atan2(self.robot.velocity.x,
+                                             -self.robot.velocity.y)
         else:
             self.robot.rotation = 0
 

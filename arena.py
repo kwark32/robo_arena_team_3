@@ -15,6 +15,15 @@ class TileTypes:
     EARTH_TILE = TileType(QColor(97, 27, 27))
     AIR_TILE = TileType(QColor(255, 251, 230))
     PORTAL_TILE = TileType(QColor(97, 92, 191))
+    tile_dict = {
+        "ground": GROUND_TILE,
+        "wall": WALL_TILE,
+        "water": WATER_TILE,
+        "fire": FIRE_TILE,
+        "earth": EARTH_TILE,
+        "air": AIR_TILE,
+        "portal": PORTAL_TILE
+    }
 
 
 class Tile:
@@ -23,11 +32,14 @@ class Tile:
 
 
 class Arena:
-    def __init__(self, size=1000, tile_size=10):
-        self.size = size
+    def __init__(self, tile_size=10, tile_count=100):
         self.tile_size = tile_size
-        self.tile_count = round(self.size / self.tile_size)
-        self.tiles = np.empty((self.tile_count, self.tile_count), dtype=Tile)
+        self.tile_count = tile_count
+        self.size = self.tile_size * self.tile_count
+        self.tiles = self.get_empty_tiles()
+
+    def get_empty_tiles(self):
+        return np.empty((self.tile_count, self.tile_count), dtype=Tile)
 
     def draw(self, qp):
         for i in range(self.tile_count):

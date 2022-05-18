@@ -7,6 +7,7 @@ from PyQt5.QtCore import Qt
 from arena import Arena, Tile, TileTypes
 from robot import Robot
 from util import Vector
+from json_interface import load_map
 
 
 class ArenaWindow(QWidget):
@@ -15,8 +16,7 @@ class ArenaWindow(QWidget):
 
         self.running = True
 
-        self.arena = Arena()
-
+        self.arena = None
         self.robot = None
 
         self.initUI()
@@ -67,6 +67,7 @@ class ArenaWindow(QWidget):
         self.show()
 
     def init_arena(self):
+        self.arena = Arena()
         tile_count = self.arena.tile_count
         for i in range(tile_count):
             for j in range(tile_count):
@@ -103,6 +104,8 @@ class ArenaWindow(QWidget):
 
 
 def main():
+    load_map("./test_map.json")
+
     app = QApplication(sys.argv)
     window = ArenaWindow()
     window.show()  # get rid of var not used flake8 error

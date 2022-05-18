@@ -1,14 +1,29 @@
 {
-    "version": 0.1,
-    "size": 1000,
-    "tiles": [
-        [
-            "ground",
-            "wall"
-        ],
-        [
-            "fire",
-            "water"
-        ]
-    ]
+	"version": 0.1,
+	"size": 2,
+	"tiles": [{
+			"row": [{
+					"tile": "ground",
+					"count": 1
+				},
+				{
+					"tile": "wall",
+					"count": 1
+				}
+			],
+			"count": 1
+		},
+		{
+			"row": [{
+					"tile": "fire",
+					"count": 1
+				},
+				{
+					"tile": "water",
+					"count": 1
+				}
+			],
+			"count": 1
+		}
+	]
 }

@@ -1,0 +1,14 @@
+{
+    "version": 0.1,
+    "size": 1000,
+    "tiles": [
+        [
+            "ground",
+            "wall"
+        ],
+        [
+            "fire",
+            "water"
+        ]
+    ]
+}

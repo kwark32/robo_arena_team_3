@@ -25,9 +25,9 @@ class Robot:
         qp.drawEllipse(QPoint(round(self.position.x),
                               round(self.position.y)),
                        self.radius, self.radius)
-        qp.drawLine(self.position.x, self.position.y,
-                    self.position.x + self.radius * math.sin(self.rotation),
-                    self.position.y - self.radius * math.cos(self.rotation))
+        qp.drawLine(round(self.position.x), round(self.position.y),
+                    round(self.position.x + self.radius * math.sin(self.rotation)),
+                    round(self.position.y - self.radius * math.cos(self.rotation)))
 
     def update(self):
         time_diff = ns_to_s(time.time_ns() - self._last_move_time_ns)

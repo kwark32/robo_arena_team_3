@@ -42,8 +42,8 @@ class Arena:
         return np.empty((self.tile_count, self.tile_count), dtype=Tile)
 
     def draw(self, qp):
-        for i in range(self.tile_count):
-            for j in range(self.tile_count):
-                qp.fillRect(i * self.tile_size, j * self.tile_size,
+        for y in range(self.tile_count):
+            for x in range(self.tile_count):
+                qp.fillRect(x * self.tile_size, y * self.tile_size,
                             self.tile_size, self.tile_size,
-                            self.tiles[i][j].tile_type.colour)
+                            self.tiles[y][x].tile_type.colour)

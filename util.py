@@ -49,6 +49,10 @@ class Vector:
             factor = 0
         self.mult(factor)
 
+    def rotate(self, angle):
+        self.x = self.x * math.cos(angle) - self.y * math.sin(angle)
+        self.y = self.x * math.sin(angle) + self.y * math.cos(angle)
+
     def limit_by_scalar(self, lower, upper):
         self.x = limit(self.x, lower, upper)
         self.y = limit(self.y, lower, upper)

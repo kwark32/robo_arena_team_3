@@ -1,4 +1,3 @@
-import math
 import sys
 
 from os.path import dirname, abspath
@@ -19,6 +18,8 @@ class ArenaWindow(QWidget):
         self.arena = None
         self.robot = None
 
+        self.player_input = None
+
         self.init_arena()
         self.init_robots()
 
@@ -35,39 +36,25 @@ class ArenaWindow(QWidget):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_W:
-            self.robot.accel.y = -self.robot.max_accel
+            self.player_input.up = True
         elif event.key() == Qt.Key_S:
-            self.robot.accel.y = self.robot.max_accel
-        elif event.key() == Qt.Key_D:
-            self.robot.accel.x = self.robot.max_accel
+            self.player_input.down = True
         elif event.key() == Qt.Key_A:
-            self.robot.accel.x = -self.robot.max_accel
+            self.player_input.left = True
+        elif event.key() == Qt.Key_D:
+            self.player_input.right = True
         event.accept()
-        self.robot.ang_accel = 0
-        self.robot.ang_velocity = 0
-        if math.fabs(self.robot.velocity.x) > 0\
-                or math.fabs(self.robot.velocity.y) > 0:
-            self.robot.rotation = math.atan2(self.robot.velocity.x,
-                                             -self.robot.velocity.y)
-        else:
-            self.robot.rotation = 0
 
     def keyReleaseEvent(self, event):
         if event.key() == Qt.Key_W:
-            self.robot.accel.y = 0
+            self.player_input.up = False
         elif event.key() == Qt.Key_S:
-            self.robot.accel.y = 0
-        elif event.key() == Qt.Key_D:
-            self.robot.accel.x = 0
+            self.player_input.down = False
         elif event.key() == Qt.Key_A:
-            self.robot.accel.x = 0
+            self.player_input.left = False
+        elif event.key() == Qt.Key_D:
+            self.player_input.right = False
         event.accept()
-        if math.fabs(self.robot.velocity.x) > 0\
-                or math.fabs(self.robot.velocity.y) > 0:
-            self.robot.rotation = math.atan2(self.robot.velocity.x,
-                                             -self.robot.velocity.y)
-        else:
-            self.robot.rotation = 0
 
     def init_arena(self):
         map_path = dirname(abspath(__file__))
@@ -76,6 +63,7 @@ class ArenaWindow(QWidget):
 
     def init_robots(self):
         self.robot = Robot(position=Vector(500, 500))
+        self.player_input = self.robot.input
 
     def paintEvent(self, event):
         qp = QPainter()

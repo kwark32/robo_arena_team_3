@@ -16,7 +16,11 @@ in-game
   - countdown to start
   - exit on esc
 
-Further documntation will be published here with slight delay.
+We created a class to represent the arena. (See main.py)
+
+We added code to draw the arena. (See arena.py)
+
+We also created a robot class and code to draw and move the robot. (See robot.py)
 
 ## Week 2
 

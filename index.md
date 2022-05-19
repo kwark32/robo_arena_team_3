@@ -2,19 +2,31 @@
 
 How the game could be structured:
 
-main menu
+Main menu
 
-  - singleplayer
-  - multiplayer (2players on one keyboard, wasd, arrow keys,...)
-  - settings (general movement speed, robot health, damage,...)
-  - quit game
+  - Singleplayer
+  - Multiplayer (2players on one keyboard, wasd, arrow keys,...)
+  - Settings (general movement speed, robot health, damage,...)
+  - Quit game
 
-in-game
+In-game
 
-  - full map shown on screen
-  - different textures for tiles
-  - countdown to start
-  - exit on esc
+  - Full map shown on screen
+  - Different textures for tiles
+  - Countdown to start
+  - Exit on esc
+
+Sketch how the main menu could look:
+  
+![Main menu](/sketches/main-menu.png)
+
+One style of how the arena could look:
+
+![Map sketch 1](/sketches/map-kevin.png)
+
+And another possible style of the arena/map:
+
+![Map sketch 2](/sketches/map-johannes.png)
 
 We created a class to represent the arena. (See main.py)
 

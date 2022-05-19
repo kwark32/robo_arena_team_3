@@ -3,7 +3,7 @@ import time
 
 from PyQt5.QtGui import QColor
 from PyQt5.QtCore import QPoint
-from util import Vector, ns_to_s, limit_scalar
+from util import Vector, ns_to_s, limit
 
 
 class Robot:
@@ -50,10 +50,10 @@ class Robot:
         position_change.mult(time_diff)
         self.position.add(position_change)
 
-        self.ang_accel = limit_scalar(self.ang_accel, -self.max_ang_accel, self.max_ang_accel)
+        self.ang_accel = limit(self.ang_accel, -self.max_ang_accel, self.max_ang_accel)
         self.ang_velocity += self.ang_accel * time_diff
 
-        self.ang_velocity = limit_scalar(self.ang_velocity, -self.max_ang_velocity, self.max_ang_velocity)
+        self.ang_velocity = limit(self.ang_velocity, -self.max_ang_velocity, self.max_ang_velocity)
         self.rotation += self.ang_velocity * time_diff
 
         while self.rotation >= math.tau:

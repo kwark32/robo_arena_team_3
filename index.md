@@ -18,7 +18,7 @@ The movement input keys remain w,a,s and d with w -> forward, s -> backward, a -
 We instanciated four non-player robots and placed them at different positions in the arena.
 For now they just move in circles.
 
-![Main menu](/sketches/main-menu.png)
+![Main menu](/Arena_mit_4_Bots.png)
 
 ## Week 3
 

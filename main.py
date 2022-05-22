@@ -1,10 +1,11 @@
 import sys
+import time
 
 from PyQt5.QtGui import QPainter, QPixmap
 from PyQt5.QtWidgets import QWidget, QApplication
 from PyQt5.QtCore import Qt, QPoint
 from robot import Robot
-from util import Vector, get_main_path
+from util import Vector, get_main_path, ns_to_s
 from json_interface import load_map
 from arena import init_tile_dict
 
@@ -26,6 +27,8 @@ class ArenaWindow(QWidget):
 
         self.initUI()
         self.arena_pixmap = QPixmap(self.arena.size, self.arena.size)
+
+        self._last_frame_time_ns = time.time_ns()
 
         self.first = True  # temporary, until arena changes per frame
 
@@ -78,19 +81,24 @@ class ArenaWindow(QWidget):
                 break
 
     def paintEvent(self, event):
-        if self.first:
+        delta_time = ns_to_s(time.time_ns() - self._last_frame_time_ns)
+        self._last_frame_time_ns = time.time_ns()
+
+        if self.first:  # draw arena only one time (for now)
             arena_painter = QPainter(self.arena_pixmap)
             self.arena.draw(arena_painter)
             arena_painter.end()
             self.first = False
 
+        for robot in self.robots:
+            robot.update(delta_time)
+
         qp = QPainter(self)
 
-        for robot in self.robots:
-            robot.update()
-
+        # draw arena pixmap
         qp.drawPixmap(QPoint(), self.arena_pixmap)
 
+        # draw robots
         for robot in self.robots:
             robot.draw(qp)
 

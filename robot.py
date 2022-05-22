@@ -1,9 +1,8 @@
 import math
-import time
 
 from PyQt5.QtGui import QColor
 from PyQt5.QtCore import QPoint
-from util import Vector, ns_to_s, limit
+from util import Vector, limit
 
 
 class Robot:
@@ -38,8 +37,6 @@ class Robot:
         self.max_accel = max_accel
         self.max_velocity = max_velocity
 
-        self._last_move_time_ns = time.time_ns()
-
     def draw(self, qp):
         qp.setPen(QColor(46, 26, 71))
         qp.setBrush(QColor(255, 53, 184))
@@ -52,10 +49,7 @@ class Robot:
                     round(self.position.y
                           - self.radius * math.cos(self.rotation)))
 
-    def update(self):
-        delta_time = ns_to_s(time.time_ns() - self._last_move_time_ns)
-        self._last_move_time_ns = time.time_ns()
-
+    def update(self, delta_time):
         if self.is_player:
             forward_velocity_goal = 0
             ang_velocity_goal = 0

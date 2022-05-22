@@ -7,14 +7,14 @@ from util import Vector, ns_to_s, limit
 
 
 class Robot:
-    def __init__(self, is_player = False, radius=15,            # added bool is_player
+    def __init__(self, is_player=False, radius=15,
                  position=Vector(0.0, 0.0), rotation=0.0,
                  max_velocity=90, max_ang_velocity=3,
                  max_accel=180, max_ang_accel=9):
 
-        self.is_player = is_player                              # is_player attribute is now saved in robot instance
+        self.is_player = is_player
 
-        self.input = None                                       # if robot instance is a player, player input is added
+        self.input = None
         if is_player:
             self.input = PlayerInput()
 
@@ -56,7 +56,7 @@ class Robot:
         delta_time = ns_to_s(time.time_ns() - self._last_move_time_ns)
         self._last_move_time_ns = time.time_ns()
 
-        if self.is_player:                                      # added condition so stuff is only done for player robots
+        if self.is_player:
             forward_velocity_goal = 0
             ang_velocity_goal = 0
             if self.input.up:
@@ -75,6 +75,8 @@ class Robot:
             self.local_accel.y /= delta_time
             self.ang_accel = (ang_velocity_goal - self.ang_velocity)
             self.ang_accel /= delta_time
+        else:
+            self.update_ai(delta_time)
 
         self.ang_accel = limit(self.ang_accel,
                                -self.max_ang_accel,
@@ -111,6 +113,10 @@ class Robot:
         position_change.limit_magnitude(self.max_velocity)
         position_change.mult(delta_time)
         self.position.add(position_change)
+
+    def update_ai(self, delta_time):
+        self.ang_accel = self.max_ang_accel
+        self.local_accel = Vector(0, self.max_accel)
 
 
 class PlayerInput:

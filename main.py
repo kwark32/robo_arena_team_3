@@ -30,6 +30,10 @@ class ArenaWindow(QWidget):
 
         self._last_frame_time_ns = time.time_ns()
 
+        self._frames_since_last_show = 0
+        self._last_fps_show_time = time.time_ns()
+        self.fps = 0
+
         self.first = True  # temporary, until arena changes per frame
 
     def initUI(self):
@@ -81,8 +85,16 @@ class ArenaWindow(QWidget):
                 break
 
     def paintEvent(self, event):
-        delta_time = ns_to_s(time.time_ns() - self._last_frame_time_ns)
-        self._last_frame_time_ns = time.time_ns()
+        curr_time_ns = time.time_ns()
+        delta_time = ns_to_s(curr_time_ns - self._last_frame_time_ns)
+        self._last_frame_time_ns = curr_time_ns
+
+        self._frames_since_last_show += 1
+        last_fps_show_delta = ns_to_s(curr_time_ns - self._last_fps_show_time)
+        if last_fps_show_delta > 0.5:
+            self.fps = self._frames_since_last_show / last_fps_show_delta
+            self._frames_since_last_show = 0
+            self._last_fps_show_time = curr_time_ns
 
         if self.first:  # draw arena only one time (for now)
             arena_painter = QPainter(self.arena_pixmap)
@@ -101,6 +113,9 @@ class ArenaWindow(QWidget):
         # draw robots
         for robot in self.robots:
             robot.draw(qp)
+
+        qp.setPen(Qt.red)
+        qp.drawText(QPoint(5, 20), str(round(self.fps)))
 
         qp.end()
 

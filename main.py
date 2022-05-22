@@ -1,8 +1,8 @@
 import sys
 
-from PyQt5.QtGui import QPainter
+from PyQt5.QtGui import QPainter, QPixmap
 from PyQt5.QtWidgets import QWidget, QApplication
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QPoint
 from robot import Robot
 from util import Vector, get_main_path
 from json_interface import load_map
@@ -19,13 +19,15 @@ class ArenaWindow(QWidget):
 
         self.arena = None
         self.robots = []
-
         self.player_input = None
 
         self.init_arena()
         self.init_robots()
 
         self.initUI()
+        self.arena_pixmap = QPixmap(self.arena.size, self.arena.size)
+
+        self.first = True  # temporary, until arena changes per frame
 
     def initUI(self):
         self.setGeometry(0, 0, self.arena.size, self.arena.size)
@@ -76,14 +78,22 @@ class ArenaWindow(QWidget):
                 break
 
     def paintEvent(self, event):
-        qp = QPainter()
-        qp.begin(self)
+        if self.first:
+            arena_painter = QPainter(self.arena_pixmap)
+            self.arena.draw(arena_painter)
+            arena_painter.end()
+            self.first = False
+
+        qp = QPainter(self)
+
         for robot in self.robots:
             robot.update()
-        if self.size().width() > 1 and self.size().height() > 1:
-            self.arena.draw(qp)
-            for robot in self.robots:
-                robot.draw(qp)
+
+        qp.drawPixmap(QPoint(), self.arena_pixmap)
+
+        for robot in self.robots:
+            robot.draw(qp)
+
         qp.end()
 
 

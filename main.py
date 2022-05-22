@@ -70,7 +70,10 @@ class ArenaWindow(QWidget):
         self.robots.append(Robot(is_player=False, position=Vector(250, 750)))
         self.robots.append(Robot(is_player=False, position=Vector(750, 250)))
         self.robots.append(Robot(is_player=False, position=Vector(750, 750)))
-        self.player_input = self.robots[0].input
+        for robot in self.robots:
+            if robot.is_player:
+                self.player_input = robot.input
+                break
 
     def paintEvent(self, event):
         qp = QPainter()

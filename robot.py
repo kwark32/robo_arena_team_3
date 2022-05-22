@@ -71,9 +71,9 @@ class Robot:
             forward_velocity_goal *= self.max_velocity
             ang_velocity_goal *= self.max_ang_velocity
 
-            self.local_accel.y = (forward_velocity_goal - self.local_velocity.y)
+            self.local_accel.y = forward_velocity_goal - self.local_velocity.y
             self.local_accel.y /= delta_time
-            self.ang_accel = (ang_velocity_goal - self.ang_velocity)
+            self.ang_accel = ang_velocity_goal - self.ang_velocity
             self.ang_accel /= delta_time
         else:
             self.update_ai(delta_time)

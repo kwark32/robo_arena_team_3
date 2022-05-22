@@ -16,7 +16,7 @@ class ArenaWindow(QWidget):
         self.running = True
 
         self.arena = None
-        self.robot = None
+        self.robots = []
 
         self.player_input = None
 
@@ -35,6 +35,8 @@ class ArenaWindow(QWidget):
         event.accept()
 
     def keyPressEvent(self, event):
+        if self.player_input is None:
+            return
         if event.key() == Qt.Key_W:
             self.player_input.up = True
         elif event.key() == Qt.Key_S:
@@ -46,6 +48,8 @@ class ArenaWindow(QWidget):
         event.accept()
 
     def keyReleaseEvent(self, event):
+        if self.player_input is None:
+            return
         if event.key() == Qt.Key_W:
             self.player_input.up = False
         elif event.key() == Qt.Key_S:
@@ -62,15 +66,22 @@ class ArenaWindow(QWidget):
         self.arena = load_map(map_path)
 
     def init_robots(self):
-        self.robot = Robot(position=Vector(500, 500))
-        self.player_input = self.robot.input
+        self.robots.append(Robot(is_player=True, position=Vector(500, 500)))
+        self.robots.append(Robot(is_player=False, position=Vector(250, 250)))
+        self.robots.append(Robot(is_player=False, position=Vector(250, 750)))
+        self.robots.append(Robot(is_player=False, position=Vector(750, 250)))
+        self.robots.append(Robot(is_player=False, position=Vector(750, 750)))
+        self.player_input = self.robots[0].input
 
     def paintEvent(self, event):
         qp = QPainter()
         qp.begin(self)
+        for robot in self.robots:
+            robot.update()
         if self.size().width() > 1 and self.size().height() > 1:
             self.arena.draw(qp)
-            self.robot.draw(qp)
+            for robot in self.robots:
+                robot.draw(qp)
         qp.end()
 
 
@@ -79,7 +90,6 @@ def main():
     window = ArenaWindow()
     window.show()  # get rid of var not used flake8 error
     while window.running:  # main loop
-        window.robot.update()
         window.update()
         app.processEvents()
 

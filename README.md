@@ -1,8 +1,8 @@
-# robo_arena_team_3
+# Robo Arena Team 3 (Die luftigen Kwarkschafe u. der UI Designer)
 
-python project
+Python 3.9 + pyqt5 project
 
-game design ideas:
+Game design ideas:
   
   Game Design:
     
@@ -10,7 +10,7 @@ game design ideas:
   
   Coding (Arena):
     
-    terrain types:
+    Terrain types:
       
       - "normal": metal ground, no modifiers
       
@@ -26,11 +26,11 @@ game design ideas:
       
       - portal: teleports robot to another portal randomly, random damage or healing and power up
       
-    general:
+    General:
       
-      - 1000*1000px
+      - 1000x1000px
       
-      - 10*10px per tile
+      - 40x40px per tile
       
       - different textures for tiles
       

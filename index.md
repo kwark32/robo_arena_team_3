@@ -2,6 +2,10 @@
 
 
 
+We started implementing the visuals of the arena with basic tile designs.
+
+The arenas borders will be a ring of walls.
+
 We extended our robot class for more realistic robot movement in the arena.
 
 The robots do now have:
@@ -15,10 +19,10 @@ The robots do now have:
 Environmental variables like the maximum acceleration and the maximum rotational acceleration might be adjustable in the game settings later.
 The movement input keys remain w,a,s and d with w -> forward, s -> backward, a -> turn left, d -> turn right.
 
-We instanciated four non-player robots and placed them at different positions in the arena.
+We instantiated four non-player robots and placed them at different positions in the arena.
 For now they just move in circles.
 
-![Main menu](/Arena_mit_4_Bots.png)
+![Main menu](/Arena_mit_4_Bots_und_Hintergrund.png)
 
 ## Week 3
 

@@ -1,115 +1,115 @@
 {
 	"version": 1,
-	"size": 100,
+	"size": 25,
 	"tiles": [{
 			"row": [{
 				"tile": "wall",
-				"count": 100
+				"count": 25
 			}],
-			"count": 4
+			"count": 1
 		},
 		{
 			"row": [{
 					"tile": "wall",
-					"count": 4
+					"count": 1
 				},
 				{
 					"tile": "ground",
-					"count": 92
+					"count": 23
 				},
 				{
 					"tile": "wall",
-					"count": 4
+					"count": 1
 				}
 			],
-			"count": 20
+			"count": 5
 		},
 		{
 			"row": [{
 					"tile": "wall",
-					"count": 4
+					"count": 1
 				},
 				{
 					"tile": "ground",
-					"count": 10
+					"count": 2
 				},
 				{
 					"tile": "water",
-					"count": 8
+					"count": 2
 				},
 				{
 					"tile": "ground",
-					"count": 8
+					"count": 2
 				},
 				{
 					"tile": "fire",
-					"count": 8
+					"count": 2
 				},
 				{
 					"tile": "ground",
-					"count": 8
+					"count": 2
 				},
 				{
 					"tile": "earth",
-					"count": 8
+					"count": 2
 				},
 				{
 					"tile": "ground",
-					"count": 8
+					"count": 2
 				},
 				{
 					"tile": "air",
-					"count": 8
+					"count": 2
 				},
 				{
 					"tile": "ground",
-					"count": 10
+					"count": 2
 				},
 				{
 					"tile": "portal_blue",
-					"count": 4
+					"count": 1
 				},
 				{
 					"tile": "ground",
-					"count": 4
+					"count": 1
 				},
 				{
 					"tile": "portal_red",
-					"count": 4
+					"count": 1
 				},
 				{
 					"tile": "ground",
-					"count": 4
+					"count": 2
 				},
 				{
 					"tile": "wall",
-					"count": 4
+					"count": 1
 				}
 			],
-			"count": 24
+			"count": 8
 		},
 		{
 			"row": [{
 					"tile": "wall",
-					"count": 4
+					"count": 1
 				},
 				{
 					"tile": "ground",
-					"count": 92
+					"count": 23
 				},
 				{
 					"tile": "wall",
-					"count": 4
+					"count": 1
 				}
 			],
-			"count": 48
+			"count": 10
 		},
 		{
 			"row": [{
 				"tile": "wall",
-				"count": 100
+				"count": 25
 			}],
-			"count": 4
+			"count": 1
 		}
 	]
 }

@@ -53,7 +53,7 @@ class Tile:
 
 
 class Arena:
-    def __init__(self, tile_size=10, tile_count=100):
+    def __init__(self, tile_size=40, tile_count=25):
         self.tile_size = tile_size
         self.tile_count = tile_count
         self.size = self.tile_size * self.tile_count

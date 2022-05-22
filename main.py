@@ -29,8 +29,6 @@ class ArenaWindow(QWidget):
 
     def initUI(self):
         self.setGeometry(0, 0, self.arena.size, self.arena.size)
-        self.setWindowTitle("Robo Arena")
-        self.show()
 
     def closeEvent(self, event):
         self.running = False
@@ -78,7 +76,8 @@ class ArenaWindow(QWidget):
 def main():
     app = QApplication(sys.argv)
     window = ArenaWindow()
-    window.show()  # get rid of var not used flake8 error
+    window.setWindowTitle("Robo Arena")
+    window.show()
     while window.running:  # main loop
         window.robot.update()
         window.update()

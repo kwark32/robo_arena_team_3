@@ -1,17 +1,19 @@
 import sys
 
-from os.path import dirname, abspath
 from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import QWidget, QApplication
 from PyQt5.QtCore import Qt
 from robot import Robot
-from util import Vector
+from util import Vector, get_main_path
 from json_interface import load_map
+from arena import init_tile_dict
 
 
 class ArenaWindow(QWidget):
     def __init__(self):
         super().__init__()
+
+        init_tile_dict()
 
         self.running = True
 
@@ -27,8 +29,6 @@ class ArenaWindow(QWidget):
 
     def initUI(self):
         self.setGeometry(0, 0, self.arena.size, self.arena.size)
-        self.setWindowTitle("Robo Arena")
-        self.show()
 
     def closeEvent(self, event):
         self.running = False
@@ -61,8 +61,7 @@ class ArenaWindow(QWidget):
         event.accept()
 
     def init_arena(self):
-        map_path = dirname(abspath(__file__))
-        map_path += "/test_map.json"
+        map_path = get_main_path() + "/test_map.json"
         self.arena = load_map(map_path)
 
     def init_robots(self):
@@ -88,7 +87,8 @@ class ArenaWindow(QWidget):
 def main():
     app = QApplication(sys.argv)
     window = ArenaWindow()
-    window.show()  # get rid of var not used flake8 error
+    window.setWindowTitle("Robo Arena")
+    window.show()
     while window.running:  # main loop
         window.update()
         app.processEvents()

@@ -6,32 +6,32 @@
 				"tile": "wall",
 				"count": 100
 			}],
-			"count": 1
+			"count": 4
 		},
 		{
 			"row": [{
 					"tile": "wall",
-					"count": 1
+					"count": 4
 				},
 				{
 					"tile": "ground",
-					"count": 98
+					"count": 92
 				},
 				{
 					"tile": "wall",
-					"count": 1
+					"count": 4
 				}
 			],
-			"count": 23
+			"count": 20
 		},
 		{
 			"row": [{
 					"tile": "wall",
-					"count": 1
+					"count": 4
 				},
 				{
 					"tile": "ground",
-					"count": 13
+					"count": 10
 				},
 				{
 					"tile": "water",
@@ -63,19 +63,27 @@
 				},
 				{
 					"tile": "ground",
-					"count": 8
+					"count": 10
 				},
 				{
-					"tile": "portal",
-					"count": 8
+					"tile": "portal_blue",
+					"count": 4
 				},
 				{
 					"tile": "ground",
-					"count": 13
+					"count": 4
+				},
+				{
+					"tile": "portal_red",
+					"count": 4
+				},
+				{
+					"tile": "ground",
+					"count": 4
 				},
 				{
 					"tile": "wall",
-					"count": 1
+					"count": 4
 				}
 			],
 			"count": 24
@@ -83,25 +91,25 @@
 		{
 			"row": [{
 					"tile": "wall",
-					"count": 1
+					"count": 4
 				},
 				{
 					"tile": "ground",
-					"count": 98
+					"count": 92
 				},
 				{
 					"tile": "wall",
-					"count": 1
+					"count": 4
 				}
 			],
-			"count": 51
+			"count": 48
 		},
 		{
 			"row": [{
 				"tile": "wall",
 				"count": 100
 			}],
-			"count": 1
+			"count": 4
 		}
 	]
 }

@@ -1,5 +1,7 @@
 import math
 
+from os.path import dirname, abspath
+
 
 class Vector:
     def __init__(self, x=0, y=0, other=None):
@@ -81,3 +83,7 @@ def limit(value, lower, upper):
     elif value > upper:
         value = upper
     return value
+
+
+def get_main_path():
+    return dirname(abspath(__file__))

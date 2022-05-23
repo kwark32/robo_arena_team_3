@@ -87,3 +87,19 @@ def limit(value, lower, upper):
 
 def get_main_path():
     return dirname(abspath(__file__))
+
+
+def rad_to_deg(value):
+    return value * 57.2957795
+
+
+def deg_to_rad(value):
+    return value / 57.2957795
+
+
+def draw_img_with_rot(qp, img, img_size, position, rotation):
+    qp.translate(position.x, position.y)
+    qp.rotate(rad_to_deg(rotation))
+    qp.drawImage(-round(img_size / 2), -round(img_size / 2),
+                 img, 0, 0, img_size, img_size)
+    qp.resetTransform()

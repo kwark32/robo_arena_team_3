@@ -1,12 +1,11 @@
 import math
 
-from PyQt5.QtGui import QColor
-from PyQt5.QtCore import QPoint
-from util import Vector, limit
+from PyQt5.QtGui import QImage
+from util import Vector, limit, get_main_path, draw_img_with_rot
 
 
 class Robot:
-    def __init__(self, is_player=False, radius=15,
+    def __init__(self, is_player=False, radius=20,
                  position=Vector(0.0, 0.0), rotation=0.0,
                  max_velocity=90, max_ang_velocity=3,
                  max_accel=180, max_ang_accel=9):
@@ -37,26 +36,23 @@ class Robot:
         self.max_accel = max_accel
         self.max_velocity = max_velocity
 
+        texture_path = get_main_path() + "/textures/moving/"
+        self.body_texture = QImage(texture_path + "tank_red_40.png")
+        if is_player:
+            self.body_texture = QImage(texture_path + "tank_blue_40.png")
+
     def draw(self, qp):
-        qp.setPen(QColor(46, 26, 71))
-        qp.setBrush(QColor(255, 53, 184))
-        qp.drawEllipse(QPoint(round(self.position.x),
-                              round(self.position.y)),
-                       self.radius, self.radius)
-        qp.drawLine(round(self.position.x), round(self.position.y),
-                    round(self.position.x
-                          + self.radius * math.sin(self.rotation)),
-                    round(self.position.y
-                          - self.radius * math.cos(self.rotation)))
+        draw_img_with_rot(qp, self.body_texture, self.radius * 2,
+                          self.position, self.rotation)
 
     def update(self, delta_time):
         if self.is_player:
             forward_velocity_goal = 0
             ang_velocity_goal = 0
             if self.input.up:
-                forward_velocity_goal -= 1
-            if self.input.down:
                 forward_velocity_goal += 1
+            if self.input.down:
+                forward_velocity_goal -= 1
             if self.input.left:
                 ang_velocity_goal -= 1
             if self.input.right:

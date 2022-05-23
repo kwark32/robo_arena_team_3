@@ -87,3 +87,11 @@ def limit(value, lower, upper):
 
 def get_main_path():
     return dirname(abspath(__file__))
+
+
+def rad_to_deg(value):
+    return value * 57.2957795
+
+
+def deg_to_rad(value):
+    return value / 57.2957795

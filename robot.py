@@ -1,7 +1,7 @@
 import math
 
 from PyQt5.QtGui import QImage
-from util import Vector, limit, get_main_path, rad_to_deg
+from util import Vector, limit, get_main_path, draw_img_with_rot
 
 
 class Robot:
@@ -42,11 +42,8 @@ class Robot:
             self.body_texture = QImage(texture_path + "tank_blue_40.png")
 
     def draw(self, qp):
-        qp.translate(self.position.x, self.position.y)
-        qp.rotate(rad_to_deg(self.rotation))
-        qp.drawImage(-self.radius, -self.radius, self.body_texture,
-                     0, 0, self.radius * 2, self.radius * 2)
-        qp.resetTransform()
+        draw_img_with_rot(qp, self.body_texture, self.radius * 2,
+                          self.position, self.rotation)
 
     def update(self, delta_time):
         if self.is_player:

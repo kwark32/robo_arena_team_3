@@ -7,14 +7,11 @@ from PyQt5.QtCore import Qt, QPoint
 from robot import Robot
 from util import Vector, get_main_path, ns_to_s
 from json_interface import load_map
-from arena import init_tile_dict
 
 
 class ArenaWindow(QWidget):
     def __init__(self):
         super().__init__()
-
-        init_tile_dict()
 
         self.running = True
 
@@ -125,6 +122,7 @@ def main():
     window = ArenaWindow()
     window.setWindowTitle("Robo Arena")
     window.show()
+
     while window.running:  # main loop
         window.update()
         app.processEvents()

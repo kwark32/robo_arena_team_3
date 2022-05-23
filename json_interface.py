@@ -1,6 +1,6 @@
 import json
 
-from arena import Arena, Tile, TileTypes
+from arena import Arena, Tile, tile_type_dict
 
 
 def load_map(file):
@@ -25,7 +25,7 @@ def load_map(file):
                 for curr_tile in range(tc):
                     # tile name:
                     n = map_json["tiles"][row_index]["row"][tile_index]["tile"]
-                    tile = Tile(tile_type=TileTypes.tile_dict[n])
+                    tile = Tile(tile_type=tile_type_dict[n])
                     tiles[y+curr_row][x+curr_tile] = tile
                 x += tc
                 tile_index += 1

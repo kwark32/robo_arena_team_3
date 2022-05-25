@@ -12,19 +12,21 @@ Game design ideas:
     
     Terrain types:
       
-      - "normal": metal ground, no modifiers
+      - normal: metal ground, no modifiers
       
-      - "wall" : impenetrable barrier
+      - wall: made of tyres, impenetrable barrier
       
-      - fire: causes fire damage, increased movement speed
+      - fire: causes fire damage, increases movement speed
       
-      - water: if robot is heavily damaged, might cause short circuit damage, greatly reduced movement speed
+      - water: if robot is heavily damaged, might cause short circuit damage, greatly reduces movement speed
       
-      - earth: reduced movement speed
+      - earth: reduces movement speed
       
-      - air: (hole) causes fall damage, immobilizes for a few seconds
+      - hole: causes fall damage, immobilizes for a few seconds
       
       - portal: teleports robot to another portal randomly, random damage or healing and power up
+      
+      - health tower: slowly regenerates health (team specific)
       
     General:
       

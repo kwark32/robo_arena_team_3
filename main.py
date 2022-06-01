@@ -1,6 +1,16 @@
 import sys
 
 from PyQt5.QtWidgets import QWidget, QApplication
+from enum import IntEnum
+from scenes import WorldScene
+
+
+# global constants
+ARENA_SIZE = 1000
+
+
+class Scene(IntEnum):
+    WORLD = 0
 
 
 class ArenaWindow(QWidget):
@@ -11,18 +21,28 @@ class ArenaWindow(QWidget):
 
         self.active_scene = None
 
-        self.initUI()
+        self.init_ui()
 
-    def initUI(self):
-        self.setGeometry(0, 0, self.arena.size, self.arena.size)
+        self.switch_scene(Scene.WORLD)
+
+    def init_ui(self):
+        self.setGeometry(0, 0, ARENA_SIZE, ARENA_SIZE)
 
     def closeEvent(self, event):
         self.running = False
         event.accept()
 
-    def paintEvent(self, event):
+    def keyPressEvent(self, event):
         if self.active_scene is not None:
-            self.active_scene.paintEvent(event)
+            self.active_scene.keyPressEvent(event)
+
+    def keyReleaseEvent(self, event):
+        if self.active_scene is not None:
+            self.active_scene.keyReleaseEvent(event)
+
+    def switch_scene(self, scene):
+        if scene == Scene.WORLD:
+            self.active_scene = WorldScene(self, ARENA_SIZE)
 
 
 def main():

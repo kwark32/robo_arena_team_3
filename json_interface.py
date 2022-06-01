@@ -3,14 +3,15 @@ import json
 from arena import Arena, Tile, tile_type_dict
 
 
-def load_map(file):
+def load_map(file, size):
     map_text = open(file, "r").read()
     map_json = json.loads(map_text)
     if map_json["version"] != 1:
         print("Invalid map version!")
         return
 
-    arena = Arena(tile_count=round(map_json["size"]))
+    map_tile_count = map_json["size"]
+    arena = Arena(size, map_tile_count)
     tiles = arena.get_empty_tiles()
     row_index = 0
     y = 0

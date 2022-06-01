@@ -51,12 +51,12 @@ class Tile:
 
 
 class Arena:
-    def __init__(self, tile_size=40, tile_count=25):
+    def __init__(self, size, tile_count):
         init_tile_dict()
 
-        self.tile_size = tile_size
+        self.size = size
         self.tile_count = tile_count
-        self.size = self.tile_size * self.tile_count
+        self.tile_size = int(self.size / self.tile_count)
         self.tiles = self.get_empty_tiles()
 
     def get_empty_tiles(self):

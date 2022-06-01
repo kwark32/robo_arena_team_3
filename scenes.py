@@ -9,18 +9,18 @@ from json_interface import load_map
 
 
 class WorldScene(QWidget):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent, size):
+        super().__init__(parent)
 
         self.arena = None
         self.robots = []
         self.player_input = None
 
-        self.init_arena()
+        self.init_arena(size)
         self.init_robots()
 
-        self.initUI()
-        self.arena_pixmap = QPixmap(self.arena.size, self.arena.size)
+        self.init_ui()
+        self.arena_pixmap = QPixmap(size, size)
 
         self._last_frame_time_ns = time.time_ns()
 
@@ -30,7 +30,7 @@ class WorldScene(QWidget):
 
         self.first = True  # temporary, until arena changes per frame
 
-    def initUI(self):
+    def init_ui(self):
         self.setGeometry(0, 0, self.arena.size, self.arena.size)
         self.show()
 
@@ -60,9 +60,9 @@ class WorldScene(QWidget):
             self.player_input.right = False
         event.accept()
 
-    def init_arena(self):
+    def init_arena(self, size):
         map_path = get_main_path() + "/test_map.json"
-        self.arena = load_map(map_path)
+        self.arena = load_map(map_path, size)
 
     def init_robots(self):
         self.robots.append(Robot(is_player=True, position=Vector(500, 500)))

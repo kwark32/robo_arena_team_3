@@ -33,14 +33,19 @@ class ArenaWindow(QWidget):
         event.accept()
 
     def keyPressEvent(self, event):
+        self.switch_scene(5)
         if self.active_scene is not None:
             self.active_scene.keyPressEvent(event)
 
     def keyReleaseEvent(self, event):
+        self.switch_scene(Scene.WORLD)
         if self.active_scene is not None:
             self.active_scene.keyReleaseEvent(event)
 
     def switch_scene(self, scene):
+        if self.active_scene is not None:
+            self.active_scene.deleteLater()
+            self.active_scene = None
         if scene == Scene.WORLD:
             self.active_scene = WorldScene(self, ARENA_SIZE)
 

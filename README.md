@@ -38,32 +38,6 @@ Requirements:
   
   - origin (0, 0) upper left corner
 
+### Upcoming tasks & Decisions:
 
-
-### Upcoming tasks:
-
-- design main menu and settings visuals
-
-- implement main menu and settings
-
-- add tile effects for fire, water, earth, air and portal tiles
-
-- add the new tile overlay textures, like portal and fire
-
-- add animation system and tile animations
-
-- add shooting and stuff
-
-- simple local multiplayer
-
-- create better map or map generator
-
-- implement robot AI for single player mode
-
-### To be decided:
-
-- designing a single map or implementing a map genetrator?
-
-- robot weapons and their effects?
-
-- multiplayer on one keyboard or multiple devices with networking?
+See our Task Project page.

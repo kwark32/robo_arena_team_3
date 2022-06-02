@@ -22,9 +22,6 @@ class WorldScene(QWidget):
         self.init_arena(size)
         self.init_robots()
 
-        self.physics_world.add_rect(Vector(620, 500), 80, 80)
-        self.physics_world.add_rect(Vector(600, 420), 40, 80)
-
         self.init_ui()
         self.arena_pixmap = QPixmap(size, size)
 
@@ -102,7 +99,7 @@ class WorldScene(QWidget):
         for robot in self.robots:
             robot.update(delta_time)
 
-        # maybe delta_time instead of 0.016
+        # maybe delta_time instead of 0.016 (~1/60th s)
         self.physics_world.world.Step(0.016, 0, 10)
 
         for robot in self.robots:

@@ -48,6 +48,16 @@ Requirements:
 
 - add tile effects for fire, water, earth, air and portal tiles
 
+- add the new tile overlay textures, like portal and fire
+
+- add animation system and tile animations
+
+- add shooting and stuff
+
+- simple local multiplayer
+
+- create better map or map generator
+
 - implement robot AI for single player mode
 
 ### To be decided:

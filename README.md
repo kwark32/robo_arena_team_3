@@ -2,13 +2,17 @@
 
 Python 3.9 + pyqt5 project
 
+Requirements:
+
+    - `pip3 install box2d box2d-kengz`
+
 Game design ideas:
   
   Game Design:
     
     
   
-  Coding (Arena):
+  Arena:
     
     Terrain types:
       
@@ -37,11 +41,23 @@ Game design ideas:
       - different textures for tiles
       
       - origin (0, 0) upper left corner
-      
-  Coding (Robot):
-    
-    
-    
-  Coding (Movement):
-    
-    
+
+
+
+Upcoming tasks:
+
+    - design main menu and settings visuals
+
+    - implement main menu and settings
+
+    - add tile effects for fire, water, earth, air and portal tiles
+
+    - implement robot AI for single player mode
+
+To be decided:
+
+    - designing a single map or implementing a map genetrator?
+
+    - robot weapons and their effects?
+
+    - multiplayer on one keyboard or multiple devices with networking?

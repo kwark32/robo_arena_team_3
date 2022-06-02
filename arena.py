@@ -28,6 +28,18 @@ tile_texture_sizes = {
 }
 
 
+tile_colliders = {
+    "ground": False,
+    "wall": True,
+    "water": False,
+    "fire": False,
+    "earth": False,
+    "air": False,
+    "portal_blue": False,
+    "portal_red": False
+}
+
+
 def init_tile_dict():
     for key in tile_type_dict:
         texture_size = tile_texture_sizes[key]

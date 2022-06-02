@@ -10,7 +10,7 @@ For this, PyBox2D is required, which can be installed with pip3 like this:
 
 `pip3 install box2d box2d-kengz`
 
-At this point, our game looks like this:
+At this point, our game looks like this (in debug mode all colliders are shown with red outlines):
 
 ![Main menu](/neue-textures-und-collision.png)
 

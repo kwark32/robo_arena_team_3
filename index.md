@@ -2,7 +2,7 @@
 
 We have better textures for almost anything now, including the robots (tanks).
 
-Our new scene system and switch between different scenes very easily, but there is still only the world scene so far.
+With our new scene system, switching between different scenes is very easy, but there is still only the world scene so far.
 
 We also have a basic physics system now, for detecting and solving collisions. For now, it works between robots and walls and also between multiple robots.
 

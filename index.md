@@ -4,11 +4,15 @@ We have better textures for almost anything now, including the robots (tanks).
 
 Our new scene system and switch between different scenes very easily, but there is still only the world scene so far.
 
-We also have a basic physics system now, for detecting and solving collisions. For now it works between robots and walls and also between multiple robots.
+We also have a basic physics system now, for detecting and solving collisions. For now, it works between robots and walls and also between multiple robots.
 
 For this, PyBox2D is required, which can be installed with pip3 like this:
 
 `pip3 install box2d box2d-kengz`
+
+At this point, our game looks like this:
+
+![Main menu](/neue-textures-und-collision.png)
 
 ## Week 4
 

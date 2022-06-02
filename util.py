@@ -100,6 +100,5 @@ def deg_to_rad(value):
 def draw_img_with_rot(qp, img, img_size, position, rotation):
     qp.translate(position.x, position.y)
     qp.rotate(rad_to_deg(rotation))
-    qp.drawImage(-round(img_size / 2), -round(img_size / 2),
-                 img, 0, 0, img_size, img_size)
+    qp.drawPixmap(-round(img_size / 2), -round(img_size / 2), img)
     qp.resetTransform()

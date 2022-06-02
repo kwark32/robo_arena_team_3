@@ -7,36 +7,42 @@ from util import get_main_path
 tile_type_dict = {
     "ground": None,
     "wall": None,
-    "water": None,
-    "fire": None,
     "earth": None,
+    "tower_1": None,
     "air": None,
-    "portal_blue": None,
-    "portal_red": None
+    "water": None,
+    "lava": None,
+    "fire": None,
+    "portal_1": None,
+    "portal_2": None,
 }
 
 
 tile_texture_sizes = {
     "ground": 40,
     "wall": 40,
-    "water": 40,
-    "fire": 40,
     "earth": 40,
+    "tower_1": 40,
     "air": 40,
-    "portal_blue": 40,
-    "portal_red": 40
+    "water": 40,
+    "lava": 40,
+    "fire": 40,
+    "portal_1": 40,
+    "portal_2": 40,
 }
 
 
 tile_colliders = {
     "ground": False,
     "wall": True,
-    "water": False,
-    "fire": False,
     "earth": False,
+    "tower_1": False,
     "air": False,
-    "portal_blue": False,
-    "portal_red": False
+    "water": False,
+    "lava": False,
+    "fire": False,
+    "portal_1": False,
+    "portal_2": False,
 }
 
 

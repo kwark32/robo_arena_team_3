@@ -42,8 +42,12 @@
 					"count": 2
 				},
 				{
+					"tile": "lava",
+					"count": 1
+				},
+				{
 					"tile": "fire",
-					"count": 2
+					"count": 1
 				},
 				{
 					"tile": "ground",
@@ -66,7 +70,7 @@
 					"count": 2
 				},
 				{
-					"tile": "portal_blue",
+					"tile": "portal_1",
 					"count": 1
 				},
 				{
@@ -74,7 +78,7 @@
 					"count": 1
 				},
 				{
-					"tile": "portal_red",
+					"tile": "portal_2",
 					"count": 1
 				},
 				{

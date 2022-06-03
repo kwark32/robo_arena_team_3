@@ -10,7 +10,7 @@ class Robot:
     def __init__(self, physics_world, is_player=False, radius=20,
                  position=Vector(0, 0), rotation=0,
                  max_velocity=90, max_ang_velocity=3,
-                 max_accel=180, max_ang_accel=9):
+                 max_accel=180, max_ang_accel=9, health=1000):
 
         self.is_player = is_player
 
@@ -59,6 +59,9 @@ class Robot:
                                                    user_data=self)
 
         self.weapon = TankCannon(self.physics_world)
+
+        self.health = health
+        self.is_dead = False
 
     def draw(self, qp):
         draw_img_with_rot(qp, self.body_texture,
@@ -148,7 +151,7 @@ class Robot:
 
     def update_ai(self, delta_time):
         self.ang_accel = self.max_ang_accel
-        self.local_accel = Vector(0, self.max_accel)
+        self.local_accel.y = self.max_accel
 
     def refresh_from_physics(self):
         if self.physics_body is not None:
@@ -156,7 +159,15 @@ class Robot:
             self.position.y = ARENA_SIZE - self.physics_body.position[1]
 
     def take_damage(self, damage):
-        print("Taking " + str(damage) + " damage")
+        self.health -= int(damage)
+        if self.health <= 0:
+            self.health = 0
+            self.is_dead = True
+            if self.is_player:
+                print("Player tank dead!")
+            else:
+                pass
+                #print("Enemy killed!")
 
 
 class PlayerInput:

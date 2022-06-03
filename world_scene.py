@@ -109,6 +109,14 @@ class WorldScene(QWidget):
         for bullet in Bullets.bullet_list:
             bullet.update(delta_time)
 
+        dead_robots = []
+        for robot in self.robots:
+            if robot.is_dead:
+                dead_robots.append(robot)
+        for dead in dead_robots:
+            self.robots.remove(dead)
+        dead_robots.clear()
+
         for robot in self.robots:
             robot.update(delta_time, curr_world_time)
 

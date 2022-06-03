@@ -4,18 +4,18 @@ from os.path import dirname, abspath
 
 
 class Vector:
-    def __init__(self, x=0, y=0, other=None):
+    def __init__(self, x, y):
         self.x = x
         self.y = y
-        self._x_for_mag = 0.0
-        self._y_for_mag = 0.0
-        self._mag = 0.0
-        if other is not None:
-            self.x = other.x
-            self.y = other.y
+        self._x_for_mag = 0
+        self._y_for_mag = 0
+        self._mag = 0
 
     def to_string(self):
         return "(" + str(self.x) + ", " + str(self.y) + ")"
+
+    def copy(self):
+        return Vector(self.x, self.y)
 
     def add(self, other):
         self.x += other.x
@@ -50,6 +50,8 @@ class Vector:
     def magnitude(self):
         if self.x != self._x_for_mag or self.y != self._y_for_mag:
             self._mag = math.sqrt(self.x * self.x + self.y * self.y)
+            self._x_for_mag = self.x
+            self._y_for_mag = self.y
         return self._mag
 
     def set_magnitude(self, value):

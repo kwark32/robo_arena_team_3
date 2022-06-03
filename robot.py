@@ -1,14 +1,14 @@
 import math
 
 from PyQt5.QtGui import QPixmap
-from combat import CannonShell
+from combat import TankCannon
 from util import Vector, limit, get_main_path, draw_img_with_rot
 from constants import ARENA_SIZE
 
 
 class Robot:
     def __init__(self, physics_world, is_player=False, radius=20,
-                 position=Vector(0.0, 0.0), rotation=0.0,
+                 position=Vector(0, 0), rotation=0,
                  max_velocity=90, max_ang_velocity=3,
                  max_accel=180, max_ang_accel=9):
 
@@ -23,7 +23,7 @@ class Robot:
         self.ang_accel = 0  # in rad/s^2
         self.ang_velocity = 0  # in rad/s
 
-        self.position = Vector(other=position)
+        self.position = position.copy()
         self.rotation = rotation  # in rad
 
         self.accel = Vector(0, 0)  # in px/s^2
@@ -58,13 +58,15 @@ class Robot:
                                                    static=False,
                                                    user_data=self)
 
+        self.weapon = TankCannon(self.physics_world)
+
     def draw(self, qp):
         draw_img_with_rot(qp, self.body_texture,
                           self.texture_size.x, self.texture_size.y,
                           self.position, self.rotation)
 
-    def update(self, delta_time):
-        real_local_velocity = Vector(other=self.position)
+    def update(self, delta_time, curr_time):
+        real_local_velocity = self.position.copy()
         real_local_velocity.sub(self.last_position)
         real_local_velocity.div(self.last_delta_time)
         real_local_velocity.rotate(-self.rotation)
@@ -81,8 +83,7 @@ class Robot:
             if self.input.right:
                 ang_velocity_goal += 1
             if self.input.shoot:
-                bullet = CannonShell(self, self.position, self.rotation,
-                                     self.physics_world)
+                self.weapon.shoot(curr_time, self, self.position, self.rotation)
 
             if (forward_velocity_goal == 0
                     or (forward_velocity_goal == 1
@@ -119,18 +120,18 @@ class Robot:
         self.accel.limit_magnitude(self.max_accel)
         self.local_accel.limit_magnitude(self.max_accel)
 
-        velocity_change = Vector(other=self.accel)
+        velocity_change = self.accel.copy()
         velocity_change.mult(delta_time)
         self.velocity.add(velocity_change)
-        local_velocity_change = Vector(other=self.local_accel)
+        local_velocity_change = self.local_accel.copy()
         local_velocity_change.mult(delta_time)
         self.local_velocity.add(local_velocity_change)
 
         self.velocity.limit_magnitude(self.max_velocity)
         self.local_velocity.limit_magnitude(self.max_velocity)
 
-        position_change = Vector(other=self.velocity)
-        rotated_local_velocity = Vector(other=self.local_velocity)
+        position_change = self.velocity.copy()
+        rotated_local_velocity = self.local_velocity.copy()
         rotated_local_velocity.rotate(self.rotation)
         position_change.add(rotated_local_velocity)
         position_change.limit_magnitude(self.max_velocity)

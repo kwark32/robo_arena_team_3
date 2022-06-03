@@ -28,6 +28,8 @@ class WorldScene(QWidget):
         self.init_ui()
         self.arena_pixmap = QPixmap(size, size)
 
+        self.world_start_time_ns = time.time_ns()
+
         self._last_frame_time_ns = time.time_ns()
 
         self._frames_since_last_show = 0
@@ -94,6 +96,7 @@ class WorldScene(QWidget):
     def update_world(self):
         curr_time_ns = time.time_ns()
         delta_time = ns_to_s(curr_time_ns - self._last_frame_time_ns)
+        curr_world_time = ns_to_s(curr_time_ns - self.world_start_time_ns)
         self._last_frame_time_ns = curr_time_ns
 
         self._frames_since_last_show += 1
@@ -103,11 +106,11 @@ class WorldScene(QWidget):
             self._frames_since_last_show = 0
             self._last_fps_show_time = curr_time_ns
 
-        for robot in self.robots:
-            robot.update(delta_time)
-
         for bullet in Bullets.bullet_list:
             bullet.update(delta_time)
+
+        for robot in self.robots:
+            robot.update(delta_time, curr_world_time)
 
         # maybe delta_time instead of 0.016 (~1/60th s)
         self.physics_world.world.Step(0.016, 0, 4)

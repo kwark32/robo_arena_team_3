@@ -8,13 +8,14 @@ class Bullets:
     robot_class = None
 
 
+# base class
 class Bullet:
     def __init__(self, child_instance, child_type,
                  source, position, rotation, physics_world):
         self.class_type = child_type
 
         self.source = source
-        self.position = Vector(other=position)
+        self.position = position.copy()
         self.rotation = rotation
 
         self.speed = child_type.speed
@@ -73,6 +74,41 @@ class CannonShell(Bullet):
         self.class_type = type(self)
         super().__init__(self, self.class_type,
                          source, position, rotation, physics_world)
+
+
+# base class
+class Weapon:
+    def __init__(self, child_type, physics_world):
+        self.class_type = child_type
+
+        self.physics_world = physics_world
+
+        self._last_shot_time = 0
+
+    def is_shot_ready(self, curr_time):
+        if curr_time - (1 / self.class_type.fire_rate) >= self._last_shot_time:
+            self._last_shot_time = curr_time
+            return True
+        return False
+
+    def shoot(self, curr_time, source, position, rotation):
+        if self.is_shot_ready(curr_time):
+            total_rot = rotation + self.class_type.rot_offset
+            spawn_pos = self.class_type.pos_offset.copy()
+            spawn_pos.rotate(total_rot)
+            spawn_pos.add(position)
+            CannonShell(source, spawn_pos, total_rot, self.physics_world)
+
+
+class TankCannon(Weapon):
+    pos_offset = Vector(0, 18)
+    rot_offset = 0
+    fire_rate = 2
+    bullet_class = CannonShell
+
+    def __init__(self, physics_world):
+        self.class_type = type(self)
+        super().__init__(self.class_type, physics_world)
 
 
 def hit_shell(data_a, data_b):

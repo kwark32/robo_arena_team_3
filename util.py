@@ -97,8 +97,8 @@ def deg_to_rad(value):
     return value / 57.2957795
 
 
-def draw_img_with_rot(qp, img, img_size, position, rotation):
+def draw_img_with_rot(qp, img, width, height, position, rotation):
     qp.translate(position.x, position.y)
     qp.rotate(rad_to_deg(rotation))
-    qp.drawPixmap(-round(img_size / 2), -round(img_size / 2), img)
+    qp.drawPixmap(-round(width / 2), -round(height / 2), img)
     qp.resetTransform()

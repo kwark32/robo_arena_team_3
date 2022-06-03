@@ -1,6 +1,6 @@
 import numpy as np
 
-from PyQt5.QtGui import QImage
+from PyQt5.QtGui import QPixmap
 from util import get_main_path
 
 
@@ -49,11 +49,11 @@ tile_colliders = {
 def init_tile_dict():
     for key in tile_type_dict:
         texture_size = tile_texture_sizes[key]
-        tile_type_dict[key] = TileType(image=QImage(get_main_path()
-                                                    + "/textures/"
-                                                    + str(texture_size) + "x"
-                                                    + str(texture_size) + "/"
-                                                    + key + ".png"),
+        tile_type_dict[key] = TileType(image=QPixmap(get_main_path()
+                                                     + "/textures/"
+                                                     + str(texture_size)
+                                                     + "x" + str(texture_size)
+                                                     + "/" + key + ".png"),
                                        texture_size=texture_size)
 
 
@@ -96,7 +96,7 @@ class Arena:
                 tile_in_img_offset_y = y % tiles_per_texture
 
                 # draw tile image
-                qp.drawImage(x_pos, y_pos, curr_tile_type.image,
-                             tile_in_img_offset_x * self.tile_size,
-                             tile_in_img_offset_y * self.tile_size,
-                             self.tile_size, self.tile_size)
+                qp.drawPixmap(x_pos, y_pos, curr_tile_type.image,
+                              tile_in_img_offset_x * self.tile_size,
+                              tile_in_img_offset_y * self.tile_size,
+                              self.tile_size, self.tile_size)

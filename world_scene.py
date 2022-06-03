@@ -4,15 +4,18 @@ from PyQt5.QtGui import QPainter, QPixmap, QPolygon
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtCore import Qt, QPoint
 from robot import Robot
-from util import Vector, get_main_path, ns_to_s
 from json_interface import load_map
 from physics import PhysicsWorld
+from combat import Bullets
+from util import Vector, get_main_path, ns_to_s
 from constants import ARENA_SIZE, DEBUG_MODE
 
 
 class WorldScene(QWidget):
     def __init__(self, parent, size):
         super().__init__(parent)
+
+        Bullets.robot_class = Robot
 
         self.physics_world = PhysicsWorld()
         self.arena = None
@@ -48,6 +51,8 @@ class WorldScene(QWidget):
             self.player_input.left = True
         elif event.key() == Qt.Key_D:
             self.player_input.right = True
+        elif event.key() == Qt.Key_Space:
+            self.player_input.shoot = True
         event.accept()
 
     def keyReleaseEvent(self, event):
@@ -61,6 +66,8 @@ class WorldScene(QWidget):
             self.player_input.left = False
         elif event.key() == Qt.Key_D:
             self.player_input.right = False
+        elif event.key() == Qt.Key_Space:
+            self.player_input.shoot = False
         event.accept()
 
     def init_arena(self, size):
@@ -99,8 +106,11 @@ class WorldScene(QWidget):
         for robot in self.robots:
             robot.update(delta_time)
 
+        for bullet in Bullets.bullet_list:
+            bullet.update(delta_time)
+
         # maybe delta_time instead of 0.016 (~1/60th s)
-        self.physics_world.world.Step(0.016, 0, 10)
+        self.physics_world.world.Step(0.016, 0, 4)
 
         for robot in self.robots:
             robot.refresh_from_physics()
@@ -123,6 +133,9 @@ class WorldScene(QWidget):
         # draw robots
         for robot in self.robots:
             robot.draw(qp)
+
+        for bullet in Bullets.bullet_list:
+            bullet.draw(qp)
 
         # debugging physics shapes
         if DEBUG_MODE:

@@ -106,6 +106,15 @@ class WorldScene(QWidget):
             self._frames_since_last_show = 0
             self._last_fps_show_time = curr_time_ns
 
+        dead_bullets = []
+        for bullet in Bullets.bullet_list:
+            if bullet.to_destroy:
+                dead_bullets.append(bullet)
+        for dead in dead_bullets:
+            dead.physics_world.world.DestroyBody(dead.physics_body)
+            Bullets.bullet_list.remove(dead)
+        dead_bullets.clear()
+
         for bullet in Bullets.bullet_list:
             bullet.update(delta_time)
 
@@ -114,6 +123,7 @@ class WorldScene(QWidget):
             if robot.is_dead:
                 dead_robots.append(robot)
         for dead in dead_robots:
+            dead.die()
             self.robots.remove(dead)
         dead_robots.clear()
 
@@ -138,15 +148,14 @@ class WorldScene(QWidget):
         qp = QPainter(self)
         qp.setPen(Qt.red)
 
-        # draw arena pixmap
+        # draw static arena background
         qp.drawPixmap(QPoint(), self.arena_pixmap)
-
-        # draw robots
-        for robot in self.robots:
-            robot.draw(qp)
 
         for bullet in Bullets.bullet_list:
             bullet.draw(qp)
+
+        for robot in self.robots:
+            robot.draw(qp)
 
         # debugging physics shapes
         if DEBUG_MODE:
@@ -157,7 +166,7 @@ class WorldScene(QWidget):
                     vertices = [(v[0], ARENA_SIZE - v[1]) for v in vertices]
                     poly = QPolygon()
                     for vert in vertices:
-                        poly.append(QPoint(vert[0], vert[1]))
+                        poly.append(QPoint(round(vert[0]), round(vert[1])))
                     qp.drawPolygon(poly)
 
         qp.drawText(QPoint(5, 20), str(round(self.fps)))

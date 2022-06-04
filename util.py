@@ -100,7 +100,15 @@ def deg_to_rad(value):
 
 
 def draw_img_with_rot(qp, img, width, height, position, rotation):
-    qp.translate(position.x, position.y)
+    qp.translate(round(position.x), round(position.y))
     qp.rotate(rad_to_deg(rotation))
     qp.drawPixmap(-round(width / 2), -round(height / 2), img)
     qp.resetTransform()
+
+
+def limit_rotation(value):
+    while value >= math.tau:
+        value -= math.tau
+    while value < 0:
+        value += math.tau
+    return value

@@ -1,16 +1,16 @@
 import math
 
 from PyQt5.QtGui import QPixmap
-from combat import TankCannon
-from util import Vector, limit, get_main_path, draw_img_with_rot
+from weapons import TankCannon
+from util import Vector, limit, get_main_path, draw_img_with_rot, limit_rotation
 from constants import ARENA_SIZE
 
 
 class Robot:
     def __init__(self, physics_world, is_player=False, radius=20,
                  position=Vector(0, 0), rotation=0,
-                 max_velocity=90, max_ang_velocity=3,
-                 max_accel=180, max_ang_accel=9, health=1000):
+                 max_velocity=120, max_ang_velocity=4,
+                 max_accel=200, max_ang_accel=12, health=1000):
 
         self.is_player = is_player
 
@@ -54,13 +54,13 @@ class Robot:
         self.physics_body = physics_world.add_rect(position,
                                                    self.texture_size.x,
                                                    self.texture_size.y,
-                                                   rotation=rotation,
+                                                   rotation=-rotation,
                                                    static=False,
                                                    user_data=self)
 
         self.weapon = TankCannon(self.physics_world)
 
-        self.health = health
+        self.health = int(health)
         self.is_dead = False
 
     def draw(self, qp):
@@ -114,11 +114,7 @@ class Robot:
                                   -self.max_ang_velocity,
                                   self.max_ang_velocity)
         self.rotation += self.ang_velocity * delta_time
-
-        while self.rotation >= math.tau:
-            self.rotation -= math.tau
-        while self.rotation < 0:
-            self.rotation += math.tau
+        self.rotation = limit_rotation(self.rotation)
 
         self.accel.limit_magnitude(self.max_accel)
         self.local_accel.limit_magnitude(self.max_accel)
@@ -163,11 +159,10 @@ class Robot:
         if self.health <= 0:
             self.health = 0
             self.is_dead = True
-            if self.is_player:
-                print("Player tank dead!")
-            else:
-                pass
-                #print("Enemy killed!")
+
+    def die(self):
+        self.physics_world.world.DestroyBody(self.physics_body)
+        print("<cool tank explode animation> or something...")
 
 
 class PlayerInput:

@@ -1,5 +1,3 @@
-import math
-
 from PyQt5.QtGui import QPixmap
 from weapons import TankCannon
 from util import Vector, limit, get_main_path, draw_img_with_rot, limit_rotation

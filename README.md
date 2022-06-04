@@ -2,9 +2,21 @@
 
 Python 3.9 + PyQt5 project
 
-Requirements:
+#### Requirements:
+  - Python3.9 (so far 3.8 & 3.10 work too)
+  - PyQt5
+  - PyBox2D: `pip3 install box2d box2d-kengz box2d-py`
 
-    pip3 install box2d box2d-kengz box2d-py
+#### Project agreements:
+
+We have a maximum line length of 120 chars.<br>
+To test your current files on flake8, type<br>
+`flake8 . --count --max-line-length=120`<br>
+(on Linux & Mac).
+
+Commit messages start with a big letter and are in past tense.
+
+Tasks are assigned and decisions tracked via the Task Project under "Projects"
 
 ## Game Design:
 
@@ -12,25 +24,27 @@ Requirements:
     
 - Terrain types:
   
-  - normal: metal ground, no modifiers
+  - Ground: metal arena, no modifiers
   
-  - wall: made of tyres, impenetrable barrier
+  - Wall: made of tires, impenetrable barrier
   
-  - fire: causes fire damage, increases movement speed
+  - Lava: causes low fire damage, decreases movement speed
   
-  - water: if robot is heavily damaged, might cause short circuit damage, greatly reduces movement speed
+  - Fire: causes higher fire damage, increases movement speed
   
-  - earth: reduces movement speed
+  - Water: the more a robot is damaged, the more short circuit damage it gets, decreases movement speed
   
-  - hole: causes fall damage, immobilizes for a few seconds
+  - Earth: decreases movement speed
   
-  - portal: teleports robot to another portal randomly, random damage or healing and power up
+  - Hole: causes fall damage, immobilizes for a few seconds
   
-  - health tower: slowly regenerates health (team specific)
+  - Portal: teleports robot to another portal randomly, random damage or healing and power up
+  
+  - Health tower: slowly regenerates health (team specific)
   
 - General:
   
-  - 1000x1000px
+  - 1000x1000px arena and window size
   
   - 40x40px per tile
   

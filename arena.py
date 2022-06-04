@@ -31,7 +31,8 @@ class TileType:
         self._texture = QPixmap(filename)
         self._texture_size = Vector(self._texture.width(), self._texture.height())
         if self._texture_size.x == 0 or self._texture_size.y == 0:
-            print("ERROR: texture for " + self.name + " has 0 size or is missing at " + filename + "!")
+            print("ERROR: texture for " + self.name
+                  + " has 0 size or is missing at " + filename + "!")
 
 
 tile_type_dict = {
@@ -75,12 +76,9 @@ class Arena:
                 # calculate correct part of the texture
                 tiles_per_texture = curr_tile_type.texture_size.copy()
                 tiles_per_texture.div(self.tile_size)
-                tile_in_img_offset = Vector(x % round(tiles_per_texture.x),
-                                            y % round(tiles_per_texture.y))
+                tile_in_img_offset = Vector(x % round(tiles_per_texture.x), y % round(tiles_per_texture.y))
 
                 # draw tile image
                 qp.drawPixmap(x_pos, y_pos, curr_tile_type.texture,
-                              tile_in_img_offset.x * self.tile_size,
-                              tile_in_img_offset.y * self.tile_size,
-                              curr_tile_type.texture_size.x,
-                              curr_tile_type.texture_size.y)
+                              tile_in_img_offset.x * self.tile_size, tile_in_img_offset.y * self.tile_size,
+                              curr_tile_type.texture_size.x, curr_tile_type.texture_size.y)

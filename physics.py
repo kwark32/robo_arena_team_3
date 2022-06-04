@@ -28,12 +28,10 @@ class ContactListener(b2ContactListener):
 class PhysicsWorld:
     def __init__(self):
         self.contact_listener = ContactListener()
-        self.world = b2World(gravity=(0, 0), doSleep=True,
-                             contactListener=self.contact_listener)
+        self.world = b2World(gravity=(0, 0), doSleep=True, contactListener=self.contact_listener)
         self.world.SetAllowSleeping(False)
 
-    def add_rect(self, position, width, height, rotation=0,
-                 static=True, sensor=False, user_data=None):
+    def add_rect(self, position, width, height, rotation=0, static=True, sensor=False, user_data=None):
         if static:
             return self.world.CreateStaticBody(
                 position=(position.x, position.y),
@@ -49,7 +47,6 @@ class PhysicsWorld:
         )
 
         dynamic.CreatePolygonFixture(box=(int(width / 2), int(height / 2)),
-                                     density=1000000, friction=1000000,
-                                     isSensor=sensor)
+                                     density=1000000, friction=1000000, isSensor=sensor)
 
         return dynamic

@@ -1,14 +1,12 @@
 from PyQt5.QtGui import QPixmap
 from weapons import TankCannon
-from util import Vector, limit, get_main_path, draw_img_with_rot, limit_rotation
+from util import Vector, limit, get_main_path, draw_img_with_rot, limit_rot
 from constants import ARENA_SIZE
 
 
 class Robot:
-    def __init__(self, physics_world, is_player=False, radius=20,
-                 position=Vector(0, 0), rotation=0,
-                 max_velocity=120, max_ang_velocity=4,
-                 max_accel=200, max_ang_accel=12, health=1000):
+    def __init__(self, physics_world, is_player=False, health=1000, radius=20, position=Vector(0, 0), rotation=0,
+                 max_velocity=120, max_ang_velocity=4, max_accel=200, max_ang_accel=12):
 
         self.is_player = is_player
 
@@ -44,17 +42,12 @@ class Robot:
         if is_player:
             self.body_texture = QPixmap(texture_path + "tank_blue_40.png")
 
-        self.texture_size = Vector(self.body_texture.width(),
-                                   self.body_texture.height())
+        self.texture_size = Vector(self.body_texture.width(), self.body_texture.height())
 
         self.physics_world = physics_world
 
-        self.physics_body = physics_world.add_rect(position,
-                                                   self.texture_size.x,
-                                                   self.texture_size.y,
-                                                   rotation=-rotation,
-                                                   static=False,
-                                                   user_data=self)
+        self.physics_body = physics_world.add_rect(position, self.texture_size.x, self.texture_size.y,
+                                                   rotation=-rotation, static=False, user_data=self)
 
         self.weapon = TankCannon(self.physics_world)
 
@@ -62,9 +55,7 @@ class Robot:
         self.is_dead = False
 
     def draw(self, qp):
-        draw_img_with_rot(qp, self.body_texture,
-                          self.texture_size.x, self.texture_size.y,
-                          self.position, self.rotation)
+        draw_img_with_rot(qp, self.body_texture, self.texture_size.x, self.texture_size.y, self.position, self.rotation)
 
     def update(self, delta_time, curr_time):
         real_local_velocity = self.position.copy()
@@ -103,16 +94,12 @@ class Robot:
         else:
             self.update_ai(delta_time)
 
-        self.ang_accel = limit(self.ang_accel,
-                               -self.max_ang_accel,
-                               self.max_ang_accel)
+        self.ang_accel = limit(self.ang_accel, -self.max_ang_accel, self.max_ang_accel)
         self.ang_velocity += self.ang_accel * delta_time
 
-        self.ang_velocity = limit(self.ang_velocity,
-                                  -self.max_ang_velocity,
-                                  self.max_ang_velocity)
+        self.ang_velocity = limit(self.ang_velocity, -self.max_ang_velocity, self.max_ang_velocity)
         self.rotation += self.ang_velocity * delta_time
-        self.rotation = limit_rotation(self.rotation)
+        self.rotation = limit_rot(self.rotation)
 
         self.accel.limit_magnitude(self.max_accel)
         self.local_accel.limit_magnitude(self.max_accel)
@@ -135,13 +122,10 @@ class Robot:
         position_change.mult(delta_time)
         self.position.add(position_change)
 
-        self.last_position = Vector(self.physics_body.position[0],
-                                    ARENA_SIZE - self.physics_body.position[1])
+        self.last_position = Vector(self.physics_body.position[0], ARENA_SIZE - self.physics_body.position[1])
         self.last_delta_time = delta_time
 
-        self.physics_body.transform = ((self.position.x,
-                                        ARENA_SIZE - self.position.y),
-                                       -self.rotation)
+        self.physics_body.transform = ((self.position.x, ARENA_SIZE - self.position.y), -self.rotation)
 
     def update_ai(self, delta_time):
         self.ang_accel = self.max_ang_accel

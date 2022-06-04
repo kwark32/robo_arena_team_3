@@ -1,5 +1,5 @@
 from PyQt5.QtGui import QPixmap
-from util import Vector, get_main_path, draw_img_with_rot, limit_rotation
+from util import Vector, get_main_path, draw_img_with_rot, limit_rot
 from constants import ARENA_SIZE
 
 
@@ -17,17 +17,15 @@ class Bullet:
 
         if self.bullet_type.texture is None:
             texture_path = get_main_path() + "/textures/moving/bullets/"
-            self.bullet_type.texture = QPixmap(texture_path
-                                               + self.bullet_type.texture_name)
-        self.texture_size = Vector(self.bullet_type.texture.width(),
-                                   self.bullet_type.texture.height())
+            self.bullet_type.texture = QPixmap(texture_path + self.bullet_type.texture_name)
+        self.texture_size = Vector(self.bullet_type.texture.width(), self.bullet_type.texture.height())
 
         self.source = source
 
         self.position = Vector(0, round(self.texture_size.y / 2))
         self.position.rotate(rotation)
         self.position.add(position)
-        self.rotation = limit_rotation(rotation)
+        self.rotation = limit_rot(rotation)
 
         self.speed = self.bullet_type.speed
         self.damage = self.bullet_type.damage
@@ -36,12 +34,8 @@ class Bullet:
 
         self.physics_world = physics_world
 
-        self.physics_body = physics_world.add_rect(self.position,
-                                                   self.texture_size.x,
-                                                   self.texture_size.y,
-                                                   rotation=-rotation,
-                                                   static=False, sensor=True,
-                                                   user_data=self)
+        self.physics_body = physics_world.add_rect(self.position, self.texture_size.x, self.texture_size.y,
+                                                   rotation=-rotation, static=False, sensor=True, user_data=self)
 
         Bullets.bullet_list.append(self)
 
@@ -60,13 +54,10 @@ class Bullet:
         movement.rotate(self.rotation)
         movement.mult(delta_time)
         self.position.add(movement)
-        self.physics_body.transform = ((self.position.x,
-                                        ARENA_SIZE - self.position.y),
-                                       -self.rotation)
+        self.physics_body.transform = ((self.position.x, ARENA_SIZE - self.position.y), -self.rotation)
 
     def draw(self, qp):
-        draw_img_with_rot(qp, self.bullet_type.texture,
-                          self.texture_size.x, self.texture_size.y,
+        draw_img_with_rot(qp, self.bullet_type.texture, self.texture_size.x, self.texture_size.y,
                           self.position, self.rotation)
 
 
@@ -94,8 +85,7 @@ class Weapon:
             spawn_pos = self.weapon_type.pos_offset.copy()
             spawn_pos.rotate(total_rot)
             spawn_pos.add(position)
-            self.weapon_type.bullet_type(source, spawn_pos, total_rot,
-                                         self.physics_world)
+            self.weapon_type.bullet_type(source, spawn_pos, total_rot, self.physics_world)
 
 
 def hit_shell(data_a, data_b):

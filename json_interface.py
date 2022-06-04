@@ -47,8 +47,7 @@ def load_map(file, size, physics_world=None):
                     height = row["count"] * arena.tile_size
                     x = t * arena.tile_size + int(width / 2)
                     y = r * arena.tile_size + int(height / 2)
-                    physics_world.add_rect(Vector(x, ARENA_SIZE - y),
-                                           width, height)
+                    physics_world.add_rect(Vector(x, ARENA_SIZE - y), width, height)
                 t += tile["count"]
             r += row["count"]
 

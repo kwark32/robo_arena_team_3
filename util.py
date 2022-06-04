@@ -106,7 +106,7 @@ def draw_img_with_rot(qp, img, width, height, position, rotation):
     qp.resetTransform()
 
 
-def limit_rotation(value):
+def limit_rot(value):
     while value >= math.tau:
         value -= math.tau
     while value < 0:

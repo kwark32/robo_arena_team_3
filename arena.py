@@ -1,79 +1,63 @@
 import numpy as np
 
-from PyQt5.QtGui import QImage
-from util import get_main_path
+from PyQt5.QtGui import QPixmap
+from util import Vector, get_main_path
 
 
-tile_type_dict = {
-    "ground": None,
-    "wall": None,
-    "earth": None,
-    "tower_1": None,
-    "air": None,
-    "water": None,
-    "lava": None,
-    "fire": None,
-    "portal_1": None,
-    "portal_2": None,
-}
-
-
-tile_texture_sizes = {
-    "ground": 40,
-    "wall": 40,
-    "earth": 40,
-    "tower_1": 40,
-    "air": 40,
-    "water": 40,
-    "lava": 40,
-    "fire": 40,
-    "portal_1": 40,
-    "portal_2": 40,
-}
-
-
-tile_colliders = {
-    "ground": False,
-    "wall": True,
-    "earth": False,
-    "tower_1": False,
-    "air": False,
-    "water": False,
-    "lava": False,
-    "fire": False,
-    "portal_1": False,
-    "portal_2": False,
-}
-
-
-def init_tile_dict():
-    for key in tile_type_dict:
-        texture_size = tile_texture_sizes[key]
-        tile_type_dict[key] = TileType(image=QImage(get_main_path()
-                                                    + "/textures/"
-                                                    + str(texture_size) + "x"
-                                                    + str(texture_size) + "/"
-                                                    + key + ".png"),
-                                       texture_size=texture_size)
+tile_texture_path = get_main_path() + "/textures/tiles/"
 
 
 class TileType:
-    def __init__(self, image=None, texture_size=0):
-        self.image = image
-        self.texture_size = texture_size
+    def __init__(self, name, has_collision):
+        self.name = name
+        self.has_collision = has_collision
+        self._texture = None
+        self._texture_size = None
+
+    @property
+    def texture(self):
+        if self._texture is None:
+            self.load_image()
+        return self._texture
+
+    @property
+    def texture_size(self):
+        if self._texture_size is None:
+            self.load_image()
+        return self._texture_size
+
+    def load_image(self):
+        filename = tile_texture_path + self.name + ".png"
+        self._texture = QPixmap(filename)
+        self._texture_size = Vector(self._texture.width(), self._texture.height())
+        if self._texture_size.x == 0 or self._texture_size.y == 0:
+            print("ERROR: texture for " + self.name
+                  + " has 0 size or is missing at " + filename + "!")
+
+
+tile_type_dict = {
+    "ground": TileType("ground", False),
+    "wall": TileType("wall", True),
+    "earth": TileType("earth", False),
+    "tower_1": TileType("tower_1", True),
+    "hole": TileType("hole", False),
+    "water": TileType("water", False),
+    "lava": TileType("lava", False),
+    "fire": TileType("fire", False),
+    "portal_1": TileType("portal_1", False),
+    "portal_2": TileType("portal_2", False),
+}
 
 
 class Tile:
-    def __init__(self, tile_type=TileType()):
+    def __init__(self, tile_type=None):
         self.tile_type = tile_type
 
 
 class Arena:
     def __init__(self, size, tile_count):
-        init_tile_dict()
-
-        self.size = size
-        self.tile_count = tile_count
+        self.size = int(size)
+        self.tile_count = int(tile_count)
         self.tile_size = int(self.size / self.tile_count)
         self.tiles = self.get_empty_tiles()
 
@@ -90,13 +74,11 @@ class Arena:
                 curr_tile_type = self.tiles[y][x].tile_type
 
                 # calculate correct part of the texture
-                tiles_per_texture = curr_tile_type.texture_size
-                tiles_per_texture /= self.tile_size
-                tile_in_img_offset_x = x % tiles_per_texture
-                tile_in_img_offset_y = y % tiles_per_texture
+                tiles_per_texture = curr_tile_type.texture_size.copy()
+                tiles_per_texture.div(self.tile_size)
+                tile_in_img_offset = Vector(x % round(tiles_per_texture.x), y % round(tiles_per_texture.y))
 
                 # draw tile image
-                qp.drawImage(x_pos, y_pos, curr_tile_type.image,
-                             tile_in_img_offset_x * self.tile_size,
-                             tile_in_img_offset_y * self.tile_size,
-                             self.tile_size, self.tile_size)
+                qp.drawPixmap(x_pos, y_pos, curr_tile_type.texture,
+                              tile_in_img_offset.x * self.tile_size, tile_in_img_offset.y * self.tile_size,
+                              curr_tile_type.texture_size.x, curr_tile_type.texture_size.y)

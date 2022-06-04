@@ -4,15 +4,18 @@ from PyQt5.QtGui import QPainter, QPixmap, QPolygon
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtCore import Qt, QPoint
 from robot import Robot
-from util import Vector, get_main_path, ns_to_s
 from json_interface import load_map
 from physics import PhysicsWorld
+from combat import Bullets
+from util import Vector, get_main_path, ns_to_s
 from constants import ARENA_SIZE, DEBUG_MODE
 
 
 class WorldScene(QWidget):
     def __init__(self, parent, size):
         super().__init__(parent)
+
+        Bullets.robot_class = Robot
 
         self.physics_world = PhysicsWorld()
         self.arena = None
@@ -24,6 +27,8 @@ class WorldScene(QWidget):
 
         self.init_ui()
         self.arena_pixmap = QPixmap(size, size)
+
+        self.world_start_time_ns = time.time_ns()
 
         self._last_frame_time_ns = time.time_ns()
 
@@ -48,6 +53,8 @@ class WorldScene(QWidget):
             self.player_input.left = True
         elif event.key() == Qt.Key_D:
             self.player_input.right = True
+        elif event.key() == Qt.Key_Space:
+            self.player_input.shoot = True
         event.accept()
 
     def keyReleaseEvent(self, event):
@@ -61,6 +68,8 @@ class WorldScene(QWidget):
             self.player_input.left = False
         elif event.key() == Qt.Key_D:
             self.player_input.right = False
+        elif event.key() == Qt.Key_Space:
+            self.player_input.shoot = False
         event.accept()
 
     def init_arena(self, size):
@@ -68,16 +77,11 @@ class WorldScene(QWidget):
         self.arena = load_map(map_path, size, physics_world=self.physics_world)
 
     def init_robots(self):
-        self.robots.append(Robot(is_player=True, position=Vector(500, 500),
-                                 physics_world=self.physics_world))
-        self.robots.append(Robot(is_player=False, position=Vector(250, 250),
-                                 physics_world=self.physics_world))
-        self.robots.append(Robot(is_player=False, position=Vector(250, 750),
-                                 physics_world=self.physics_world))
-        self.robots.append(Robot(is_player=False, position=Vector(750, 250),
-                                 physics_world=self.physics_world))
-        self.robots.append(Robot(is_player=False, position=Vector(750, 750),
-                                 physics_world=self.physics_world))
+        self.robots.append(Robot(is_player=True, position=Vector(500, 500), physics_world=self.physics_world))
+        self.robots.append(Robot(is_player=False, position=Vector(250, 250), physics_world=self.physics_world))
+        self.robots.append(Robot(is_player=False, position=Vector(250, 750), physics_world=self.physics_world))
+        self.robots.append(Robot(is_player=False, position=Vector(750, 250), physics_world=self.physics_world))
+        self.robots.append(Robot(is_player=False, position=Vector(750, 750), physics_world=self.physics_world))
 
         for robot in self.robots:
             if robot.is_player:
@@ -87,6 +91,7 @@ class WorldScene(QWidget):
     def update_world(self):
         curr_time_ns = time.time_ns()
         delta_time = ns_to_s(curr_time_ns - self._last_frame_time_ns)
+        curr_world_time = ns_to_s(curr_time_ns - self.world_start_time_ns)
         self._last_frame_time_ns = curr_time_ns
 
         self._frames_since_last_show += 1
@@ -96,11 +101,32 @@ class WorldScene(QWidget):
             self._frames_since_last_show = 0
             self._last_fps_show_time = curr_time_ns
 
+        dead_bullets = []
+        for bullet in Bullets.bullet_list:
+            if bullet.to_destroy:
+                dead_bullets.append(bullet)
+        for dead in dead_bullets:
+            dead.physics_world.world.DestroyBody(dead.physics_body)
+            Bullets.bullet_list.remove(dead)
+        dead_bullets.clear()
+
+        for bullet in Bullets.bullet_list:
+            bullet.update(delta_time)
+
+        dead_robots = []
         for robot in self.robots:
-            robot.update(delta_time)
+            if robot.is_dead:
+                dead_robots.append(robot)
+        for dead in dead_robots:
+            dead.die()
+            self.robots.remove(dead)
+        dead_robots.clear()
+
+        for robot in self.robots:
+            robot.update(delta_time, curr_world_time)
 
         # maybe delta_time instead of 0.016 (~1/60th s)
-        self.physics_world.world.Step(0.016, 0, 10)
+        self.physics_world.world.Step(0.016, 0, 4)
 
         for robot in self.robots:
             robot.refresh_from_physics()
@@ -117,10 +143,12 @@ class WorldScene(QWidget):
         qp = QPainter(self)
         qp.setPen(Qt.red)
 
-        # draw arena pixmap
+        # draw static arena background
         qp.drawPixmap(QPoint(), self.arena_pixmap)
 
-        # draw robots
+        for bullet in Bullets.bullet_list:
+            bullet.draw(qp)
+
         for robot in self.robots:
             robot.draw(qp)
 
@@ -133,7 +161,7 @@ class WorldScene(QWidget):
                     vertices = [(v[0], ARENA_SIZE - v[1]) for v in vertices]
                     poly = QPolygon()
                     for vert in vertices:
-                        poly.append(QPoint(vert[0], vert[1]))
+                        poly.append(QPoint(round(vert[0]), round(vert[1])))
                     qp.drawPolygon(poly)
 
         qp.drawText(QPoint(5, 20), str(round(self.fps)))

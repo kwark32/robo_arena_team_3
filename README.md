@@ -4,7 +4,7 @@ Python 3.9 + PyQt5 project
 
 Requirements:
 
-    pip3 install box2d box2d-kengz
+    pip3 install box2d box2d-kengz box2d-py
 
 ## Game Design:
 

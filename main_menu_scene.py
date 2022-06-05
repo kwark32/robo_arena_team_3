@@ -171,7 +171,7 @@ class MainMenuScene(QWidget):
             if self.selected_button is not None:
                 self.selected_button.click()
 
-        if True:#DEBUG_MODE:
+        if DEBUG_MODE:
             self._frames_since_last_show += 1
             last_fps_show_delta = ns_to_s(curr_time_ns - self._last_fps_show_time)
             if last_fps_show_delta > 0.5:
@@ -189,6 +189,7 @@ class MainMenuScene(QWidget):
         qp.fillRect(0, 0, self.size, self.size, QColor(50, 50, 50))
 
         qp.setFont(QFont("sans serif", 85))
+        qp.setPen(Qt.darkCyan)
         qp.drawText(QPoint(210, 210), "Robo Arena")
         # draw static menu background
         # qp.drawPixmap(QPoint(), <menu background pixmap>)
@@ -196,8 +197,9 @@ class MainMenuScene(QWidget):
         for button in self.buttons:
             button.draw(qp)
 
-        if True:#DEBUG_MODE:
+        if DEBUG_MODE:
             qp.setFont(QFont("sans serif", 12))
+            qp.setPen(Qt.red)
             qp.drawText(QPoint(5, 20), str(round(self.fps)))
 
         qp.end()

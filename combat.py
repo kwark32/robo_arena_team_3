@@ -8,6 +8,9 @@ class Bullets:
     robot_class = None
 
 
+bullet_texture_path = get_main_path() + "/textures/moving/bullets/"
+
+
 # base class
 class Bullet:
     def __init__(self, source, position, rotation, physics_world):
@@ -15,14 +18,11 @@ class Bullet:
         if self.bullet_type is Bullet:
             print("ERROR: Bullet base class should not be instantiated!")
 
-        if self.bullet_type.texture is None:
-            texture_path = get_main_path() + "/textures/moving/bullets/"
-            self.bullet_type.texture = QPixmap(texture_path + self.bullet_type.texture_name)
-        self.texture_size = Vector(self.bullet_type.texture.width(), self.bullet_type.texture.height())
-
         self.source = source
 
-        self.position = Vector(0, round(self.texture_size.y / 2))
+        self.size = self.bullet_type.size
+
+        self.position = Vector(0, round(self.size.y / 2))
         self.position.rotate(rotation)
         self.position.add(position)
         self.rotation = limit_rot(rotation)
@@ -34,10 +34,18 @@ class Bullet:
 
         self.physics_world = physics_world
 
-        self.physics_body = physics_world.add_rect(self.position, self.texture_size.x, self.texture_size.y,
+        self.physics_body = physics_world.add_rect(self.position, self.size.x, self.size.y,
                                                    rotation=-rotation, static=False, sensor=True, user_data=self)
 
         Bullets.bullet_list.append(self)
+
+    @property
+    def type_texture(self):
+        if self.bullet_type.texture is None:
+            self.bullet_type.texture = QPixmap(bullet_texture_path + self.bullet_type.texture_name)
+            if self.bullet_type.texture.width() != self.size.x or self.bullet_type.texture.height() != self.size.y:
+                print("WARN: Bullet texture size is not equal to bullet (collider) size!")
+        return self.bullet_type.texture
 
     def destroy(self):
         self.to_destroy = True
@@ -57,7 +65,7 @@ class Bullet:
         self.physics_body.transform = ((self.position.x, ARENA_SIZE - self.position.y), -self.rotation)
 
     def draw(self, qp):
-        draw_img_with_rot(qp, self.bullet_type.texture, self.texture_size.x, self.texture_size.y,
+        draw_img_with_rot(qp, self.type_texture, self.size.x, self.size.y,
                           self.position, self.rotation)
 
 

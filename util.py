@@ -17,6 +17,9 @@ class Vector:
     def copy(self):
         return Vector(self.x, self.y)
 
+    def equal(self, other):
+        return self.x == other.x and self.y == other.y
+
     def round(self):
         self.x = round(self.x)
         self.y = round(self.y)

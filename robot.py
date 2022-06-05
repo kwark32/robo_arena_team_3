@@ -4,8 +4,11 @@ from util import Vector, limit, get_main_path, draw_img_with_rot, limit_rot
 from constants import ARENA_SIZE
 
 
+robot_texture_path = get_main_path() + "/textures/moving/"
+
+
 class Robot:
-    def __init__(self, physics_world, is_player=False, health=1000, radius=20, position=Vector(0, 0), rotation=0,
+    def __init__(self, physics_world, is_player=False, health=1000, size=Vector(40, 40), position=Vector(0, 0), rotation=0,
                  max_velocity=120, max_ang_velocity=4, max_accel=200, max_ang_accel=12):
 
         self.is_player = is_player
@@ -14,7 +17,7 @@ class Robot:
         if is_player:
             self.input = PlayerInput()
 
-        self.radius = radius
+        self.size = size
 
         self.ang_accel = 0  # in rad/s^2
         self.ang_velocity = 0  # in rad/s
@@ -39,16 +42,12 @@ class Robot:
 
         self.forward_velocity_goal = 0
 
-        texture_path = get_main_path() + "/textures/moving/"
-        self.body_texture = QPixmap(texture_path + "tank_red_40.png")
-        if is_player:
-            self.body_texture = QPixmap(texture_path + "tank_blue_40.png")
-
-        self.texture_size = Vector(self.body_texture.width(), self.body_texture.height())
+        self._body_texture = None
+        self._texture_size = None
 
         self.physics_world = physics_world
 
-        self.physics_body = physics_world.add_rect(position, self.texture_size.x, self.texture_size.y,
+        self.physics_body = physics_world.add_rect(position, self.size.x, self.size.y,
                                                    rotation=-rotation, static=False, user_data=self)
 
         self.weapon = TankCannon(self.physics_world)
@@ -56,8 +55,18 @@ class Robot:
         self.health = int(health)
         self.is_dead = False
 
+    @property
+    def body_texture(self):
+        if self._body_texture is None:
+            self._body_texture = QPixmap(robot_texture_path + "tank_red_40.png")
+            if self.is_player:
+                self._body_texture = QPixmap(robot_texture_path + "tank_blue_40.png")
+            if self._body_texture.width() != self.size.x or self._body_texture.height() != self.size.y:
+                print("WARN: Robot texture size is not equal to robot (collider) size!")
+        return self._body_texture
+
     def draw(self, qp):
-        draw_img_with_rot(qp, self.body_texture, self.texture_size.x, self.texture_size.y, self.position, self.rotation)
+        draw_img_with_rot(qp, self.body_texture, self.size.x, self.size.y, self.position, self.rotation)
 
     def update(self, delta_time, curr_time):
         last_forward_velocity_goal = self.forward_velocity_goal

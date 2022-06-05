@@ -63,7 +63,11 @@
 				},
 				{
 					"tile": "hole",
-					"count": 2
+					"count": 1
+				},
+				{
+					"tile": "wall",
+					"count": 1
 				},
 				{
 					"tile": "ground",

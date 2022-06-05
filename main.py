@@ -1,13 +1,9 @@
 import sys
 
 from PyQt5.QtWidgets import QWidget, QApplication
-from enum import IntEnum
+from main_menu_scene import MainMenuScene
 from world_scene import WorldScene
-from constants import WINDOW_SIZE
-
-
-class Scene(IntEnum):
-    WORLD = 0
+from constants import Scene, WINDOW_SIZE
 
 
 class ArenaWindow(QWidget):
@@ -20,7 +16,7 @@ class ArenaWindow(QWidget):
 
         self.init_ui()
 
-        self.switch_scene(Scene.WORLD)
+        self.switch_scene(Scene.MAIN_MENU)
 
     def init_ui(self):
         self.setGeometry(0, 0, WINDOW_SIZE, WINDOW_SIZE)
@@ -37,11 +33,27 @@ class ArenaWindow(QWidget):
         if self.active_scene is not None:
             self.active_scene.keyReleaseEvent(event)
 
+    def mouseMoveEvent(self, event):
+        if self.active_scene is not None:
+            self.active_scene.mouseMoveEvent(event)
+
+    def mousePressEvent(self, event):
+        if self.active_scene is not None:
+            self.active_scene.mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        if self.active_scene is not None:
+            self.active_scene.mouseReleaseEvent(event)
+
     def switch_scene(self, scene):
         if self.active_scene is not None:
+            self.active_scene.clean_mem()
+            self.active_scene.hide()
             self.active_scene.deleteLater()
             self.active_scene = None
-        if scene == Scene.WORLD:
+        if scene == Scene.MAIN_MENU:
+            self.active_scene = MainMenuScene(self, WINDOW_SIZE)
+        elif scene == Scene.WORLD:
             self.active_scene = WorldScene(self, WINDOW_SIZE)
 
 

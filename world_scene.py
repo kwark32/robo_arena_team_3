@@ -1,6 +1,6 @@
 import time
 
-from PyQt5.QtGui import QPainter, QPixmap, QPolygon
+from PyQt5.QtGui import QPainter, QPixmap, QPolygon, QFont
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtCore import Qt, QPoint
 from robot import Robot
@@ -8,7 +8,7 @@ from json_interface import load_map
 from physics import PhysicsWorld
 from combat import Bullets
 from util import Vector, get_main_path, ns_to_s
-from constants import ARENA_SIZE, DEBUG_MODE
+from constants import Scene, ARENA_SIZE, DEBUG_MODE
 
 
 class WorldScene(QWidget):
@@ -31,7 +31,6 @@ class WorldScene(QWidget):
         self.world_start_time_ns = time.time_ns()
 
         self._last_frame_time_ns = time.time_ns()
-
         self._frames_since_last_show = 0
         self._last_fps_show_time = time.time_ns()
         self.fps = 0
@@ -41,6 +40,9 @@ class WorldScene(QWidget):
     def init_ui(self):
         self.setGeometry(0, 0, self.arena.size, self.arena.size)
         self.show()
+
+    def clean_mem(self):
+        Bullets.bullet_list.clear()
 
     def keyPressEvent(self, event):
         if self.player_input is None:
@@ -55,6 +57,10 @@ class WorldScene(QWidget):
             self.player_input.right = True
         elif event.key() == Qt.Key_Space:
             self.player_input.shoot = True
+        elif event.key() == Qt.Key_Escape:
+            self.parentWidget().switch_scene(Scene.MAIN_MENU)
+        else:
+            return
         event.accept()
 
     def keyReleaseEvent(self, event):
@@ -70,6 +76,8 @@ class WorldScene(QWidget):
             self.player_input.right = False
         elif event.key() == Qt.Key_Space:
             self.player_input.shoot = False
+        else:
+            return
         event.accept()
 
     def init_arena(self, size):
@@ -141,6 +149,7 @@ class WorldScene(QWidget):
             self.first = False
 
         qp = QPainter(self)
+        qp.setFont(QFont("sans serif", 12))
         qp.setPen(Qt.red)
 
         # draw static arena background

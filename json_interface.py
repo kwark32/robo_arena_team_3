@@ -3,7 +3,7 @@ try:
 except ImportError:
     import json
 
-from arena import Arena, TileType, tile_type_dict
+from arena import Arena, tile_type_dict
 from util import Vector
 from constants import ARENA_SIZE, MAP_FORMAT_VERSION
 

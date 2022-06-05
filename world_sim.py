@@ -35,16 +35,14 @@ class WorldSim:
         self.arena = load_map(map_path, size, physics_world=self.physics_world)
 
     def init_robots(self):
-        self.robots.append(Robot(is_player=True, position=Vector(500, 500), physics_world=self.physics_world))
-        self.robots.append(Robot(is_player=False, position=Vector(250, 250), physics_world=self.physics_world))
-        self.robots.append(Robot(is_player=False, position=Vector(250, 750), physics_world=self.physics_world))
-        self.robots.append(Robot(is_player=False, position=Vector(750, 250), physics_world=self.physics_world))
-        self.robots.append(Robot(is_player=False, position=Vector(750, 750), physics_world=self.physics_world))
+        player = Robot(is_player=True, has_ai=False, position=Vector(500, 500), physics_world=self.physics_world)
+        self.robots.append(player)
+        self.robots.append(Robot(position=Vector(250, 250), physics_world=self.physics_world))
+        self.robots.append(Robot(position=Vector(250, 750), physics_world=self.physics_world))
+        self.robots.append(Robot(position=Vector(750, 250), physics_world=self.physics_world))
+        self.robots.append(Robot(position=Vector(750, 750), physics_world=self.physics_world))
 
-        for robot in self.robots:
-            if robot.is_player:
-                self.player_input = robot.input
-                break
+        self.player_input = player.input
 
     def update_world(self):
         curr_time_ns = time.time_ns()

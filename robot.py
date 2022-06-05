@@ -8,13 +8,15 @@ robot_texture_path = get_main_path() + "/textures/moving/"
 
 
 class Robot:
-    def __init__(self, physics_world, is_player=False, health=1000, size=Vector(40, 40), position=Vector(0, 0), rotation=0,
+    def __init__(self, physics_world, is_player=False, has_ai=True, health=1000,
+                 size=Vector(40, 40), position=Vector(0, 0), rotation=0,
                  max_velocity=120, max_ang_velocity=4, max_accel=200, max_ang_accel=12):
 
         self.is_player = is_player
+        self.has_ai = has_ai
 
         self.input = None
-        if is_player:
+        if not has_ai:
             self.input = PlayerInput()
 
         self.size = size
@@ -76,7 +78,7 @@ class Robot:
         real_local_velocity.div(self.last_delta_time)
         real_local_velocity.rotate(-self.rotation)
 
-        if self.is_player:
+        if not self.has_ai:
             self.forward_velocity_goal = 0
             ang_velocity_goal = 0
             if self.input.up:

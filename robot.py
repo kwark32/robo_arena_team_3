@@ -37,6 +37,8 @@ class Robot:
         self.last_position = position
         self.last_delta_time = 1
 
+        self.forward_velocity_goal = 0
+
         texture_path = get_main_path() + "/textures/moving/"
         self.body_texture = QPixmap(texture_path + "tank_red_40.png")
         if is_player:
@@ -58,18 +60,20 @@ class Robot:
         draw_img_with_rot(qp, self.body_texture, self.texture_size.x, self.texture_size.y, self.position, self.rotation)
 
     def update(self, delta_time, curr_time):
+        last_forward_velocity_goal = self.forward_velocity_goal
+
         real_local_velocity = self.position.copy()
         real_local_velocity.sub(self.last_position)
         real_local_velocity.div(self.last_delta_time)
         real_local_velocity.rotate(-self.rotation)
 
         if self.is_player:
-            forward_velocity_goal = 0
+            self.forward_velocity_goal = 0
             ang_velocity_goal = 0
             if self.input.up:
-                forward_velocity_goal += 1
+                self.forward_velocity_goal += 1
             if self.input.down:
-                forward_velocity_goal -= 1
+                self.forward_velocity_goal -= 1
             if self.input.left:
                 ang_velocity_goal -= 1
             if self.input.right:
@@ -77,17 +81,15 @@ class Robot:
             if self.input.shoot:
                 self.weapon.shoot(curr_time, self, self.position, self.rotation)
 
-            if (forward_velocity_goal == 0
-                    or (forward_velocity_goal == 1
-                        and self.local_velocity.y < 0)
-                    or (forward_velocity_goal == -1
-                        and self.local_velocity.y > 0)):
+            if ((self.forward_velocity_goal == 0 and last_forward_velocity_goal != 0)
+                    or (self.forward_velocity_goal == 1 and self.local_velocity.y < 0)
+                    or (self.forward_velocity_goal == -1 and self.local_velocity.y > 0)):
                 self.local_velocity.y = real_local_velocity.y
 
-            forward_velocity_goal *= self.max_velocity
+            self.forward_velocity_goal *= self.max_velocity
             ang_velocity_goal *= self.max_ang_velocity
 
-            self.local_accel.y = forward_velocity_goal - self.local_velocity.y
+            self.local_accel.y = self.forward_velocity_goal - self.local_velocity.y
             self.local_accel.y /= delta_time
             self.ang_accel = ang_velocity_goal - self.ang_velocity
             self.ang_accel /= delta_time

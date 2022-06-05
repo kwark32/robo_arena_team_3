@@ -17,6 +17,10 @@ class Vector:
     def copy(self):
         return Vector(self.x, self.y)
 
+    def round(self):
+        self.x = round(self.x)
+        self.y = round(self.y)
+
     def add(self, other):
         self.x += other.x
         self.y += other.y
@@ -112,3 +116,7 @@ def limit_rot(value):
     while value < 0:
         value += math.tau
     return value
+
+
+def is_point_inside_rect(point, top_left, bottom_right):
+    return top_left.x <= point.x <= bottom_right.x and top_left.y <= point.y <= bottom_right.y

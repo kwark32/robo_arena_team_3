@@ -1,5 +1,4 @@
 from world_sim import WorldSim
-from combat import Bullets
 from constants import Scene, ARENA_SIZE, DEBUG_MODE
 from PyQt5.QtGui import QPainter, QPolygon, QFont
 from PyQt5.QtWidgets import QWidget
@@ -68,7 +67,7 @@ class WorldScene(QWidget):
 
         self.world_sim.arena.draw(qp)
 
-        for bullet in Bullets.bullet_list:
+        for bullet in self.world_sim.bullets:
             bullet.draw(qp)
 
         for robot in self.world_sim.robots:

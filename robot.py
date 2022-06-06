@@ -1,14 +1,16 @@
-from PyQt5.QtGui import QPixmap
 from weapons import TankCannon
 from util import Vector, limit, get_main_path, draw_img_with_rot, limit_rot
-from constants import ARENA_SIZE
+from constants import GameInfo, ARENA_SIZE
+
+if not GameInfo.is_headless:
+    from PyQt5.QtGui import QPixmap
 
 
 robot_texture_path = get_main_path() + "/textures/moving/"
 
 
 class Robot:
-    def __init__(self, physics_world, is_player=False, has_ai=True, health=1000,
+    def __init__(self, world_sim, is_player=False, has_ai=True, health=1000,
                  size=Vector(40, 40), position=Vector(0, 0), rotation=0,
                  max_velocity=120, max_ang_velocity=4, max_accel=200, max_ang_accel=12):
 
@@ -47,12 +49,13 @@ class Robot:
         self._body_texture = None
         self._texture_size = None
 
-        self.physics_world = physics_world
+        self.world_sim = world_sim
+        self.physics_world = world_sim.physics_world
 
-        self.physics_body = physics_world.add_rect(position, self.size.x, self.size.y,
-                                                   rotation=-rotation, static=False, user_data=self)
+        self.physics_body = self.physics_world.add_rect(position, self.size.x, self.size.y,
+                                                        rotation=-rotation, static=False, user_data=self)
 
-        self.weapon = TankCannon(self.physics_world)
+        self.weapon = TankCannon(self.world_sim)
 
         self.health = int(health)
         self.is_dead = False

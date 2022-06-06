@@ -86,6 +86,14 @@ def ns_to_s(ns):
     return (round(ns) >> 10) / 976562.5  # shift to ~us, then float division
 
 
+def s_to_ns(s):
+    return round(s * 976562.5) << 10  # float multiply to ~us, then shift to ns
+
+
+def get_delta_time_s(now_ns, last_ns):
+    return ns_to_s(now_ns - last_ns)
+
+
 def limit(value, lower, upper):
     if value < lower:
         value = lower

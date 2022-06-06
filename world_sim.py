@@ -3,18 +3,18 @@ import time
 from robot import Robot
 from json_interface import load_map
 from physics import PhysicsWorld
-from combat import Bullets
-from util import Vector, get_main_path, ns_to_s
-from constants import ARENA_SIZE
+from util import Vector, get_main_path, get_delta_time_s
+from constants import ARENA_SIZE, FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_FIXED_TIMESTEPS
 
 
 class WorldSim:
     def __init__(self):
-        Bullets.robot_class = Robot
+        self.robot_class = Robot
 
         self.physics_world = PhysicsWorld()
         self.arena = None
         self.robots = []
+        self.bullets = []
         self.player_input = None
 
         self.init_arena(ARENA_SIZE)
@@ -22,51 +22,41 @@ class WorldSim:
 
         self.world_start_time_ns = time.time_ns()
 
-        self._last_frame_time_ns = time.time_ns()
+        self._last_fixed_update_ns = self.world_start_time_ns
+
+        self._last_frame_time_ns = self.world_start_time_ns
         self._frames_since_last_show = 0
-        self._last_fps_show_time = time.time_ns()
+        self._last_fps_show_time = self.world_start_time_ns
         self.fps = 0
 
     def clean_mem(self):
-        Bullets.bullet_list.clear()
+        pass
 
     def init_arena(self, size):
         map_path = get_main_path() + "/test_map.json"
         self.arena = load_map(map_path, size, physics_world=self.physics_world)
 
     def init_robots(self):
-        player = Robot(is_player=True, has_ai=False, position=Vector(500, 500), physics_world=self.physics_world)
+        player = Robot(is_player=True, has_ai=False, position=Vector(500, 500), world_sim=self)
         self.robots.append(player)
-        self.robots.append(Robot(position=Vector(250, 250), physics_world=self.physics_world))
-        self.robots.append(Robot(position=Vector(250, 750), physics_world=self.physics_world))
-        self.robots.append(Robot(position=Vector(750, 250), physics_world=self.physics_world))
-        self.robots.append(Robot(position=Vector(750, 750), physics_world=self.physics_world))
+        self.robots.append(Robot(position=Vector(250, 250), world_sim=self))
+        self.robots.append(Robot(position=Vector(250, 750), world_sim=self))
+        self.robots.append(Robot(position=Vector(750, 250), world_sim=self))
+        self.robots.append(Robot(position=Vector(750, 750), world_sim=self))
 
         self.player_input = player.input
 
-    def update_world(self):
-        curr_time_ns = time.time_ns()
-        delta_time = ns_to_s(curr_time_ns - self._last_frame_time_ns)
-        curr_world_time = ns_to_s(curr_time_ns - self.world_start_time_ns)
-        self._last_frame_time_ns = curr_time_ns
-
-        self._frames_since_last_show += 1
-        last_fps_show_delta = ns_to_s(curr_time_ns - self._last_fps_show_time)
-        if last_fps_show_delta > 0.5:
-            self.fps = self._frames_since_last_show / last_fps_show_delta
-            self._frames_since_last_show = 0
-            self._last_fps_show_time = curr_time_ns
-
+    def fixed_update(self, delta_time, curr_world_time):
         dead_bullets = []
-        for bullet in Bullets.bullet_list:
+        for bullet in self.bullets:
             if bullet.to_destroy:
                 dead_bullets.append(bullet)
         for dead in dead_bullets:
             dead.physics_world.world.DestroyBody(dead.physics_body)
-            Bullets.bullet_list.remove(dead)
+            self.bullets.remove(dead)
         dead_bullets.clear()
 
-        for bullet in Bullets.bullet_list:
+        for bullet in self.bullets:
             bullet.update(delta_time)
 
         dead_robots = []
@@ -81,8 +71,27 @@ class WorldSim:
         for robot in self.robots:
             robot.update(delta_time, curr_world_time)
 
-        # maybe delta_time instead of 0.016 (~1/60th s)
-        self.physics_world.world.Step(0.016, 0, 4)
+        self.physics_world.world.Step(delta_time, 0, 4)
 
         for robot in self.robots:
             robot.refresh_from_physics()
+
+    def update_world(self):
+        curr_time_ns = time.time_ns()
+        delta_time = get_delta_time_s(curr_time_ns, self._last_frame_time_ns)
+        curr_world_time = get_delta_time_s(curr_time_ns, self.world_start_time_ns)
+        self._last_frame_time_ns = curr_time_ns
+
+        for i in range(MAX_FIXED_TIMESTEPS):
+            last_fixed_timestep_delta_time_ns = curr_time_ns - self._last_fixed_update_ns
+            if last_fixed_timestep_delta_time_ns < FIXED_DELTA_TIME_NS:
+                break
+            self.fixed_update(FIXED_DELTA_TIME, curr_world_time)
+            self._last_fixed_update_ns += FIXED_DELTA_TIME_NS
+
+        self._frames_since_last_show += 1
+        last_fps_show_delta = get_delta_time_s(curr_time_ns, self._last_fps_show_time)
+        if last_fps_show_delta > 0.5:
+            self.fps = self._frames_since_last_show / last_fps_show_delta
+            self._frames_since_last_show = 0
+            self._last_fps_show_time = curr_time_ns

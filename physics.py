@@ -1,5 +1,6 @@
 from Box2D import b2World, b2ContactListener, b2PolygonShape
-from combat import Bullet, hit_shell
+from combat import hit_shell
+from weapons import Bullet
 
 
 class ContactListener(b2ContactListener):

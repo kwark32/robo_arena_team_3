@@ -1,21 +1,21 @@
 import sys
 
-from world_scene import WorldScene
-from world_sim import WorldSim
-from constants import Scene, WINDOW_SIZE
+from constants import GameInfo
 
-is_headless = False
 headless_args = []
 for arg in sys.argv:
     if arg == "--headless":
         headless_args.append(arg)
-        is_headless = True
+        GameInfo.is_headless = True
 for arg in headless_args:
     sys.argv.remove(arg)
 headless_args.clear()
 
-if not is_headless:
+if not GameInfo.is_headless:
+    from constants import Scene, WINDOW_SIZE
+    from world_sim import WorldSim
     from main_menu_scene import MainMenuScene
+    from world_scene import WorldScene
     from PyQt5.QtWidgets import QWidget, QApplication
 
     class ArenaWindow(QWidget):
@@ -68,9 +68,12 @@ if not is_headless:
             elif scene == Scene.WORLD:
                 self.active_scene = WorldScene(self, WINDOW_SIZE)
 
+else:
+    from world_sim import WorldSim
+
 
 def main():
-    if not is_headless:
+    if not GameInfo.is_headless:
         app = QApplication(sys.argv)
         window = ArenaWindow()
         window.setWindowTitle("Robo Arena")

@@ -35,6 +35,7 @@ class WorldScene(QWidget):
             self.world_sim.player_input.right = True
         elif event.key() == Qt.Key_Space:
             self.world_sim.player_input.shoot = True
+            self.world_sim.player_input.shoot_pressed = True
         elif event.key() == Qt.Key_Escape:
             self.parentWidget().switch_scene(Scene.MAIN_MENU)
         else:
@@ -67,11 +68,13 @@ class WorldScene(QWidget):
 
         self.world_sim.arena.draw(qp)
 
+        # TODO: Maybe use less delta_time, if physics can't keep up, to still extrapolate correctly
+
         for bullet in self.world_sim.bullets:
-            bullet.draw(qp)
+            bullet.draw(qp, self.world_sim.extrapolation_delta_time)
 
         for robot in self.world_sim.robots:
-            robot.draw(qp)
+            robot.draw(qp, self.world_sim.extrapolation_delta_time)
 
         # debugging physics shapes
         if DEBUG_MODE:

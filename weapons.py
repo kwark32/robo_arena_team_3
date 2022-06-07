@@ -1,3 +1,4 @@
+from transform import SimpleBody
 from util import Vector, get_main_path, draw_img_with_rot, limit_rot
 from constants import GameInfo, ARENA_SIZE
 
@@ -19,20 +20,25 @@ class Bullet:
 
         self.size = self.bullet_type.size
 
-        self.position = Vector(0, round(self.size.y / 2))
-        self.position.rotate(rotation)
-        self.position.add(position)
-        self.rotation = limit_rot(rotation)
+        rotation = limit_rot(rotation)
+        pos = Vector(0, round(self.size.y / 2))
+        pos.rotate(rotation)
+        pos.add(position)
 
         self.speed = self.bullet_type.speed
         self.damage = self.bullet_type.damage
+
+        self.sim_body = SimpleBody(position=pos, rotation=rotation)
+        self.sim_body.local_velocity.y = self.speed
+        self.extrapolation_body = self.sim_body.copy()
 
         self.to_destroy = False
 
         self.world_sim = world_sim
         self.physics_world = world_sim.physics_world
 
-        self.physics_body = self.physics_world.add_rect(self.position, self.size.x, self.size.y,
+        # TODO: Bullets should sweep collision with other dynamic bodies too, or similar
+        self.physics_body = self.physics_world.add_rect(self.sim_body.position, self.size.x, self.size.y,
                                                         rotation=-rotation, static=False, sensor=True, user_data=self)
 
         self.world_sim.bullets.append(self)
@@ -56,15 +62,16 @@ class Bullet:
         self.apply_effect(robot)
 
     def update(self, delta_time):
-        movement = Vector(0, self.bullet_type.speed)
-        movement.rotate(self.rotation)
-        movement.mult(delta_time)
-        self.position.add(movement)
-        self.physics_body.transform = ((self.position.x, ARENA_SIZE - self.position.y), -self.rotation)
+        self.sim_body.step(delta_time)
+        if not GameInfo.is_headless:
+            self.extrapolation_body.set(self.sim_body)
+        self.physics_body.transform = ((self.sim_body.position.x, ARENA_SIZE - self.sim_body.position.y),
+                                       -self.sim_body.rotation)
 
-    def draw(self, qp):
+    def draw(self, qp, delta_time):
+        self.extrapolation_body.step(delta_time)
         draw_img_with_rot(qp, self.type_texture, self.size.x, self.size.y,
-                          self.position, self.rotation)
+                          self.extrapolation_body.position, self.extrapolation_body.rotation)
 
 
 # base class

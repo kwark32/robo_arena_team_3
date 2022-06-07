@@ -3,7 +3,7 @@ import time
 from robot import Robot
 from json_interface import load_map
 from physics import PhysicsWorld
-from util import Vector, get_main_path, get_delta_time_s
+from util import Vector, get_main_path, get_delta_time_s, ns_to_s
 from constants import ARENA_SIZE, FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_FIXED_TIMESTEPS
 
 
@@ -20,11 +20,12 @@ class WorldSim:
         self.init_arena(ARENA_SIZE)
         self.init_robots()
 
+        self.physics_world_time_ns = 0
         self.world_start_time_ns = time.time_ns()
+        self.curr_world_time_ns = 0
+        self.delta_time = 0
+        self.extrapolation_delta_time = 0
 
-        self._last_fixed_update_ns = self.world_start_time_ns
-
-        self._last_frame_time_ns = self.world_start_time_ns
         self._frames_since_last_show = 0
         self._last_fps_show_time = self.world_start_time_ns
         self.fps = 0
@@ -77,17 +78,19 @@ class WorldSim:
             robot.refresh_from_physics()
 
     def update_world(self):
+        last_world_time_ns = self.curr_world_time_ns
         curr_time_ns = time.time_ns()
-        delta_time = get_delta_time_s(curr_time_ns, self._last_frame_time_ns)
-        curr_world_time = get_delta_time_s(curr_time_ns, self.world_start_time_ns)
-        self._last_frame_time_ns = curr_time_ns
+        self.curr_world_time_ns = curr_time_ns - self.world_start_time_ns
+        self.delta_time = get_delta_time_s(self.curr_world_time_ns, last_world_time_ns)
+        self.extrapolation_delta_time = self.delta_time
 
         for i in range(MAX_FIXED_TIMESTEPS):
-            last_fixed_timestep_delta_time_ns = curr_time_ns - self._last_fixed_update_ns
+            last_fixed_timestep_delta_time_ns = self.curr_world_time_ns - self.physics_world_time_ns
             if last_fixed_timestep_delta_time_ns < FIXED_DELTA_TIME_NS:
                 break
-            self.fixed_update(FIXED_DELTA_TIME, curr_world_time)
-            self._last_fixed_update_ns += FIXED_DELTA_TIME_NS
+            self.fixed_update(FIXED_DELTA_TIME, ns_to_s(self.physics_world_time_ns))
+            self.physics_world_time_ns += FIXED_DELTA_TIME_NS
+            self.extrapolation_delta_time = 0
 
         self._frames_since_last_show += 1
         last_fps_show_delta = get_delta_time_s(curr_time_ns, self._last_fps_show_time)

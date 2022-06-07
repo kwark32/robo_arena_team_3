@@ -11,9 +11,16 @@ robot_texture_path = get_main_path() + "/textures/moving/"
 
 
 class Robot:
-    def __init__(self, world_sim, is_player=False, has_ai=True, health=1000,
+    next_id = 0
+
+    def __init__(self, world_sim, robot_id=-1, is_player=False, has_ai=True, health=1000,
                  size=Vector(40, 40), position=Vector(0, 0), rotation=0,
                  max_velocity=120, max_ang_velocity=4, max_accel=200, max_ang_accel=12):
+
+        self.robot_id = robot_id
+        if robot_id == -1:
+            self.robot_id = Robot.next_id
+            Robot.next_id += 1
 
         self.sim_body = SimBody(position=position, rotation=rotation, max_velocity=max_velocity,
                                 max_ang_velocity=max_ang_velocity, max_accel=max_accel, max_ang_accel=max_ang_accel)

@@ -4,12 +4,15 @@ from robot import Robot
 from json_interface import load_map
 from physics import PhysicsWorld
 from util import Vector, get_main_path, get_delta_time_s, ns_to_s
+from networking import UDPClient, UDPServer, RobotInfo, BulletInfo, Packet
 from constants import ARENA_SIZE, FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_FIXED_TIMESTEPS
 
 
 class WorldSim:
     def __init__(self):
         self.robot_class = Robot
+
+        self.player_id = -1
 
         self.physics_world = PhysicsWorld()
         self.arena = None
@@ -18,6 +21,8 @@ class WorldSim:
         self.player_input = None
 
         self.init_arena(ARENA_SIZE)
+
+        self.physics_frame_count = 0
 
         self.physics_world_time_ns = 0
         self.world_start_time_ns = time.time_ns()
@@ -36,16 +41,13 @@ class WorldSim:
         map_path = get_main_path() + "/test_map.json"
         self.arena = load_map(map_path, size, physics_world=self.physics_world)
 
-    def init_player(self, position=Vector(500, 500)):
-        player = Robot(is_player=True, has_ai=False, position=Vector(500, 500), world_sim=self)
+    def create_player(self, robot_id=-1, position=Vector(ARENA_SIZE / 2, ARENA_SIZE / 2)):
+        player = Robot(self, robot_id=robot_id, is_player=True, has_ai=False, position=Vector(500, 500))
         self.robots.append(player)
         return player
 
-    def init_ai_robots(self):
-        self.robots.append(Robot(position=Vector(250, 250), world_sim=self))
-        self.robots.append(Robot(position=Vector(250, 750), world_sim=self))
-        self.robots.append(Robot(position=Vector(750, 250), world_sim=self))
-        self.robots.append(Robot(position=Vector(750, 750), world_sim=self))
+    def create_enemy_robot(self, robot_id=-1, position=Vector(ARENA_SIZE / 2, ARENA_SIZE / 2), has_ai=True):
+        self.robots.append(Robot(self, robot_id=robot_id, has_ai=has_ai, position=position))
 
     def fixed_update(self, delta_time, curr_world_time):
         dead_bullets = []
@@ -89,6 +91,7 @@ class WorldSim:
             if last_fixed_timestep_delta_time_ns < FIXED_DELTA_TIME_NS:
                 break
             self.fixed_update(FIXED_DELTA_TIME, ns_to_s(self.physics_world_time_ns))
+            self.physics_frame_count += 1
             self.physics_world_time_ns += FIXED_DELTA_TIME_NS
             self.extrapolation_delta_time = 0
 
@@ -104,16 +107,28 @@ class SPWorldSim(WorldSim):
     def __init__(self):
         super().__init__()
 
-        self.player = self.init_player()
+        self.player = self.create_player()
         self.player_input = self.player.input
-        self.init_ai_robots()
+        self.create_enemy_robot(position=Vector(250, 250))
+        self.create_enemy_robot(position=Vector(250, 750))
+        self.create_enemy_robot(position=Vector(750, 250))
+        self.create_enemy_robot(position=Vector(750, 750))
 
 
 class OnlineWorldSim(WorldSim):
     def __init__(self):
         super().__init__()
 
+        self.udp_socket = UDPClient()
+
+    def fixed_update(self, delta_time, curr_world_time):
+        pass
+
+        super().fixed_update(delta_time, curr_world_time)
+
 
 class ServerWorldSim(WorldSim):
     def __init__(self):
         super().__init__()
+
+        self.udp_socket = UDPServer()

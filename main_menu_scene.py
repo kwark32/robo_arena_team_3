@@ -134,8 +134,8 @@ class MainMenuScene(QWidget):
 
         self.buttons.append(ExitButton(self.parentWidget(), Vector(self.size / 2, 800)))
         self.buttons.append(SingleplayerButton(self.parentWidget(), Vector(self.size / 2, 350)))
-        self.buttons.append(LocalMultiplayerButton(self.parentWidget(), Vector(self.size / 2, 500)))
-        self.buttons.append(OnlineMultiplayerButton(self.parentWidget(), Vector(self.size / 2, 600)))
+        self.buttons.append(OnlineMultiplayerButton(self.parentWidget(), Vector(self.size / 2, 500)))
+        self.buttons.append(LocalMultiplayerButton(self.parentWidget(), Vector(self.size / 2, 600)))
 
         self.show()
 

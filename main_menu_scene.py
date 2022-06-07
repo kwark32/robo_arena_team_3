@@ -90,7 +90,7 @@ class SingleplayerButton(Button):
     name = "singleplayer"
 
     def click(self):
-        self.main_widget.switch_scene(Scene.WORLD)
+        self.main_widget.switch_scene(Scene.SP_WORLD)
 
 
 class LocalMultiplayerButton(Button):
@@ -104,7 +104,7 @@ class OnlineMultiplayerButton(Button):
     name = "online_multiplayer"
 
     def click(self):
-        print("Online multiplayer button clicked!")
+        self.main_widget.switch_scene(Scene.ONLINE_WORLD)
 
 
 class MainMenuScene(QWidget):

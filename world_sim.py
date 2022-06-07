@@ -18,7 +18,6 @@ class WorldSim:
         self.player_input = None
 
         self.init_arena(ARENA_SIZE)
-        self.init_robots()
 
         self.physics_world_time_ns = 0
         self.world_start_time_ns = time.time_ns()
@@ -37,15 +36,16 @@ class WorldSim:
         map_path = get_main_path() + "/test_map.json"
         self.arena = load_map(map_path, size, physics_world=self.physics_world)
 
-    def init_robots(self):
+    def init_player(self, position=Vector(500, 500)):
         player = Robot(is_player=True, has_ai=False, position=Vector(500, 500), world_sim=self)
         self.robots.append(player)
+        return player
+
+    def init_ai_robots(self):
         self.robots.append(Robot(position=Vector(250, 250), world_sim=self))
         self.robots.append(Robot(position=Vector(250, 750), world_sim=self))
         self.robots.append(Robot(position=Vector(750, 250), world_sim=self))
         self.robots.append(Robot(position=Vector(750, 750), world_sim=self))
-
-        self.player_input = player.input
 
     def fixed_update(self, delta_time, curr_world_time):
         dead_bullets = []
@@ -98,3 +98,22 @@ class WorldSim:
             self.fps = self._frames_since_last_show / last_fps_show_delta
             self._frames_since_last_show = 0
             self._last_fps_show_time = curr_time_ns
+
+
+class SPWorldSim(WorldSim):
+    def __init__(self):
+        super().__init__()
+
+        self.player = self.init_player()
+        self.player_input = self.player.input
+        self.init_ai_robots()
+
+
+class OnlineWorldSim(WorldSim):
+    def __init__(self):
+        super().__init__()
+
+
+class ServerWorldSim(WorldSim):
+    def __init__(self):
+        super().__init__()

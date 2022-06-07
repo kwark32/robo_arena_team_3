@@ -13,9 +13,9 @@ headless_args.clear()
 
 if not GameInfo.is_headless:
     from constants import Scene, WINDOW_SIZE
-    from world_sim import WorldSim
+    from world_sim import SPWorldSim, OnlineWorldSim
     from main_menu_scene import MainMenuScene
-    from world_scene import WorldScene
+    from world_scene import SPWorldScene, OnlineWorldScene
     from PyQt5.QtWidgets import QWidget, QApplication
 
     class ArenaWindow(QWidget):
@@ -65,11 +65,13 @@ if not GameInfo.is_headless:
                 self.active_scene = None
             if scene == Scene.MAIN_MENU:
                 self.active_scene = MainMenuScene(self, WINDOW_SIZE)
-            elif scene == Scene.WORLD:
-                self.active_scene = WorldScene(self, WINDOW_SIZE)
+            elif scene == Scene.SP_WORLD:
+                self.active_scene = SPWorldScene(self, WINDOW_SIZE)
+            elif scene == Scene.ONLINE_WORLD:
+                self.active_scene = OnlineWorldScene(self, WINDOW_SIZE)
 
 else:
-    from world_sim import WorldSim
+    from world_sim import ServerWorldSim
 
 
 def main():
@@ -86,7 +88,7 @@ def main():
         sys.exit(0)
 
     else:
-        world_sim = WorldSim()
+        world_sim = ServerWorldSim()
         while True:
             world_sim.update_world()
 

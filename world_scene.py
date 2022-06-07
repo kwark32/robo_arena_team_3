@@ -1,4 +1,4 @@
-from world_sim import WorldSim
+from world_sim import SPWorldSim, OnlineWorldSim
 from constants import Scene, ARENA_SIZE, DEBUG_MODE
 from PyQt5.QtGui import QPainter, QPolygon, QFont
 from PyQt5.QtWidgets import QWidget
@@ -6,12 +6,12 @@ from PyQt5.QtCore import Qt, QPoint
 
 
 class WorldScene(QWidget):
-    def __init__(self, parent, size):
+    def __init__(self, parent, size, sim_class):
         super().__init__(parent)
 
         self.size = size
 
-        self.world_sim = WorldSim()
+        self.world_sim = sim_class()
 
         self.init_ui()
 
@@ -91,3 +91,13 @@ class WorldScene(QWidget):
         qp.drawText(QPoint(5, 20), str(round(self.world_sim.fps)))
 
         qp.end()
+
+
+class SPWorldScene(WorldScene):
+    def __init__(self, parent, size):
+        super().__init__(parent, size, SPWorldSim)
+
+
+class OnlineWorldScene(WorldScene):
+    def __init__(self, parent, size):
+        super().__init__(parent, size, OnlineWorldSim)

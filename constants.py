@@ -3,8 +3,9 @@ from enum import IntEnum
 
 
 class Scene(IntEnum):
-    WORLD = 0
-    MAIN_MENU = 1
+    MAIN_MENU = 0
+    SP_WORLD = 1
+    ONLINE_WORLD = 2
 
 
 class GameInfo:

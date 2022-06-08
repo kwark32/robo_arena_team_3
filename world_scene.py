@@ -68,11 +68,9 @@ class WorldScene(QWidget):
 
         self.world_sim.arena.draw(qp)
 
-        # TODO: Maybe use less delta_time, if physics can't keep up, to still extrapolate correctly
-
+        # TODO: Maybe use less delta_time if physics can't keep up, to still extrapolate correctly
         for bullet in self.world_sim.bullets:
             bullet.draw(qp, self.world_sim.extrapolation_delta_time)
-
         for robot in self.world_sim.robots:
             robot.draw(qp, self.world_sim.extrapolation_delta_time)
 

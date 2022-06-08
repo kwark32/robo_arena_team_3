@@ -119,8 +119,7 @@ class SimBody:
         self.position = pos_change
 
         rot_change = rot_change_from_velocity_accel(delta_time, self.ang_velocity, self.ang_accel,
-                                                    self.max_ang_velocity, self.max_ang_accel,
-                                                    body=self)
+                                                    self.max_ang_velocity, self.max_ang_accel, body=self)
 
         new_rot = self.rotation + rot_change
         new_rot = limit_rot(new_rot)

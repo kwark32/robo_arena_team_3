@@ -3,8 +3,6 @@ import socket
 import select
 import pickle
 
-from util import Vector
-
 
 server_ip = "127.0.0.1"
 port = 54345
@@ -12,29 +10,24 @@ server_ip_port = server_ip, port
 buffer_size = 4096
 
 
-def byte_address_to_str(address):
-    return str(address[0]) + "." + str(address[1]) + "." + str(address[2]) + "." + str(address[3])
-
-
 class RobotInfo:
-    def __init__(self, robot_body, health, player_id, player_name="Player", weapon_class=None,
-                 last_shot_frame=0,last_position=Vector(0, 0), forward_velocity_goal=0):
-        self.robot_body = robot_body
-        self.player_id = player_id
-        self.health = health
-        self.weapon_class = weapon_class
-        self.last_shot_frame = last_shot_frame
-        self.player_name = player_name
-        self.last_position = last_position
-        self.forward_velocity_goal = forward_velocity_goal
+    def __init__(self, robot):
+        self.robot_body = robot.sim_body
+        self.player_id = robot.robot_id
+        self.health = robot.health
+        self.weapon_class = robot.weapon.weapon_type
+        self.last_shot_frame = robot.weapon.last_shot_frame
+        self.player_name = robot.player_name
+        self.last_position = robot.last_position
+        self.forward_velocity_goal = robot.forward_velocity_goal
 
 
 class BulletInfo:
-    def __init__(self, bullet_id, bullet_body, bullet_class, from_player_id=0):
-        self.bullet_id = bullet_id
-        self.bullet_body = bullet_body
-        self.bullet_class = bullet_class
-        self.from_player_id = from_player_id
+    def __init__(self, bullet):
+        self.bullet_id = bullet.bullet_id
+        self.bullet_body = bullet.sim_body
+        self.bullet_class = bullet.bullet_type
+        self.from_player_id = bullet.source_id
 
 
 class Packet:
@@ -45,8 +38,9 @@ class Packet:
 
 
 class StatePacket(Packet):
-    def __init__(self, creation_time=0, physics_frame=0, player_id=0, robots=None, bullets=None):
+    def __init__(self, creation_time=0, world_start_time=0, physics_frame=0, player_id=0, robots=None, bullets=None):
         super().__init__(creation_time=creation_time)
+        self.world_start_time = world_start_time
         self.physics_frame = physics_frame
         self.player_id = player_id
         self.robots = robots
@@ -62,12 +56,18 @@ class ClientPacket(Packet):
         super().__init__(creation_time=creation_time)
         self.player_input = player_input
         self.player_name = player_name
+        self.disconnect = False
 
 
 class Client:
-    def __init__(self, address, player_id, player_name="Player"):
+    next_player_id = 0
+
+    def __init__(self, address, player_id=-1, player_name="Player"):
         self.address = address
         self.player_id = player_id
+        if player_id == -1:
+            self.player_id = Client.next_player_id
+            Client.next_player_id += 1
         self.player_name = player_name
         self.last_rx_packet = None
 
@@ -75,10 +75,10 @@ class Client:
 class UDPSocket:
     def __init__(self):
         self.udp_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
-        self.udp_socket_list = [self.udp_socket]
+        self._udp_socket_list = [self.udp_socket]
 
     def get_packet_available(self):
-        read_sockets, write_sockets, error_sockets = select.select(self.udp_socket_list, [], [], 0)
+        read_sockets, write_sockets, error_sockets = select.select(self._udp_socket_list, [], [], 0)
         return len(read_sockets) > 0
 
     def get_packet(self):
@@ -102,13 +102,15 @@ class UDPServer(UDPSocket):
         self.udp_socket.bind((server_ip, port))
         self.clients = {}  # client dict: address (str) -> client
 
-    def get_packet(self):
-        client_address, client_packet = super().get_packet()
-        if client_address is None:
-            return None, None
-        str_address = byte_address_to_str(client_address)
-        client = self.clients[str_address]
-        return client, client_packet
+    def get_client_packets(self):
+        while self.get_packet_available():
+            address, packet = self.get_packet()
+            client = self.clients.get(address)
+            if client is None or packet.disconnect:
+                client = Client(address)
+                self.clients[address] = client
+            if client.last_rx_packet is None or packet.creation_time >= client.last_rx_packet.creation_time:
+                client.last_rx_packet = packet
 
     def send_packet(self, client, state_packet):
         super().send_packet(client.address, state_packet)

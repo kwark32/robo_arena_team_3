@@ -16,6 +16,7 @@ def set_bullet_values(bullet, bullet_info):
     bullet.source_id = bullet_info.from_player_id
 
 
+# TODO: Multiplayer bullets have problems... maybe combine robot and bullet id range or something
 # base class
 class Bullet:
     next_id = 0

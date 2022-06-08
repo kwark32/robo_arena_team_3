@@ -16,7 +16,7 @@ def set_robot_values(robot, robot_info):
     robot.sim_body = robot_info.robot_body
     robot.extrapolation_body = robot_info.robot_body
     robot.health = robot_info.health
-    if type(robot.weapon) is not robot_info.weapon_class:
+    if robot.weapon is None or robot.weapon.weapon_type is not robot_info.weapon_class:
         robot.weapon = robot_info.weapon_class()
     robot.weapon.last_shot_frame = robot_info.last_shot_frame
     robot.last_position = robot_info.last_position
@@ -83,7 +83,7 @@ class Robot:
                           self.extrapolation_body.position, self.extrapolation_body.rotation)
 
     def update(self, delta_time):
-        last_forward_velocity_goal = self.forward_velocity_goal
+        # last_forward_velocity_goal = self.forward_velocity_goal
 
         self.real_velocity = self.sim_body.position.copy()
         self.real_velocity.sub(self.last_position)

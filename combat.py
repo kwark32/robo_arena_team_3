@@ -12,7 +12,7 @@ def hit_shell(data_a, data_b):
         bullet = data_b
         other = data_a
     if isinstance(other, Robot):
-        if other is bullet.source:
+        if other.robot_id == bullet.source_id:
             return
         other_is_robot = True
     elif isinstance(other, Bullet):

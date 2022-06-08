@@ -3,6 +3,8 @@ import socket
 import select
 import pickle
 
+from util import Vector
+
 
 server_ip = "127.0.0.1"
 port = 54345
@@ -15,14 +17,21 @@ def byte_address_to_str(address):
 
 
 class RobotInfo:
-    def __init__(self, robot_body, player_id=0, player_name="Player"):
+    def __init__(self, robot_body, health, player_id, player_name="Player", weapon_class=None,
+                 last_shot_frame=0,last_position=Vector(0, 0), forward_velocity_goal=0):
         self.robot_body = robot_body
         self.player_id = player_id
+        self.health = health
+        self.weapon_class = weapon_class
+        self.last_shot_frame = last_shot_frame
         self.player_name = player_name
+        self.last_position = last_position
+        self.forward_velocity_goal = forward_velocity_goal
 
 
 class BulletInfo:
-    def __init__(self, bullet_body, bullet_class, from_player_id=0):
+    def __init__(self, bullet_id, bullet_body, bullet_class, from_player_id=0):
+        self.bullet_id = bullet_id
         self.bullet_body = bullet_body
         self.bullet_class = bullet_class
         self.from_player_id = from_player_id
@@ -34,23 +43,25 @@ class Packet:
         if self.creation_time == 0:
             self.creation_time = time.time_ns()
 
-    class StatePacket:
-        def __init__(self, creation_time=0, physics_frame=0, player_id=0, robots=None, bullets=None):
-            super().__init__(creation_time=creation_time)
-            self.physics_frame = physics_frame
-            self.player_id = player_id
-            self.robots = robots
-            if self.robots is None:
-                self.robots = []
-            self.bullets = bullets
-            if self.bullets is None:
-                self.bullets = []
 
-    class ClientPacket:
-        def __init__(self, creation_time=0, player_input=None, player_name="Player"):
-            super().__init__(creation_time=creation_time)
-            self.player_input = player_input
-            self.player_name = player_name
+class StatePacket(Packet):
+    def __init__(self, creation_time=0, physics_frame=0, player_id=0, robots=None, bullets=None):
+        super().__init__(creation_time=creation_time)
+        self.physics_frame = physics_frame
+        self.player_id = player_id
+        self.robots = robots
+        if self.robots is None:
+            self.robots = []
+        self.bullets = bullets
+        if self.bullets is None:
+            self.bullets = []
+
+
+class ClientPacket(Packet):
+    def __init__(self, creation_time=0, player_input=None, player_name="Player"):
+        super().__init__(creation_time=creation_time)
+        self.player_input = player_input
+        self.player_name = player_name
 
 
 class Client:
@@ -111,5 +122,5 @@ class UDPClient(UDPSocket):
         server_address, state_packet = super().get_packet()
         return state_packet
 
-    def send_packet(self, client, client_packet):
+    def send_packet(self, server, client_packet):
         super().send_packet(server_ip_port, client_packet)

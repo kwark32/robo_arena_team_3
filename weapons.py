@@ -1,6 +1,6 @@
 from transform import SimpleBody
 from util import Vector, get_main_path, draw_img_with_rot, limit_rot
-from constants import GameInfo, ARENA_SIZE
+from constants import GameInfo, ARENA_SIZE, FIXED_FPS
 
 if not GameInfo.is_headless:
     from PyQt5.QtGui import QPixmap
@@ -9,14 +9,28 @@ if not GameInfo.is_headless:
 bullet_texture_path = get_main_path() + "/textures/moving/bullets/"
 
 
+def set_bullet_values(bullet, bullet_info):
+    bullet.bullet_id = bullet_info.bullet_id
+    bullet.sim_body = bullet_info.bullet_body
+    bullet.bullet_type = bullet_info.bullet_class
+    bullet.source_id = bullet_info.from_player_id
+
+
 # base class
 class Bullet:
-    def __init__(self, source, position, rotation, world_sim):
+    next_id = 0
+
+    def __init__(self, world_sim, source_id=-1, position=Vector(0, 0), rotation=0, bullet_id=-1):
         self.bullet_type = type(self)
         if self.bullet_type is Bullet:
             print("ERROR: Bullet base class should not be instantiated!")
 
-        self.source = source
+        self.bullet_id = bullet_id
+        if bullet_id == -1:
+            self.bullet_id = Bullet.next_id
+            Bullet.next_id += 1
+
+        self.source_id = source_id
 
         self.size = self.bullet_type.size
 
@@ -84,22 +98,21 @@ class Weapon:
         self.world_sim = world_sim
         self.physics_world = world_sim.physics_world
 
-        self._last_shot_time = 0
+        self.last_shot_frame = 0
 
-    def is_shot_ready(self, curr_time):
-        fire_delay = (1 / self.weapon_type.fire_rate)
-        if curr_time - fire_delay >= self._last_shot_time:
-            self._last_shot_time = curr_time
-            return True
-        return False
+    def is_shot_ready(self):
+        fire_delay = round(FIXED_FPS / self.weapon_type.fire_rate)
+        return self.world_sim.physics_frame_count - fire_delay >= self.last_shot_frame
 
-    def shoot(self, curr_time, source, position, rotation):
-        if self.is_shot_ready(curr_time):
+    def shoot(self, source_id, position, rotation):
+        if self.is_shot_ready():
+            self.last_shot_frame = self.world_sim.physics_frame_count
             total_rot = rotation + self.weapon_type.rot_offset
             spawn_pos = self.weapon_type.pos_offset.copy()
             spawn_pos.rotate(total_rot)
             spawn_pos.add(position)
-            self.weapon_type.bullet_type(source, spawn_pos, total_rot, self.world_sim)
+            self.weapon_type.bullet_type(world_sim=self.world_sim, source_id=source_id,
+                                         position=spawn_pos, rotation=total_rot)
 
 
 class CannonShell(Bullet):

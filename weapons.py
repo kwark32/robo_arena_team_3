@@ -12,6 +12,7 @@ bullet_texture_path = get_main_path() + "/textures/moving/bullets/"
 def set_bullet_values(bullet, bullet_info):
     bullet.bullet_id = bullet_info.bullet_id
     bullet.sim_body = bullet_info.bullet_body
+    bullet.extrapolation_body = bullet_info.bullet_body
     bullet.bullet_type = bullet_info.bullet_class
     bullet.source_id = bullet_info.from_player_id
 

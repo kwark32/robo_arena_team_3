@@ -203,7 +203,7 @@ class OnlineWorldSim(WorldSim):
             for new_bullet_info in last_packet.bullets:
                 existing_bullet = None
                 for bullet in self.bullets:
-                    if bullet.source_id == new_bullet_info.from_player_id:
+                    if bullet.bullet_id == new_bullet_info.bullet_id:
                         existing_bullet = bullet
                         break
 
@@ -217,7 +217,7 @@ class OnlineWorldSim(WorldSim):
                 for bullet in self.bullets:
                     contained = False
                     for new_bullet_info in last_packet.bullets:
-                        if bullet.source_id == new_bullet_info.from_player_id:
+                        if bullet.bullet_id == new_bullet_info.bullet_id:
                             contained = True
                             break
                     if not contained:

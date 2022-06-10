@@ -13,7 +13,6 @@ headless_args.clear()
 
 if not GameInfo.is_headless:
     from constants import Scene, WINDOW_SIZE
-    from world_sim import SPWorldSim, OnlineWorldSim
     from main_menu_scene import MainMenuScene
     from world_scene import SPWorldScene, OnlineWorldScene
     from PyQt5.QtWidgets import QWidget, QApplication

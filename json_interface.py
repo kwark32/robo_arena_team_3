@@ -44,12 +44,13 @@ def load_map(file, size, physics_world=None):
         for row in map_json["tiles"]:
             t = 0
             for tile in row["row"]:
-                if tile_type_dict[tile["tile"]].has_collision:
+                tile_type = tile_type_dict[tile["tile"]]
+                if tile_type.has_collision:
                     width = tile["count"] * arena.tile_size
                     height = row["count"] * arena.tile_size
                     x = t * arena.tile_size + int(width / 2)
                     y = r * arena.tile_size + int(height / 2)
-                    physics_world.add_rect(Vector(x, ARENA_SIZE - y), width, height)
+                    physics_world.add_rect(Vector(x, ARENA_SIZE - y), width, height, user_data=tile_type)
                 t += tile["count"]
             r += row["count"]
 

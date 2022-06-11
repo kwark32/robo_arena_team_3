@@ -12,7 +12,7 @@ bullet_texture_path = get_main_path() + "/textures/moving/bullets/"
 def set_bullet_values(bullet, bullet_info):
     bullet.bullet_id = bullet_info.bullet_id
     bullet.sim_body = bullet_info.bullet_body
-    bullet.extrapolation_body = bullet_info.bullet_body
+    bullet.extrapolation_body = bullet_info.bullet_body.copy()
     bullet.bullet_type = bullet_info.bullet_class
     bullet.source_id = bullet_info.from_player_id
 
@@ -54,7 +54,7 @@ class Bullet:
         self.physics_world = world_sim.physics_world
 
         # TODO: Bullets should sweep collision with other dynamic bodies too, or similar
-        self.physics_body = self.physics_world.add_rect(self.sim_body.position, self.size.x, self.size.y,
+        self.physics_body = self.physics_world.add_rect(Vector(pos.x, ARENA_SIZE - pos.y), self.size.x, self.size.y,
                                                         rotation=-rotation, static=False, sensor=True, user_data=self)
 
         self.world_sim.bullets.append(self)

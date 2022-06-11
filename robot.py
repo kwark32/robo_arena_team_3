@@ -14,13 +14,14 @@ def set_robot_values(robot, robot_info):
     robot.robot_id = robot_info.player_id
     robot.player_name = robot_info.player_name
     robot.sim_body = robot_info.robot_body
-    robot.extrapolation_body = robot_info.robot_body
+    robot.extrapolation_body = robot_info.robot_body.copy()
     robot.health = robot_info.health
     if robot.weapon is None or robot.weapon.weapon_type is not robot_info.weapon_class:
         robot.weapon = robot_info.weapon_class()
     robot.weapon.last_shot_frame = robot_info.last_shot_frame
     robot.last_position = robot_info.last_position
     robot.forward_velocity_goal = robot_info.forward_velocity_goal
+    robot.set_physics_body()
 
 
 class Robot:
@@ -50,7 +51,7 @@ class Robot:
 
         self.real_velocity = Vector(0, 0)
 
-        self.last_position = position
+        self.last_position = position.copy()
         self.forward_velocity_goal = 0
 
         self._body_texture = None
@@ -59,12 +60,14 @@ class Robot:
         self.world_sim = world_sim
         self.physics_world = world_sim.physics_world
 
-        self.physics_body = self.physics_world.add_rect(position, self.size.x, self.size.y,
+        self.physics_body = self.physics_world.add_rect(Vector(position.x, ARENA_SIZE - position.y),
+                                                        self.size.x, self.size.y,
                                                         rotation=-rotation, static=False, user_data=self)
 
         self.weapon = TankCannon(self.world_sim)
 
         self.health = int(health)
+        self.to_remove = False
         self.is_dead = False
 
     @property
@@ -83,6 +86,9 @@ class Robot:
                           self.extrapolation_body.position, self.extrapolation_body.rotation)
 
     def update(self, delta_time):
+        if self.is_dead:
+            self.die()
+
         # last_forward_velocity_goal = self.forward_velocity_goal
 
         self.real_velocity = self.sim_body.position.copy()
@@ -129,12 +135,15 @@ class Robot:
 
         self.last_position = Vector(self.physics_body.position[0], ARENA_SIZE - self.physics_body.position[1])
 
-        self.physics_body.transform = ((self.sim_body.position.x, ARENA_SIZE - self.sim_body.position.y),
-                                       -self.sim_body.rotation)
+        self.set_physics_body()
 
     def update_ai(self, delta_time):
         self.sim_body.ang_accel = self.sim_body.max_ang_accel
         self.sim_body.local_accel.y = self.sim_body.max_accel
+
+    def set_physics_body(self):
+        self.physics_body.transform = ((self.sim_body.position.x, ARENA_SIZE - self.sim_body.position.y),
+                                       -self.sim_body.rotation)
 
     def refresh_from_physics(self):
         if self.physics_body is not None:
@@ -148,8 +157,18 @@ class Robot:
             self.is_dead = True
 
     def die(self):
+        print("<cool tank explode animation> or something... (for robot ID " + str(self.robot_id) + ")")
+        self.health = ROBOT_HEALTH
+        self.sim_body.reset(position=Vector(ARENA_SIZE / 2, ARENA_SIZE / 2), rotation=0)
+        self.extrapolation_body.set(self.sim_body)
+        self.last_position = self.sim_body.position.copy()
+        self.forward_velocity_goal = 0
+        self.set_physics_body()
+        self.is_dead = False
+
+    def remove(self):
+        self.to_remove = True
         self.physics_world.world.DestroyBody(self.physics_body)
-        print("<cool tank explode animation> or something...")
 
 
 class PlayerInput:

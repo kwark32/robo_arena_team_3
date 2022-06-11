@@ -48,6 +48,8 @@ class SimpleBody:
 
         self.local_velocity = Vector(0, 0)
 
+        self._was_reset = False
+
     def copy(self):
         body = SimpleBody()
         body.set(self)
@@ -60,10 +62,22 @@ class SimpleBody:
         self.local_velocity = other.local_velocity
 
     def step(self, delta_time):
+        if self._was_reset:
+            self._was_reset = True
+            return
+
         movement = self.local_velocity.copy()
         movement.rotate(self.rotation)
         movement.mult(delta_time)
         self.position.add(movement)
+
+    def reset(self, position=Vector(0, 0), rotation=0):
+        self.position = position.copy()
+        self.rotation = rotation
+
+        self.local_velocity = Vector(0, 0)
+
+        self._was_reset = False
 
 
 class SimBody:
@@ -87,6 +101,8 @@ class SimBody:
         self.max_accel = max_accel
         self.max_velocity = max_velocity
 
+        self._was_reset = False
+
     def copy(self):
         body = SimBody()
         body.set(self)
@@ -108,6 +124,10 @@ class SimBody:
         self.local_velocity = other.local_velocity
 
     def step(self, delta_time):
+        if self._was_reset:
+            self._was_reset = True
+            return
+
         pos_change = pos_change_from_velocity_accel(delta_time, self.velocity, self.accel,
                                                     self.max_velocity, self.max_accel)
         local_pos_change = pos_change_from_velocity_accel(delta_time, self.local_velocity, self.local_accel,
@@ -124,3 +144,18 @@ class SimBody:
         new_rot = self.rotation + rot_change
         new_rot = limit_rot(new_rot)
         self.rotation = new_rot
+
+    def reset(self, position=Vector(0, 0), rotation=0):
+        self.ang_accel = 0  # in rad/s^2
+        self.ang_velocity = 0  # in rad/s
+
+        self.position = position.copy()
+        self.rotation = rotation  # in rad
+
+        self.accel = Vector(0, 0)  # in px/s^2
+        self.local_accel = Vector(0, 0)  # in px/s^2, local to robot
+
+        self.velocity = Vector(0, 0)  # in px/s
+        self.local_velocity = Vector(0, 0)  # in px/s, local to robot
+
+        self._was_reset = False

@@ -98,6 +98,8 @@ class LocalMultiplayerButton(Button):
 
     def click(self):
         print("Local multiplayer button clicked!")
+        print("TODO: Move host button to separate (and implement local multiplayer)")
+        self.main_widget.switch_scene(Scene.SERVER_WORLD)
 
 
 class OnlineMultiplayerButton(Button):

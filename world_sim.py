@@ -69,7 +69,7 @@ class WorldSim:
 
         dead_robots = []
         for robot in self.robots:
-            if robot.is_dead:
+            if robot.to_remove:
                 dead_robots.append(robot)
         for dead in dead_robots:
             dead.die()
@@ -195,7 +195,7 @@ class OnlineWorldSim(WorldSim):
                     if not contained:
                         dead_robots.append(robot)
                 for dead in dead_robots:
-                    dead.die()
+                    dead.remove()
                     self.robots.remove(dead)
                 dead_robots.clear()
 
@@ -242,24 +242,25 @@ class OnlineWorldSim(WorldSim):
                                           / FIXED_DELTA_TIME)
                 extrapolation_count = limit(extrapolation_count, 0, MAX_EXTRAPOLATION_STEPS)
 
-                extrapolation_start_frame = self.physics_frame_count
-                prev_inputs_length = len(self.previous_inputs)
-                frame_inputs = []
-                input_index = 0
-                for i in range(extrapolation_count):
-                    while (input_index < prev_inputs_length
-                           and self.previous_inputs[input_index][1] < extrapolation_start_frame + i):
-                        input_index += 1
-                    if input_index < prev_inputs_length:
-                        frame_inputs.append(self.previous_inputs[input_index])
-                    else:
-                        frame_inputs.append(PlayerInput())
+                if extrapolation_count:
+                    extrapolation_start_frame = self.physics_frame_count
+                    prev_inputs_length = len(self.previous_inputs)
+                    frame_inputs = []
+                    input_index = 0
+                    for i in range(extrapolation_count):
+                        while (input_index < prev_inputs_length
+                               and self.previous_inputs[input_index][1] < extrapolation_start_frame + i):
+                            input_index += 1
+                        if input_index < prev_inputs_length:
+                            frame_inputs.append(self.previous_inputs[input_index])
+                        else:
+                            frame_inputs.append(PlayerInput())
 
-                for i in range(extrapolation_count):
-                    self.local_player_robot.input = frame_inputs[i]
-                    super().fixed_update(FIXED_DELTA_TIME)
+                    for i in range(extrapolation_count):
+                        self.local_player_robot.input = frame_inputs[i]
+                        super().fixed_update(FIXED_DELTA_TIME)
 
-                self.local_player_robot.input = self.player_input
+                    self.local_player_robot.input = self.player_input
 
             self.received_first_packet = True
 
@@ -289,9 +290,12 @@ class ServerWorldSim(WorldSim):
                         existing_robot = robot
                         break
                 if existing_robot is None:
-                    existing_robot = self.create_player(robot_id=client.player_id)
+                    existing_robot = self.create_enemy_robot(robot_id=client.player_id, has_ai=False)
+                    client.robot = existing_robot
                 existing_robot.input = client.last_rx_packet.player_input
         for disconnected in disconnected_clients:
+            if disconnected.robot is not None:
+                disconnected.robot.remove()
             self.udp_socket.clients.pop(disconnected.address)
         disconnected_clients.clear()
 

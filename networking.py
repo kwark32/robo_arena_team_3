@@ -52,15 +52,15 @@ class StatePacket(Packet):
 
 
 class ClientPacket(Packet):
-    def __init__(self, creation_time=0, player_input=None, player_name="Player"):
+    def __init__(self, creation_time=0, player_input=None, player_name="Player", disconnect=False):
         super().__init__(creation_time=creation_time)
         self.player_input = player_input
         self.player_name = player_name
-        self.disconnect = False
+        self.disconnect = disconnect
 
 
 class Client:
-    next_player_id = 0
+    next_player_id = 10
 
     def __init__(self, address, player_id=-1, player_name="Player"):
         self.address = address
@@ -70,6 +70,7 @@ class Client:
             Client.next_player_id += 1
         self.player_name = player_name
         self.last_rx_packet = None
+        self.robot = None
 
 
 class UDPSocket:

@@ -1,5 +1,6 @@
-from world_sim import SPWorldSim, OnlineWorldSim
+from world_sim import SPWorldSim, OnlineWorldSim, ServerWorldSim
 from constants import Scene, ARENA_SIZE, DEBUG_MODE
+from networking import ClientPacket
 from PyQt5.QtGui import QPainter, QPolygon, QFont
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtCore import Qt, QPoint
@@ -8,6 +9,8 @@ from PyQt5.QtCore import Qt, QPoint
 class WorldScene(QWidget):
     def __init__(self, parent, size, sim_class):
         super().__init__(parent)
+
+        self.main_widget = parent
 
         self.size = size
 
@@ -99,3 +102,17 @@ class SPWorldScene(WorldScene):
 class OnlineWorldScene(WorldScene):
     def __init__(self, parent, size):
         super().__init__(parent, size, OnlineWorldSim)
+
+    def clean_mem(self):
+        super().clean_mem()
+
+        for i in range(2):
+            self.world_sim.udp_socket.send_packet(None, ClientPacket(
+                creation_time=(self.world_sim.curr_time_ns + 1000000), disconnect=True))
+
+
+class ServerWorldScene(WorldScene):
+    def __init__(self, parent, size):
+        super().__init__(parent, size, ServerWorldSim)
+        self.world_sim.player = self.world_sim.create_player()
+        self.world_sim.player.input = self.world_sim.player_input

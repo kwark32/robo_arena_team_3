@@ -6,6 +6,7 @@ class Scene(IntEnum):
     MAIN_MENU = 0
     SP_WORLD = 1
     ONLINE_WORLD = 2
+    SERVER_WORLD = 3
 
 
 class GameInfo:

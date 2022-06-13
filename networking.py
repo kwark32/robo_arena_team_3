@@ -4,7 +4,7 @@ import select
 import pickle
 
 
-server_ip = "127.0.0.1"
+server_ip = "202.61.239.116"
 port = 54345
 server_ip_port = server_ip, port
 buffer_size = 4096

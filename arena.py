@@ -44,9 +44,9 @@ tile_type_dict = {
     "earth": TileType("earth", effect_class=EarthTileEffect),
     "tower_1": TileType("tower_1", has_collision=True),
     "hole": TileType("hole"),
-    "water": TileType("water"),
+    "water": TileType("water", effect_class=WaterTileEffect),
     "lava": TileType("lava"),
-    "fire": TileType("fire"),
+    "fire": TileType("fire", effect_class=FireTileEffect),
     "portal_1": TileType("portal_1"),
     "portal_2": TileType("portal_2"),
 }

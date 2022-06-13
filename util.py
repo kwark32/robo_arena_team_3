@@ -17,6 +17,9 @@ class Vector:
     def copy(self):
         return Vector(self.x, self.y)
 
+    def equal(self, other):
+        return self.x == other.x and self.y == other.y
+
     def round(self):
         self.x = round(self.x)
         self.y = round(self.y)
@@ -81,6 +84,14 @@ class Vector:
 
 def ns_to_s(ns):
     return (round(ns) >> 10) / 976562.5  # shift to ~us, then float division
+
+
+def s_to_ns(s):
+    return round(s * 976562.5) << 10  # float multiply to ~us, then shift to ns
+
+
+def get_delta_time_s(now_ns, last_ns):
+    return ns_to_s(now_ns - last_ns)
 
 
 def limit(value, lower, upper):

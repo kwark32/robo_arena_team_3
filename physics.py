@@ -1,5 +1,6 @@
 from Box2D import b2World, b2ContactListener, b2PolygonShape
-from combat import Bullet, hit_shell
+from combat import hit_shell
+from weapons import Bullet
 
 
 class ContactListener(b2ContactListener):
@@ -28,7 +29,7 @@ class ContactListener(b2ContactListener):
 class PhysicsWorld:
     def __init__(self):
         self.contact_listener = ContactListener()
-        self.world = b2World(gravity=(0, 0), doSleep=True, contactListener=self.contact_listener)
+        self.world = b2World(gravity=(0, 0), doSleep=False, contactListener=self.contact_listener)
         self.world.SetAllowSleeping(False)
 
     def add_rect(self, position, width, height, rotation=0, static=True, sensor=False, user_data=None):

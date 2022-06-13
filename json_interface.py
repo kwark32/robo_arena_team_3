@@ -1,6 +1,9 @@
-import json
+try:
+    import simplejson as json
+except ImportError:
+    import json
 
-from arena import Arena, Tile, tile_type_dict
+from arena import Arena, tile_type_dict
 from util import Vector
 from constants import ARENA_SIZE, MAP_FORMAT_VERSION
 
@@ -28,8 +31,7 @@ def load_map(file, size, physics_world=None):
                 for curr_tile in range(tc):
                     # tile name:
                     n = map_json["tiles"][row_index]["row"][tile_index]["tile"]
-                    tile = Tile(tile_type=tile_type_dict[n])
-                    tiles[y+curr_row][x+curr_tile] = tile
+                    tiles[y+curr_row][x+curr_tile] = tile_type_dict[n]
                 x += tc
                 tile_index += 1
         y += row_count
@@ -42,12 +44,13 @@ def load_map(file, size, physics_world=None):
         for row in map_json["tiles"]:
             t = 0
             for tile in row["row"]:
-                if tile_type_dict[tile["tile"]].has_collision:
+                tile_type = tile_type_dict[tile["tile"]]
+                if tile_type.has_collision:
                     width = tile["count"] * arena.tile_size
                     height = row["count"] * arena.tile_size
                     x = t * arena.tile_size + int(width / 2)
                     y = r * arena.tile_size + int(height / 2)
-                    physics_world.add_rect(Vector(x, ARENA_SIZE - y), width, height)
+                    physics_world.add_rect(Vector(x, ARENA_SIZE - y), width, height, user_data=tile_type)
                 t += tile["count"]
             r += row["count"]
 

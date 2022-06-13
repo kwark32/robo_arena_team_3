@@ -90,7 +90,7 @@ class SingleplayerButton(Button):
     name = "singleplayer"
 
     def click(self):
-        self.main_widget.switch_scene(Scene.WORLD)
+        self.main_widget.switch_scene(Scene.SP_WORLD)
 
 
 class LocalMultiplayerButton(Button):
@@ -98,13 +98,15 @@ class LocalMultiplayerButton(Button):
 
     def click(self):
         print("Local multiplayer button clicked!")
+        print("TODO: Move host button to separate (and implement local multiplayer)")
+        self.main_widget.switch_scene(Scene.SERVER_WORLD)
 
 
 class OnlineMultiplayerButton(Button):
     name = "online_multiplayer"
 
     def click(self):
-        print("Online multiplayer button clicked!")
+        self.main_widget.switch_scene(Scene.ONLINE_WORLD)
 
 
 class MainMenuScene(QWidget):
@@ -134,8 +136,8 @@ class MainMenuScene(QWidget):
 
         self.buttons.append(ExitButton(self.parentWidget(), Vector(self.size / 2, 800)))
         self.buttons.append(SingleplayerButton(self.parentWidget(), Vector(self.size / 2, 350)))
-        self.buttons.append(LocalMultiplayerButton(self.parentWidget(), Vector(self.size / 2, 500)))
-        self.buttons.append(OnlineMultiplayerButton(self.parentWidget(), Vector(self.size / 2, 600)))
+        self.buttons.append(OnlineMultiplayerButton(self.parentWidget(), Vector(self.size / 2, 500)))
+        self.buttons.append(LocalMultiplayerButton(self.parentWidget(), Vector(self.size / 2, 600)))
 
         self.show()
 

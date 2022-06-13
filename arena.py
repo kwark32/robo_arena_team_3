@@ -1,6 +1,7 @@
 import numpy as np
 
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtCore import QPoint
+from PyQt5.QtGui import QPixmap, QPainter
 from util import Vector, get_main_path
 
 
@@ -49,36 +50,39 @@ tile_type_dict = {
 }
 
 
-class Tile:
-    def __init__(self, tile_type=None):
-        self.tile_type = tile_type
-
-
 class Arena:
     def __init__(self, size, tile_count):
         self.size = int(size)
         self.tile_count = int(tile_count)
         self.tile_size = int(self.size / self.tile_count)
         self.tiles = self.get_empty_tiles()
+        self.background_pixmap = None
 
     def get_empty_tiles(self):
         # get array of empty tiles with correct dimensions
-        return np.empty((self.tile_count, self.tile_count), dtype=Tile)
+        return np.empty((self.tile_count, self.tile_count), dtype=TileType)
 
     def draw(self, qp):
-        for y in range(self.tile_count):
-            for x in range(self.tile_count):
-                x_pos = x * self.tile_size
-                y_pos = y * self.tile_size
+        if self.background_pixmap is None:
+            self.background_pixmap = QPixmap(self.size, self.size)
+            painter = QPainter(self.background_pixmap)
+            for y in range(self.tile_count):
+                for x in range(self.tile_count):
+                    x_pos = x * self.tile_size
+                    y_pos = y * self.tile_size
 
-                curr_tile_type = self.tiles[y][x].tile_type
+                    curr_tile_type = self.tiles[y][x]
 
-                # calculate correct part of the texture
-                tiles_per_texture = curr_tile_type.texture_size.copy()
-                tiles_per_texture.div(self.tile_size)
-                tile_in_img_offset = Vector(x % round(tiles_per_texture.x), y % round(tiles_per_texture.y))
+                    # calculate correct part of the texture
+                    tiles_per_texture = curr_tile_type.texture_size.copy()
+                    tiles_per_texture.div(self.tile_size)
+                    tile_in_img_offset = Vector(x % round(tiles_per_texture.x), y % round(tiles_per_texture.y))
 
-                # draw tile image
-                qp.drawPixmap(x_pos, y_pos, curr_tile_type.texture,
-                              tile_in_img_offset.x * self.tile_size, tile_in_img_offset.y * self.tile_size,
-                              curr_tile_type.texture_size.x, curr_tile_type.texture_size.y)
+                    # draw tile image
+                    painter.drawPixmap(x_pos, y_pos, curr_tile_type.texture,
+                                       tile_in_img_offset.x * self.tile_size, tile_in_img_offset.y * self.tile_size,
+                                       curr_tile_type.texture_size.x, curr_tile_type.texture_size.y)
+
+            painter.end()
+
+        qp.drawPixmap(QPoint(), self.background_pixmap)

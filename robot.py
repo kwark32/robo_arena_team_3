@@ -1,142 +1,154 @@
-from PyQt5.QtGui import QPixmap
+from transform import SimBody
 from weapons import TankCannon
-from util import Vector, limit, get_main_path, draw_img_with_rot, limit_rot
-from constants import ARENA_SIZE
+from util import Vector, get_main_path, draw_img_with_rot
+from constants import GameInfo, ARENA_SIZE, FIXED_DELTA_TIME, ROBOT_HEALTH
+
+if not GameInfo.is_headless:
+    from PyQt5.QtGui import QPixmap
+
+
+robot_texture_path = get_main_path() + "/textures/moving/"
+
+
+def set_robot_values(robot, robot_info):
+    robot.robot_id = robot_info.player_id
+    robot.player_name = robot_info.player_name
+    robot.sim_body = robot_info.robot_body
+    robot.extrapolation_body = robot_info.robot_body.copy()
+    robot.health = robot_info.health
+    if robot.weapon is None or robot.weapon.weapon_type is not robot_info.weapon_class:
+        robot.weapon = robot_info.weapon_class()
+    robot.weapon.last_shot_frame = robot_info.last_shot_frame
+    robot.last_position = robot_info.last_position
+    robot.forward_velocity_goal = robot_info.forward_velocity_goal
+    robot.set_physics_body()
 
 
 class Robot:
-    def __init__(self, physics_world, is_player=False, health=1000, radius=20, position=Vector(0, 0), rotation=0,
-                 max_velocity=120, max_ang_velocity=4, max_accel=200, max_ang_accel=12):
+    next_id = 0
+
+    def __init__(self, world_sim, robot_id=-1, is_player=False, has_ai=True, health=ROBOT_HEALTH,
+                 size=Vector(40, 40), position=Vector(0, 0), rotation=0,
+                 max_velocity=120, max_ang_velocity=4, max_accel=200, max_ang_accel=12, player_name=""):
+
+        self.robot_id = robot_id
+        if robot_id == -1:
+            self.robot_id = Robot.next_id
+            Robot.next_id += 1
+
+        self.player_name = player_name
+
+        self.sim_body = SimBody(position=position, rotation=rotation, max_velocity=max_velocity,
+                                max_ang_velocity=max_ang_velocity, max_accel=max_accel, max_ang_accel=max_ang_accel)
+        self.extrapolation_body = self.sim_body.copy()
 
         self.is_player = is_player
+        self.has_ai = has_ai
 
         self.input = None
-        if is_player:
-            self.input = PlayerInput()
 
-        self.radius = radius
+        self.size = size
 
-        self.ang_accel = 0  # in rad/s^2
-        self.ang_velocity = 0  # in rad/s
+        self.real_velocity = Vector(0, 0)
 
-        self.position = position.copy()
-        self.rotation = rotation  # in rad
-
-        self.accel = Vector(0, 0)  # in px/s^2
-        self.local_accel = Vector(0, 0)  # in px/s^2, local to robot
-
-        self.velocity = Vector(0, 0)  # in px/s
-        self.local_velocity = Vector(0, 0)  # in px/s, local to robot
-
-        self.max_ang_accel = max_ang_accel
-        self.max_ang_velocity = max_ang_velocity
-
-        self.max_accel = max_accel
-        self.max_velocity = max_velocity
-
-        self.last_position = position
-        self.last_delta_time = 1
-
+        self.last_position = position.copy()
         self.forward_velocity_goal = 0
 
-        texture_path = get_main_path() + "/textures/moving/"
-        self.body_texture = QPixmap(texture_path + "tank_red_40.png")
-        if is_player:
-            self.body_texture = QPixmap(texture_path + "tank_blue_40.png")
+        self._body_texture = None
+        self._texture_size = None
 
-        self.texture_size = Vector(self.body_texture.width(), self.body_texture.height())
+        self.world_sim = world_sim
+        self.physics_world = world_sim.physics_world
 
-        self.physics_world = physics_world
+        self.physics_body = self.physics_world.add_rect(Vector(position.x, ARENA_SIZE - position.y),
+                                                        self.size.x, self.size.y,
+                                                        rotation=-rotation, static=False, user_data=self)
 
-        self.physics_body = physics_world.add_rect(position, self.texture_size.x, self.texture_size.y,
-                                                   rotation=-rotation, static=False, user_data=self)
-
-        self.weapon = TankCannon(self.physics_world)
+        self.weapon = TankCannon(self.world_sim)
 
         self.health = int(health)
+        self.to_remove = False
         self.is_dead = False
 
-    def draw(self, qp):
-        draw_img_with_rot(qp, self.body_texture, self.texture_size.x, self.texture_size.y, self.position, self.rotation)
+    @property
+    def body_texture(self):
+        if self._body_texture is None:
+            self._body_texture = QPixmap(robot_texture_path + "tank_red_40.png")
+            if self.is_player:
+                self._body_texture = QPixmap(robot_texture_path + "tank_blue_40.png")
+            if self._body_texture.width() != self.size.x or self._body_texture.height() != self.size.y:
+                print("WARN: Robot texture size is not equal to robot (collider) size!")
+        return self._body_texture
 
-    def update(self, delta_time, curr_time):
-        last_forward_velocity_goal = self.forward_velocity_goal
+    def draw(self, qp, delta_time):
+        self.extrapolation_body.step(delta_time)
+        draw_img_with_rot(qp, self.body_texture, self.size.x, self.size.y,
+                          self.extrapolation_body.position, self.extrapolation_body.rotation)
 
-        real_local_velocity = self.position.copy()
-        real_local_velocity.sub(self.last_position)
-        real_local_velocity.div(self.last_delta_time)
-        real_local_velocity.rotate(-self.rotation)
+    def update(self, delta_time):
+        if self.is_dead:
+            self.die()
 
-        if self.is_player:
-            self.forward_velocity_goal = 0
-            ang_velocity_goal = 0
-            if self.input.up:
-                self.forward_velocity_goal += 1
-            if self.input.down:
-                self.forward_velocity_goal -= 1
-            if self.input.left:
-                ang_velocity_goal -= 1
-            if self.input.right:
-                ang_velocity_goal += 1
-            if self.input.shoot:
-                self.weapon.shoot(curr_time, self, self.position, self.rotation)
+        # last_forward_velocity_goal = self.forward_velocity_goal
 
-            if ((self.forward_velocity_goal == 0 and last_forward_velocity_goal != 0)
-                    or (self.forward_velocity_goal == 1 and self.local_velocity.y < 0)
-                    or (self.forward_velocity_goal == -1 and self.local_velocity.y > 0)):
-                self.local_velocity.y = real_local_velocity.y
+        self.real_velocity = self.sim_body.position.copy()
+        self.real_velocity.sub(self.last_position)
+        self.real_velocity.div(FIXED_DELTA_TIME)
+        real_local_velocity = self.real_velocity.copy()
+        real_local_velocity.rotate(-self.sim_body.rotation)
 
-            self.forward_velocity_goal *= self.max_velocity
-            ang_velocity_goal *= self.max_ang_velocity
+        self.sim_body.local_velocity.y = real_local_velocity.y
 
-            self.local_accel.y = self.forward_velocity_goal - self.local_velocity.y
-            self.local_accel.y /= delta_time
-            self.ang_accel = ang_velocity_goal - self.ang_velocity
-            self.ang_accel /= delta_time
+        if not self.has_ai:
+            if self.input is not None:
+                self.forward_velocity_goal = 0
+                ang_velocity_goal = 0
+                if self.input.up:
+                    self.forward_velocity_goal += 1
+                if self.input.down:
+                    self.forward_velocity_goal -= 1
+                if self.input.left:
+                    ang_velocity_goal -= 1
+                if self.input.right:
+                    ang_velocity_goal += 1
+                if self.input.shoot or self.input.shoot_pressed:
+                    self.input.shoot_pressed = False
+                    if self.weapon is not None:
+                        self.weapon.shoot(self.robot_id, self.sim_body.position, self.sim_body.rotation)
+
+                # if ((self.forward_velocity_goal == 0 and last_forward_velocity_goal != 0)
+                #         or (self.forward_velocity_goal == 1 and self.sim_body.local_velocity.y < 0)
+                #         or (self.forward_velocity_goal == -1 and self.sim_body.local_velocity.y > 0)):
+                #     self.sim_body.local_velocity.y = real_local_velocity.y
+
+                self.forward_velocity_goal *= self.sim_body.max_velocity
+                ang_velocity_goal *= self.sim_body.max_ang_velocity
+
+                self.sim_body.local_accel.y = (self.forward_velocity_goal - self.sim_body.local_velocity.y) / delta_time
+                self.sim_body.ang_accel = (ang_velocity_goal - self.sim_body.ang_velocity) / delta_time
         else:
             self.update_ai(delta_time)
 
-        self.ang_accel = limit(self.ang_accel, -self.max_ang_accel, self.max_ang_accel)
-        self.ang_velocity += self.ang_accel * delta_time
-
-        self.ang_velocity = limit(self.ang_velocity, -self.max_ang_velocity, self.max_ang_velocity)
-        self.rotation += self.ang_velocity * delta_time
-        self.rotation = limit_rot(self.rotation)
-
-        self.accel.limit_magnitude(self.max_accel)
-        self.local_accel.limit_magnitude(self.max_accel)
-
-        velocity_change = self.accel.copy()
-        velocity_change.mult(delta_time)
-        self.velocity.add(velocity_change)
-        local_velocity_change = self.local_accel.copy()
-        local_velocity_change.mult(delta_time)
-        self.local_velocity.add(local_velocity_change)
-
-        self.velocity.limit_magnitude(self.max_velocity)
-        self.local_velocity.limit_magnitude(self.max_velocity)
-
-        position_change = self.velocity.copy()
-        rotated_local_velocity = self.local_velocity.copy()
-        rotated_local_velocity.rotate(self.rotation)
-        position_change.add(rotated_local_velocity)
-        position_change.limit_magnitude(self.max_velocity)
-        position_change.mult(delta_time)
-        self.position.add(position_change)
+        self.sim_body.step(delta_time)
+        if not GameInfo.is_headless:
+            self.extrapolation_body.set(self.sim_body)
 
         self.last_position = Vector(self.physics_body.position[0], ARENA_SIZE - self.physics_body.position[1])
-        self.last_delta_time = delta_time
 
-        self.physics_body.transform = ((self.position.x, ARENA_SIZE - self.position.y), -self.rotation)
+        self.set_physics_body()
 
     def update_ai(self, delta_time):
-        self.ang_accel = self.max_ang_accel
-        self.local_accel.y = self.max_accel
+        self.sim_body.ang_accel = self.sim_body.max_ang_accel
+        self.sim_body.local_accel.y = self.sim_body.max_accel
+
+    def set_physics_body(self):
+        self.physics_body.transform = ((self.sim_body.position.x, ARENA_SIZE - self.sim_body.position.y),
+                                       -self.sim_body.rotation)
 
     def refresh_from_physics(self):
         if self.physics_body is not None:
-            self.position.x = self.physics_body.position[0]
-            self.position.y = ARENA_SIZE - self.physics_body.position[1]
+            self.sim_body.position.x = self.physics_body.position[0]
+            self.sim_body.position.y = ARENA_SIZE - self.physics_body.position[1]
 
     def take_damage(self, damage):
         self.health -= int(damage)
@@ -145,8 +157,18 @@ class Robot:
             self.is_dead = True
 
     def die(self):
+        print("<cool tank explode animation> or something... (for robot ID " + str(self.robot_id) + ")")
+        self.health = ROBOT_HEALTH
+        self.sim_body.reset(position=Vector(ARENA_SIZE / 2, ARENA_SIZE / 2), rotation=0)
+        self.extrapolation_body.set(self.sim_body)
+        self.last_position = self.sim_body.position.copy()
+        self.forward_velocity_goal = 0
+        self.set_physics_body()
+        self.is_dead = False
+
+    def remove(self):
+        self.to_remove = True
         self.physics_world.world.DestroyBody(self.physics_body)
-        print("<cool tank explode animation> or something...")
 
 
 class PlayerInput:
@@ -156,3 +178,13 @@ class PlayerInput:
         self.left = False
         self.right = False
         self.shoot = False
+        self.shoot_pressed = False
+
+    def copy(self):
+        player_input = PlayerInput()
+        player_input.up = self.up
+        player_input.down = self.down
+        player_input.left = self.left
+        player_input.right = self.right
+        player_input.shoot = self.shoot
+        player_input.shoot_pressed = self.shoot_pressed

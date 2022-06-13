@@ -107,11 +107,12 @@ class UDPServer(UDPSocket):
         while self.get_packet_available():
             address, packet = self.get_packet()
             client = self.clients.get(address)
-            if client is None and not packet.disconnect:
-                client = Client(address)
-                self.clients[address] = client
-            if client.last_rx_packet is None or packet.creation_time >= client.last_rx_packet.creation_time:
-                client.last_rx_packet = packet
+            if not packet.disconnect:
+                if client is None:
+                    client = Client(address)
+                    self.clients[address] = client
+                if client.last_rx_packet is None or packet.creation_time >= client.last_rx_packet.creation_time:
+                    client.last_rx_packet = packet
 
     def send_packet(self, client, state_packet):
         super().send_packet(client.address, state_packet)

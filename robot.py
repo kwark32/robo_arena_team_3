@@ -38,9 +38,16 @@ class Robot:
 
         self.player_name = player_name
 
+        self.max_velocity = max_velocity
+        self.max_ang_velocity = max_ang_velocity
+        self.max_accel = max_accel
+        self.max_ang_accel = max_ang_accel
+
         self.sim_body = SimBody(position=position, rotation=rotation, max_velocity=max_velocity,
                                 max_ang_velocity=max_ang_velocity, max_accel=max_accel, max_ang_accel=max_ang_accel)
         self.extrapolation_body = self.sim_body.copy()
+
+        self.effects = []
 
         self.is_player = is_player
         self.has_ai = has_ai
@@ -88,6 +95,8 @@ class Robot:
     def update(self, delta_time):
         if self.is_dead:
             self.die()
+
+        self.apply_effects(delta_time)
 
         # last_forward_velocity_goal = self.forward_velocity_goal
 
@@ -149,6 +158,20 @@ class Robot:
         if self.physics_body is not None:
             self.sim_body.position.x = self.physics_body.position[0]
             self.sim_body.position.y = ARENA_SIZE - self.physics_body.position[1]
+
+    def apply_effects(self, delta_time):
+        expired_effects = []
+        for effect in self.effects:
+            effect.revert(self)
+            if effect.duration <= 0:
+                expired_effects.append(effect)
+
+        for expired in expired_effects:
+            self.effects.remove(expired)
+        expired_effects.clear()
+
+        for effect in self.effects:
+            effect.apply(self, delta_time)
 
     def take_damage(self, damage):
         self.health -= int(damage)

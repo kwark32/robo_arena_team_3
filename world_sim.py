@@ -252,7 +252,7 @@ class OnlineWorldSim(WorldSim):
                                and self.previous_inputs[input_index][1] < extrapolation_start_frame + i):
                             input_index += 1
                         if input_index < prev_inputs_length:
-                            frame_inputs.append(self.previous_inputs[input_index])
+                            frame_inputs.append(self.previous_inputs[input_index][0])
                         else:
                             frame_inputs.append(PlayerInput())
 

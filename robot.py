@@ -225,3 +225,7 @@ class PlayerInput:
         player_input.right = self.right
         player_input.shoot = self.shoot
         player_input.shoot_pressed = self.shoot_pressed
+
+    def to_string(self):
+        return ("PlayerInput {\n  Up: " + self.up + "\n  Down: " + self.down + "\n  Left: " + self.left + "\n  Right: "
+                + self.right + "\n  Shoot: " + self.shoot + "\n  Shoot Pressed: " + self.shoot_pressed + "\n}")

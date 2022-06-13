@@ -96,6 +96,10 @@ class Robot:
         if self.is_dead:
             self.die()
 
+        current_tile = self.get_center_tile()
+        if current_tile.effect_class is not None:
+            self.effects.append(current_tile.effect_class())
+
         self.apply_effects(delta_time)
 
         # last_forward_velocity_goal = self.forward_velocity_goal
@@ -149,6 +153,16 @@ class Robot:
     def update_ai(self, delta_time):
         self.sim_body.ang_accel = self.sim_body.max_ang_accel
         self.sim_body.local_accel.y = self.sim_body.max_accel
+
+    def get_center_tile(self):
+        tile_size = self.world_sim.arena.tile_size
+        tile_count = self.world_sim.arena.tile_count
+        tile_position = self.sim_body.position.copy()
+        tile_position.div(tile_size)
+        tile_position.x = int(tile_position.x)
+        tile_position.y = int(tile_position.y)
+        tile_position.limit_by_scalar(0, tile_count - 1)
+        return self.world_sim.arena.tiles[tile_position.y][tile_position.x]
 
     def set_physics_body(self):
         self.physics_body.transform = ((self.sim_body.position.x, ARENA_SIZE - self.sim_body.position.y),

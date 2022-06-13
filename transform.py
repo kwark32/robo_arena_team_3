@@ -128,6 +128,15 @@ class SimBody:
             self._was_reset = True
             return
 
+        if self.max_velocity < 0:
+            self.max_velocity = 0
+        if self.max_ang_velocity < 0:
+            self.max_ang_velocity = 0
+        if self.max_accel < 0:
+            self.max_accel = 0
+        if self.max_ang_accel < 0:
+            self.max_ang_accel = 0
+
         pos_change = pos_change_from_velocity_accel(delta_time, self.velocity, self.accel,
                                                     self.max_velocity, self.max_accel)
         local_pos_change = pos_change_from_velocity_accel(delta_time, self.local_velocity, self.local_accel,

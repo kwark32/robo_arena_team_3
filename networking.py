@@ -1,3 +1,4 @@
+import sys
 import time
 import socket
 import select
@@ -5,6 +6,14 @@ import pickle
 
 
 server_ip = "202.61.239.116"  # "127.0.0.1"
+i = 0
+for arg in sys.argv:
+    if arg == "--ip":
+        if len(sys.argv) > i + 1:
+            server_ip = sys.argv[i + 1]
+            break
+    i += 1
+
 port = 54345
 server_ip_port = server_ip, port
 buffer_size = 4096

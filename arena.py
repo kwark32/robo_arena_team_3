@@ -1,9 +1,12 @@
 import numpy as np
 
-from PyQt5.QtCore import QPoint
-from PyQt5.QtGui import QPixmap, QPainter
+from constants import GameInfo
 from util import Vector, get_main_path
 from effects import *
+
+if not GameInfo.is_headless:
+    from PyQt5.QtCore import QPoint
+    from PyQt5.QtGui import QPixmap, QPainter
 
 
 tile_texture_path = get_main_path() + "/textures/tiles/"

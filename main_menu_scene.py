@@ -1,124 +1,59 @@
 import time
 
-from PyQt5.QtGui import QPainter, QPixmap, QColor, QFont
+from PyQt5.QtGui import QPainter, QColor, QFont
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtCore import Qt, QPoint
-from util import Vector, get_main_path, ns_to_s, is_point_inside_rect
-from constants import DEBUG_MODE, Scene
+from ui_elements import Button, Menu
+from util import Vector, ns_to_s, is_point_inside_rect
+from constants import DEBUG_MODE, Scene, Menu
 
 
-button_texture_path = get_main_path() + "/textures/ui/main_menu_buttons/"
+class MainMenu(Menu):
+    class ExitButton(Button):
+        name = "exit"
 
+        def click(self):
+            self.main_widget.running = False
 
-# base class
-class Button:
-    def __init__(self, main_widget, position):
-        self.button_type = type(self)
-        if self.button_type is Button:
-            print("ERROR: Button base class should not be instantiated!")
+    class SingleplayerButton(Button):
+        name = "singleplayer"
 
-        self.main_widget = main_widget
+        def click(self):
+            self.main_widget.switch_scene(Scene.SP_WORLD)
 
-        self.position = position
-        self._texture = None
-        self._texture_size = None
+    class LocalMultiplayerButton(Button):
+        name = "local_multiplayer"
 
-        self.is_selected = False
+        def click(self):
+            print("Local multiplayer button clicked!")
+            print("TODO: Move host button to separate (and implement local multiplayer)")
+            self.main_widget.switch_scene(Scene.SERVER_WORLD)
 
-        self._top_left_corner = None
-        self._bottom_right_corner = None
+    class OnlineMultiplayerButton(Button):
+        name = "online_multiplayer"
 
-    @property
-    def texture(self):
-        if self._texture is None:
-            self.load_image()
-        return self._texture
+        def click(self):
+            self.main_widget.switch_scene(Scene.ONLINE_WORLD)
 
-    @property
-    def texture_size(self):
-        if self._texture_size is None:
-            self.load_image()
-        return self._texture_size
+    def __init__(self, main_widget, size, main_menu_scene):
+        super().__init__(main_widget, size, main_menu_scene)
 
-    @property
-    def top_left_corner(self):
-        if self._top_left_corner is None:
-            half_texture_size = self.texture_size.copy()
-            half_texture_size.div(2)
-            self._top_left_corner = self.position.copy()
-            self._top_left_corner.sub(half_texture_size)
-            self._top_left_corner.round()
-        return self._top_left_corner
-
-    @property
-    def bottom_right_corner(self):
-        if self._bottom_right_corner is None:
-            half_texture_size = self.texture_size.copy()
-            half_texture_size.div(2)
-            self._bottom_right_corner = self.position.copy()
-            self._bottom_right_corner.add(half_texture_size)
-            self._bottom_right_corner.round()
-        return self._bottom_right_corner
-
-    def load_image(self):
-        filename = button_texture_path + self.button_type.name + ".png"
-        self._texture = QPixmap(filename)
-        self._texture_size = Vector(self._texture.width(), self._texture.height())
-        if self._texture_size.x == 0 or self._texture_size.y == 0:
-            print("ERROR: texture for " + self.name
-                  + " has 0 size or is missing at " + filename + "!")
-
-    def draw(self, qp):
-        if self.is_selected:
-            qp.fillRect(self.top_left_corner.x, self.top_left_corner.y,
-                        self.texture_size.x, self.texture_size.y, QColor(80, 80, 80))
-
-        qp.drawPixmap(self.top_left_corner.x, self.top_left_corner.y, self.texture)
-
-    def click(self):
-        pass
-
-
-class ExitButton(Button):
-    name = "exit"
-
-    def click(self):
-        self.main_widget.running = False
-
-
-class SingleplayerButton(Button):
-    name = "singleplayer"
-
-    def click(self):
-        self.main_widget.switch_scene(Scene.SP_WORLD)
-
-
-class LocalMultiplayerButton(Button):
-    name = "local_multiplayer"
-
-    def click(self):
-        print("Local multiplayer button clicked!")
-        print("TODO: Move host button to separate (and implement local multiplayer)")
-        self.main_widget.switch_scene(Scene.SERVER_WORLD)
-
-
-class OnlineMultiplayerButton(Button):
-    name = "online_multiplayer"
-
-    def click(self):
-        self.main_widget.switch_scene(Scene.ONLINE_WORLD)
+        self.elements.append(MainMenu.ExitButton(main_widget, Vector(self.size / 2, 800)))
+        self.elements.append(MainMenu.SingleplayerButton(main_widget, Vector(self.size / 2, 350)))
+        self.elements.append(MainMenu.OnlineMultiplayerButton(main_widget, Vector(self.size / 2, 500)))
+        self.elements.append(MainMenu.LocalMultiplayerButton(main_widget, Vector(self.size / 2, 600)))
 
 
 class MainMenuScene(QWidget):
     def __init__(self, parent, size):
         super().__init__(parent)
 
-        self.parent = parent
+        self.main_widget = self.parentWidget()
 
+        self.parent = parent
         self.size = size
 
-        self.buttons = []
-        self.selected_button = None
+        self.active_menu = MainMenu(self.main_widget, self.size)
         self.is_clicking = False
 
         self.init_ui()
@@ -133,13 +68,18 @@ class MainMenuScene(QWidget):
     def init_ui(self):
         self.setGeometry(0, 0, self.size, self.size)
         self.setMouseTracking(True)
-
-        self.buttons.append(ExitButton(self.parentWidget(), Vector(self.size / 2, 800)))
-        self.buttons.append(SingleplayerButton(self.parentWidget(), Vector(self.size / 2, 350)))
-        self.buttons.append(OnlineMultiplayerButton(self.parentWidget(), Vector(self.size / 2, 500)))
-        self.buttons.append(LocalMultiplayerButton(self.parentWidget(), Vector(self.size / 2, 600)))
-
         self.show()
+
+    def switch_menu(self, menu):
+        self.active_menu = None
+        if menu == Menu.MAIN_MENU:
+            self.active_menu = MainMenu(self.main_widget, self.size)
+        elif menu == Menu.ONLINE_OPTIONS:
+            # self.active_menu = OnlineOptions(self.main_widget, self.size)
+            pass
+        elif menu == Menu.SETTINGS:
+            # self.active_menu = Settings(self.main_widget, self.size)
+            pass
 
     def clean_mem(self):
         pass
@@ -155,23 +95,16 @@ class MainMenuScene(QWidget):
         if event.button() == Qt.LeftButton:
             self.is_clicking = True
 
-    def update_ui(self):
+    def paintEvent(self, event):
         curr_time_ns = time.time_ns()
         # delta_time = ns_to_s(curr_time_ns - self._last_frame_time_ns)
         self._last_frame_time_ns = curr_time_ns
 
-        self.selected_button = None
-        for button in self.buttons:
-            if is_point_inside_rect(self.mouse_position, button.top_left_corner, button.bottom_right_corner):
-                button.is_selected = True
-                self.selected_button = button
-            else:
-                button.is_selected = False
-
         if self.is_clicking:
+            self.active_menu.click_element()
             self.is_clicking = False
-            if self.selected_button is not None:
-                self.selected_button.click()
+
+        self.active_menu.update_ui(self.mouse_position)
 
         if DEBUG_MODE:
             self._frames_since_last_show += 1
@@ -180,9 +113,6 @@ class MainMenuScene(QWidget):
                 self.fps = self._frames_since_last_show / last_fps_show_delta
                 self._frames_since_last_show = 0
                 self._last_fps_show_time = curr_time_ns
-
-    def paintEvent(self, event):
-        self.update_ui()
 
         qp = QPainter(self)
         qp.setFont(QFont("sans serif", 12))
@@ -196,8 +126,7 @@ class MainMenuScene(QWidget):
         # draw static menu background
         # qp.drawPixmap(QPoint(), <menu background pixmap>)
 
-        for button in self.buttons:
-            button.draw(qp)
+        self.active_menu.draw(qp)
 
         if DEBUG_MODE:
             qp.setFont(QFont("sans serif", 12))

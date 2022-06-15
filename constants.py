@@ -9,6 +9,12 @@ class Scene(IntEnum):
     SERVER_WORLD = 3
 
 
+class Menu(IntEnum):
+    MAIN_MENU = 0
+    ONLINE_OPTIONS = 1
+    SETTINGS = 2
+
+
 class GameInfo:
     is_headless = False
 

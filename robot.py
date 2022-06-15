@@ -52,6 +52,10 @@ class Robot:
         self.is_player = is_player
         self.has_ai = has_ai
 
+        self.should_respawn = True
+        if has_ai:
+            self.should_respawn = False
+
         self.input = None
 
         self.size = size
@@ -93,8 +97,11 @@ class Robot:
                           self.extrapolation_body.position, self.extrapolation_body.rotation)
 
     def update(self, delta_time):
-        if self.is_dead:
+        if int(self.health) <= 0:
+            self.health = 0
             self.die()
+            if not self.should_respawn:
+                return
 
         current_tile = self.get_center_tile()
         if current_tile.effect_class is not None:
@@ -188,13 +195,17 @@ class Robot:
             effect.apply(self, delta_time)
 
     def take_damage(self, damage):
-        self.health -= int(damage)
-        if self.health <= 0:
-            self.health = 0
-            self.is_dead = True
+        self.health -= damage
 
     def die(self):
         print("<cool tank explode animation> or something... (for robot ID " + str(self.robot_id) + ")")
+        self.is_dead = True
+        if self.should_respawn:
+            self.respawn()
+        else:
+            self.remove()
+
+    def respawn(self):
         self.health = ROBOT_HEALTH
         self.sim_body.reset(position=Vector(ARENA_SIZE / 2, ARENA_SIZE / 2), rotation=0)
         self.extrapolation_body.set(self.sim_body)
@@ -205,7 +216,9 @@ class Robot:
 
     def remove(self):
         self.to_remove = True
-        self.physics_world.world.DestroyBody(self.physics_body)
+        if self.physics_body is not None:
+            self.physics_world.world.DestroyBody(self.physics_body)
+            self.physics_body = None
 
 
 class PlayerInput:

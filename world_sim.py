@@ -54,7 +54,7 @@ class WorldSim:
         self.robots.append(enemy)
         return enemy
 
-    def fixed_update(self, delta_time):
+    def clear_dead_bullets(self):
         dead_bullets = []
         for bullet in self.bullets:
             if bullet.to_destroy:
@@ -64,17 +64,18 @@ class WorldSim:
             self.bullets.remove(dead)
         dead_bullets.clear()
 
-        for bullet in self.bullets:
-            bullet.update(delta_time)
-
+    def clear_dead_robots(self):
         dead_robots = []
         for robot in self.robots:
             if robot.to_remove:
                 dead_robots.append(robot)
         for dead in dead_robots:
-            dead.die()
             self.robots.remove(dead)
         dead_robots.clear()
+
+    def fixed_update(self, delta_time):
+        for bullet in self.bullets:
+            bullet.update(delta_time)
 
         for robot in self.robots:
             robot.update(delta_time)
@@ -83,6 +84,9 @@ class WorldSim:
 
         for robot in self.robots:
             robot.refresh_from_physics()
+
+        self.clear_dead_bullets()
+        self.clear_dead_robots()
 
         self.physics_frame_count += 1
         self.physics_world_time_ns = FIXED_DELTA_TIME_NS * self.physics_frame_count
@@ -195,6 +199,7 @@ class OnlineWorldSim(WorldSim):
                     if not contained:
                         dead_robots.append(robot)
                 for dead in dead_robots:
+                    dead.die()
                     dead.remove()
                     self.robots.remove(dead)
                 dead_robots.clear()
@@ -295,9 +300,12 @@ class ServerWorldSim(WorldSim):
                 existing_robot.input = client.last_rx_packet.player_input
         for disconnected in disconnected_clients:
             if disconnected.robot is not None:
+                disconnected.robot.die()
                 disconnected.robot.remove()
             self.udp_socket.clients.pop(disconnected.address)
         disconnected_clients.clear()
+
+        self.clear_dead_robots()
 
         super().fixed_update(delta_time)
 

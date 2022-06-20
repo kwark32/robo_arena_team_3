@@ -9,7 +9,7 @@ class Scene(IntEnum):
     SERVER_WORLD = 3
 
 
-class Menu(IntEnum):
+class Menus(IntEnum):
     MAIN_MENU = 0
     ONLINE_OPTIONS = 1
     SETTINGS = 2
@@ -32,5 +32,8 @@ MAX_EXTRAPOLATION_STEPS = round((1 / 4) * FIXED_FPS)
 ROBOT_HEALTH = 1000
 
 CLIENT_DISCONNECT_TIMEOUT_NS = s_to_ns(10)
+
+MAX_PLAYER_NAME_LENGTH = 15
+CARET_BLINK_RATE_NS = s_to_ns(0.5)
 
 DEBUG_MODE = False

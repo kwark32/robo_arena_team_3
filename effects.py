@@ -14,6 +14,9 @@ class RobotEffect:
 
 
 class SpeedEffect(RobotEffect):
+    speed_gain = 0
+    ang_speed_gain = 0
+
     def __init__(self, duration=(FIXED_DELTA_TIME / 2)):  # duration: half physics frame (gets applied 1 frame)
         super().__init__(duration)
 

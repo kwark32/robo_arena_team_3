@@ -4,19 +4,16 @@ import socket
 import select
 import pickle
 
+from constants import GameInfo
 
-server_ip = "202.61.239.116"  # "127.0.0.1"
+
 i = 0
 for arg in sys.argv:
     if arg == "--ip":
         if len(sys.argv) > i + 1:
-            server_ip = sys.argv[i + 1]
+            GameInfo.server_ip = sys.argv[i + 1]
             break
     i += 1
-
-port = 54345
-server_ip_port = server_ip, port
-buffer_size = 4096
 
 
 class RobotInfo:
@@ -61,7 +58,7 @@ class StatePacket(Packet):
 
 
 class ClientPacket(Packet):
-    def __init__(self, creation_time=0, player_input=None, player_name="Player", disconnect=False):
+    def __init__(self, creation_time=0, player_input=None, player_name="", disconnect=False):
         super().__init__(creation_time=creation_time)
         self.player_input = player_input
         self.player_name = player_name
@@ -71,7 +68,7 @@ class ClientPacket(Packet):
 class Client:
     next_player_id = 10
 
-    def __init__(self, address, player_id=-1, player_name="Player"):
+    def __init__(self, address, player_id=-1, player_name=""):
         self.address = address
         self.player_id = player_id
         if player_id == -1:
@@ -92,7 +89,7 @@ class UDPSocket:
         return len(read_sockets) > 0
 
     def get_packet(self):
-        bytes_address_tuple = self.udp_socket.recvfrom(buffer_size)
+        bytes_address_tuple = self.udp_socket.recvfrom(GameInfo.buffer_size)
 
         message = bytes_address_tuple[0]
         address = bytes_address_tuple[1]
@@ -109,7 +106,7 @@ class UDPServer(UDPSocket):
     def __init__(self):
         super().__init__()
 
-        self.udp_socket.bind(("", port))
+        self.udp_socket.bind(("", GameInfo.port))
         self.clients = {}  # client dict: address (str) -> client
 
     def get_client_packets(self):
@@ -117,7 +114,7 @@ class UDPServer(UDPSocket):
             address, packet = self.get_packet()
             client = self.clients.get(address)
             if client is None and not packet.disconnect:
-                client = Client(address)
+                client = Client(address, player_name=packet.player_name)
                 self.clients[address] = client
             if client is not None:
                 if client.last_rx_packet is None or packet.creation_time >= client.last_rx_packet.creation_time:
@@ -136,4 +133,4 @@ class UDPClient(UDPSocket):
         return state_packet
 
     def send_packet(self, server, client_packet):
-        super().send_packet(server_ip_port, client_packet)
+        super().send_packet((GameInfo.server_ip, GameInfo.port), client_packet)

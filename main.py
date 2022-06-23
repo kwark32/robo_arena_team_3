@@ -12,9 +12,10 @@ for arg in headless_args:
 headless_args.clear()
 
 if not GameInfo.is_headless:
-    from constants import Scene, WINDOW_SIZE
+    from constants import Scene, WINDOW_SIZE, Fonts
     from main_menu_scene import MainMenuScene
     from world_scene import SPWorldScene, OnlineWorldScene, ServerWorldScene
+    from PyQt5.QtGui import QFont
     from PyQt5.QtWidgets import QWidget, QApplication
 
     class ArenaWindow(QWidget):
@@ -81,6 +82,9 @@ def main():
         window = ArenaWindow()
         window.setWindowTitle("Robo Arena")
         window.show()
+
+        Fonts.fps_font = QFont("Noto Sans", 12)
+        Fonts.text_field_font = QFont("Noto Sans", 16)
 
         while window.running:  # main loop
             window.update()

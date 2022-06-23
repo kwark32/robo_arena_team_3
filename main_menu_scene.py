@@ -1,11 +1,11 @@
 import time
 
-from PyQt5.QtGui import QPainter, QColor, QFont
+from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtCore import Qt, QPoint
 from ui_elements import Button, Menu, TextField
 from util import Vector, ns_to_s
-from constants import DEBUG_MODE, Scene, Menus, MAX_PLAYER_NAME_LENGTH
+from constants import DEBUG_MODE, GameInfo, Scene, Menus, Fonts, MAX_PLAYER_NAME_LENGTH, MAX_SERVER_IP_LENGTH
 
 
 class MainMenu(Menu):
@@ -40,7 +40,7 @@ class MainMenu(Menu):
             self.menu.main_menu_scene.switch_menu(Menus.SETTINGS)
 
     def __init__(self, main_widget, size, main_menu_scene):
-        super().__init__(main_widget, size, main_menu_scene)
+        super().__init__(main_widget, size, main_menu_scene, "main-menu_bg")
 
         self.elements.append(MainMenu.ExitButton(main_widget, Vector(self.size / 2, 850), self))
         self.elements.append(MainMenu.SingleplayerButton(main_widget, Vector(self.size / 2, 300), self))
@@ -50,15 +50,6 @@ class MainMenu(Menu):
 
     def escape_pressed(self):
         self.main_widget.running = False
-
-    def draw(self, qp):
-        qp.setFont(QFont("sans serif", 75))
-        qp.setPen(Qt.darkCyan)
-        qp.drawText(QPoint(245, 150), "Robo Arena")
-        # draw static menu background
-        # qp.drawPixmap(QPoint(), <menu background pixmap>)
-
-        super().draw(qp)
 
 
 class OnlineOptions(Menu):
@@ -71,25 +62,120 @@ class OnlineOptions(Menu):
     class PlayerNameField(TextField):
         name = "player_name"
 
+        def __init__(self, main_widget, position, menu, text_offset=Vector(0, 0), max_text_length=-1):
+            super().__init__(main_widget, position, menu, text_offset=text_offset, max_text_length=max_text_length)
+
+            self.placeholder_text = GameInfo.placeholder_name
+            if GameInfo.local_player_name != GameInfo.placeholder_name:
+                self.text = GameInfo.local_player_name
+
+    class ServerIPField(TextField):
+        name = "server_ip"
+
+        def __init__(self, main_widget, position, menu, text_offset=Vector(0, 0), max_text_length=-1):
+            super().__init__(main_widget, position, menu, text_offset=text_offset, max_text_length=max_text_length)
+
+            self.placeholder_text = GameInfo.default_ip
+            if GameInfo.server_ip != GameInfo.default_ip:
+                self.text = GameInfo.server_ip
+
+            self.dot_count = 0
+            self.number_counts = [0, 0, 0, 0]
+
+        def key_press(self, key):
+            keycode = int(key)
+            valid_input = True
+
+            if key == Qt.Key_Backspace:
+                if len(self.text) > 0:
+                    last = self.text[-1]
+                    if last == '.':
+                        self.dot_count -= 1
+                    elif ord('0') <= ord(last) <= ord('9'):
+                        self.number_counts[self.dot_count] -= 1
+
+            elif keycode == ord('.') and self.dot_count < 3 and self.number_counts[self.dot_count] > 0:
+                self.dot_count += 1
+
+            elif (ord('0') <= keycode <= ord('9')
+                  and self.number_counts[self.dot_count] < 3
+                  and (self.number_counts[self.dot_count] == 0
+                       or int(self.text[-self.number_counts[self.dot_count]:]) * 10 + keycode - ord('0') <= 255)):
+                self.number_counts[self.dot_count] += 1
+
+            else:
+                valid_input = False
+
+            if valid_input:
+                super().key_press(key)
+
+    class JoinButton(Button):
+        name = "join"
+
+        def __init__(self, main_widget, position, menu):
+            super().__init__(main_widget, position, menu)
+
+            self.player_name_field = None
+            self.server_ip_field = None
+
+        def click(self):
+            if self.player_name_field is not None and len(self.player_name_field.text) > 0:
+                GameInfo.local_player_name = self.player_name_field.text
+            else:
+                GameInfo.local_player_name = GameInfo.placeholder_name
+
+            if self.server_ip_field is not None and len(self.server_ip_field.text) > 0:
+                GameInfo.server_ip = self.server_ip_field.text
+            else:
+                GameInfo.server_ip = GameInfo.default_ip
+
+            self.main_widget.switch_scene(Scene.ONLINE_WORLD)
+
+    class HostButton(Button):
+        name = "host"
+
+        def __init__(self, main_widget, position, menu):
+            super().__init__(main_widget, position, menu)
+
+            self.player_name_field = None
+            self.server_ip_field = None
+
+        def click(self):
+            if self.player_name_field is not None and len(self.player_name_field.text) > 0:
+                GameInfo.local_player_name = self.player_name_field.text
+            else:
+                GameInfo.local_player_name = GameInfo.placeholder_name
+
+            if self.server_ip_field is not None and len(self.server_ip_field.text) > 0:
+                GameInfo.server_ip = self.server_ip_field.text
+            else:
+                GameInfo.server_ip = GameInfo.default_ip
+
+            self.main_widget.switch_scene(Scene.SERVER_WORLD)
+
     def __init__(self, main_widget, size, main_menu_scene):
-        super().__init__(main_widget, size, main_menu_scene)
+        super().__init__(main_widget, size, main_menu_scene, "online-options_bg")
 
         self.elements.append(OnlineOptions.BackButton(main_widget, Vector(self.size / 2, 850), self))
-        self.elements.append(OnlineOptions.PlayerNameField(main_widget, Vector(self.size / 2, 500),
-                                                           self, text_offset=Vector(255, 50),
-                                                           max_text_length=MAX_PLAYER_NAME_LENGTH))
+        player_name_field = OnlineOptions.PlayerNameField(main_widget, Vector(self.size / 2, 300),
+                                                          self, text_offset=Vector(255, 50),
+                                                          max_text_length=MAX_PLAYER_NAME_LENGTH)
+        self.elements.append(player_name_field)
+        server_ip_field = OnlineOptions.ServerIPField(main_widget, Vector(self.size / 2, 425),
+                                                      self, text_offset=Vector(255, 50),
+                                                      max_text_length=MAX_SERVER_IP_LENGTH)
+        self.elements.append(server_ip_field)
+        join_button = OnlineOptions.JoinButton(main_widget, Vector(self.size / 2 - 200, 600), self)
+        join_button.player_name_field = player_name_field
+        join_button.server_ip_field = server_ip_field
+        self.elements.append(join_button)
+        host_button = OnlineOptions.HostButton(main_widget, Vector(self.size / 2 + 200, 600), self)
+        host_button.player_name_field = player_name_field
+        host_button.server_ip_field = server_ip_field
+        self.elements.append(host_button)
 
     def escape_pressed(self):
         self.main_menu_scene.switch_menu(Menus.MAIN_MENU)
-
-    def draw(self, qp):
-        qp.setFont(QFont("sans serif", 60))
-        qp.setPen(Qt.darkCyan)
-        qp.drawText(QPoint(185, 150), "Online Multiplayer")
-        # draw static menu background
-        # qp.drawPixmap(QPoint(), <menu background pixmap>)
-
-        super().draw(qp)
 
 
 class Settings(Menu):
@@ -100,21 +186,12 @@ class Settings(Menu):
             self.menu.main_menu_scene.switch_menu(Menus.MAIN_MENU)
 
     def __init__(self, main_widget, size, main_menu_scene):
-        super().__init__(main_widget, size, main_menu_scene)
+        super().__init__(main_widget, size, main_menu_scene, "settings_bg")
 
         self.elements.append(Settings.BackButton(main_widget, Vector(self.size / 2, 850), self))
 
     def escape_pressed(self):
         self.main_menu_scene.switch_menu(Menus.MAIN_MENU)
-
-    def draw(self, qp):
-        qp.setFont(QFont("sans serif", 75))
-        qp.setPen(Qt.darkCyan)
-        qp.drawText(QPoint(315, 150), "Settings")
-
-        # TODO: Set correct bg pixmap
-
-        super().draw(qp)
 
 
 class MainMenuScene(QWidget):
@@ -194,15 +271,11 @@ class MainMenuScene(QWidget):
                 self._last_fps_show_time = curr_time_ns
 
         qp = QPainter(self)
-        qp.setFont(QFont("sans serif", 12))
-        qp.setPen(Qt.red)
-
-        qp.fillRect(0, 0, self.size, self.size, QColor(50, 50, 50))
 
         self.active_menu.draw(qp)
 
         if DEBUG_MODE:
-            qp.setFont(QFont("sans serif", 12))
+            qp.setFont(Fonts.fps_font)
             qp.setPen(Qt.red)
             qp.drawText(QPoint(5, 20), str(round(self.fps)))
 

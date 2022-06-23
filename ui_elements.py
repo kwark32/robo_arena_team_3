@@ -1,9 +1,7 @@
-import time
-
 from PyQt5.QtCore import QPoint, Qt
-from PyQt5.QtGui import QPixmap, QColor, QFont
+from PyQt5.QtGui import QPixmap, QColor, QFontMetricsF
 from util import Vector, get_main_path, is_point_inside_rect
-from constants import CARET_BLINK_RATE_NS
+from constants import CARET_BLINK_RATE_NS, Fonts
 
 
 ui_element_texture_path = get_main_path() + "/textures/ui/main_menu/"
@@ -25,6 +23,8 @@ class UIElement:
         self.menu = menu
 
         self.is_selected = False
+
+        self.update_time_ns = 0
 
         self._top_left_corner = None
         self._bottom_right_corner = None
@@ -81,6 +81,7 @@ class UIElement:
 
     def update_selected(self, curr_time_ns):
         self.is_selected = True
+        self.update_time_ns = curr_time_ns
 
     def unselect(self):
         self.is_selected = False
@@ -101,54 +102,65 @@ class TextField(UIElement):
         if self.text_field_type is TextField:
             print("ERROR: TextField base class should not be instantiated!")
 
+        self.font_metrics = QFontMetricsF(Fonts.text_field_font)
+
         self.text_offset = text_offset.copy()
         self.max_text_length = max_text_length
 
-        self.caret = 0
+        self.caret = False
 
         self.last_caret_switch_time = 0
 
         self.text = ""
+        self.placeholder_text = ""
 
     def draw(self, qp):
         super().draw(qp)
 
-        qp.setFont(QFont("sans serif", 25))
-        qp.setPen(Qt.darkCyan)
-        qp.drawText(QPoint(self.top_left_corner.x + self.text_offset.x,
-                           self.top_left_corner.y + self.text_offset.y), self.text)
+        draw_text = self.text
+        if self.caret:
+            draw_text += "|"
+
+        qp.setFont(Fonts.text_field_font)
+
+        if len(self.text) > 0 or self.is_selected:
+            qp.setPen(Qt.darkCyan)
+            qp.drawText(QPoint(self.top_left_corner.x + self.text_offset.x,
+                               self.top_left_corner.y + self.text_offset.y), draw_text)
+        else:
+            qp.setPen(Qt.gray)
+            qp.drawText(QPoint(self.top_left_corner.x + self.text_offset.x,
+                               self.top_left_corner.y + self.text_offset.y), self.placeholder_text)
 
     def key_press(self, key):
         keycode = int(key)
-        if 0 <= self.max_text_length <= (len(self.text) - self.caret) and not key == Qt.Key_Backspace:
-            print("WARN: Max text length for this TextField is " + str(self.max_text_length) + "!")
-            return True
 
-        caret = self.caret != 0
-        if caret:
-            self.remove_caret()
+        if (keycode == ord(' ') or keycode == ord('-') or keycode == ord('.') or ord('0') <= keycode <= ord('9')
+                or ord('A') <= keycode <= ord('Z') or keycode == ord('_')):
 
-        if (keycode == 32 or keycode == 45 or 48 <= keycode <= 57
-                or 65 <= keycode <= 90 or keycode == 95):
             new_char = chr(keycode)
             if not self.menu.shift_key_pressed:
                 new_char = new_char.lower()
-            self.text += new_char
+
+            if self.get_text_width(add_str=str(new_char)) <= self.max_text_length:
+                self.text += new_char
+            else:
+                print("WARN: Max text width for this TextField is " + str(self.max_text_length)
+                      + "px (would be " + str(self.get_text_width(add_str=str(new_char))) + ")!")
+
             self.set_caret(True)
+
         elif key == Qt.Key_Backspace:
             self.text = self.text[:-1]
             self.set_caret(True)
-
-        if caret:
-            self.add_caret()
 
         return True
 
     def update_selected(self, curr_time_ns):
         super().update_selected(curr_time_ns)
 
-        if curr_time_ns >= self.last_caret_switch_time + CARET_BLINK_RATE_NS:
-            self.set_caret(self.caret == 0)
+        if self.update_time_ns >= self.last_caret_switch_time + CARET_BLINK_RATE_NS:
+            self.set_caret(not self.caret)
 
     def unselect(self):
         super().unselect()
@@ -156,23 +168,11 @@ class TextField(UIElement):
         self.set_caret(False)
 
     def set_caret(self, value):
-        change = value != (self.caret != 0)
-        if value:
-            self.caret = 1
-            if change:
-                self.add_caret()
-        else:
-            self.caret = 0
-            if change:
-                self.remove_caret()
+        self.caret = value
+        self.last_caret_switch_time = self.update_time_ns
 
-        self.last_caret_switch_time = time.time_ns()
-
-    def add_caret(self):
-        self.text += "|"
-
-    def remove_caret(self):
-        self.text = self.text[:-1]
+    def get_text_width(self, add_str=""):
+        return self.font_metrics.width(self.text + add_str)
 
 
 # base class
@@ -186,7 +186,7 @@ class Button(UIElement):
 
 
 class Menu:
-    def __init__(self, main_widget, size, main_menu_scene):
+    def __init__(self, main_widget, size, main_menu_scene, bg_texture_name):
         self.main_widget = main_widget
         self.size = size
         self.main_menu_scene = main_menu_scene
@@ -194,7 +194,7 @@ class Menu:
         self.elements = []
         self.selected_element = None
 
-        self.bg_pixmap = None
+        self.bg_pixmap = QPixmap(ui_element_texture_path + bg_texture_name + ".png")
 
         self.shift_key_pressed = False
 

@@ -1,7 +1,7 @@
 from world_sim import SPWorldSim, OnlineWorldSim, ServerWorldSim
-from constants import Scene, ARENA_SIZE, DEBUG_MODE
+from constants import Scene, ARENA_SIZE, DEBUG_MODE, Fonts
 from networking import ClientPacket
-from PyQt5.QtGui import QPainter, QPolygon, QFont
+from PyQt5.QtGui import QPainter, QPolygon
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtCore import Qt, QPoint
 
@@ -66,7 +66,7 @@ class WorldScene(QWidget):
         self.world_sim.update_world()
 
         qp = QPainter(self)
-        qp.setFont(QFont("sans serif", 12))
+        qp.setFont(Fonts.fps_font)
         qp.setPen(Qt.red)
 
         self.world_sim.arena.draw(qp)

@@ -6,7 +6,7 @@ from json_interface import load_map
 from physics import PhysicsWorld
 from util import Vector, get_main_path, get_delta_time_s, limit
 from networking import UDPClient, UDPServer, RobotInfo, BulletInfo, ClientPacket, StatePacket
-from constants import ARENA_SIZE, FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_FIXED_TIMESTEPS
+from constants import GameInfo, ARENA_SIZE, FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_FIXED_TIMESTEPS
 from constants import CLIENT_DISCONNECT_TIMEOUT_NS, MAX_EXTRAPOLATION_STEPS
 
 
@@ -45,7 +45,8 @@ class WorldSim:
         self.arena = load_map(map_path, size, physics_world=self.physics_world)
 
     def create_player(self, robot_id=-1, position=Vector(ARENA_SIZE / 2, ARENA_SIZE / 2)):
-        player = Robot(self, robot_id=robot_id, is_player=True, has_ai=False, position=position)
+        player = Robot(self, robot_id=robot_id, is_player=True, has_ai=False,
+                       position=position, player_name=GameInfo.local_player_name)
         self.robots.append(player)
         return player
 
@@ -140,11 +141,13 @@ class OnlineWorldSim(WorldSim):
     def fixed_update(self, delta_time):
         self.previous_inputs.append((self.player_input.copy(), self.physics_frame_count))
 
+        packet = None
         if self.player_id == -1 or self.player_input is None:
-            self.udp_socket.send_packet(None, ClientPacket(creation_time=self.curr_time_ns))
+            packet = ClientPacket(creation_time=self.curr_time_ns, player_name=GameInfo.local_player_name)
         else:
-            packet = ClientPacket(creation_time=self.curr_time_ns, player_input=self.player_input)
-            self.udp_socket.send_packet(None, packet)
+            packet = ClientPacket(creation_time=self.curr_time_ns, player_input=self.player_input,
+                                  player_name=GameInfo.local_player_name)
+        self.udp_socket.send_packet(None, packet)
 
         new_packets = []
         while self.udp_socket.get_packet_available():

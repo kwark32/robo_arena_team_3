@@ -43,7 +43,7 @@ tile_type_dict = {
     "wall": TileType("wall", has_collision=True),
     "earth": TileType("earth", effect_class=EarthTileEffect),
     "tower_1": TileType("tower_1", has_collision=True),
-    "hole": TileType("hole"),
+    "hole": TileType("hole", effect_class=HoleTileEffect),
     "water": TileType("water", effect_class=WaterTileEffect),
     "lava": TileType("lava"),
     "fire": TileType("fire", effect_class=FireTileEffect),

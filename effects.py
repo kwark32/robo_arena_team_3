@@ -68,3 +68,27 @@ class FireTileEffect(SpeedEffect):
         super().apply(robot, delta_time=delta_time)
 
         robot.take_damage(self.effect_class.damage_per_second * delta_time)
+
+
+class HoleTileEffect(StunEffect):
+    rotation = 8
+
+    def __init__(self, duration=4):
+        super().__init__(duration=duration)
+
+        self.start_rotation = None
+
+    def apply(self, robot, delta_time=0):
+        super().apply(robot, delta_time=delta_time)
+
+        if self.start_rotation is None:
+            self.start_rotation = robot.sim_body.rotation
+
+        robot.sim_body.rotation += self.effect_class.rotation * delta_time * delta_time
+
+        if self.duration <= 0:
+            robot.take_damage(1000)
+
+    def revert(self, robot):
+        if self.start_rotation is not None:
+            robot.sim_body.rotation = self.start_rotation

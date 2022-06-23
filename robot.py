@@ -96,6 +96,8 @@ class Robot:
         if self.is_dead:
             self.die()
 
+        self.revert_effects()
+
         current_tile = self.get_center_tile()
         if current_tile.effect_class is not None:
             self.effects.append(current_tile.effect_class())
@@ -174,6 +176,10 @@ class Robot:
             self.sim_body.position.y = ARENA_SIZE - self.physics_body.position[1]
 
     def apply_effects(self, delta_time):
+        for effect in self.effects:
+            effect.apply(self, delta_time)
+
+    def revert_effects(self):
         expired_effects = []
         for effect in self.effects:
             effect.revert(self)
@@ -183,9 +189,6 @@ class Robot:
         for expired in expired_effects:
             self.effects.remove(expired)
         expired_effects.clear()
-
-        for effect in self.effects:
-            effect.apply(self, delta_time)
 
     def take_damage(self, damage):
         self.health -= int(damage)
@@ -202,6 +205,7 @@ class Robot:
         self.forward_velocity_goal = 0
         self.set_physics_body()
         self.is_dead = False
+        self.effects.clear()
 
     def remove(self):
         self.to_remove = True

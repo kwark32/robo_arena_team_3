@@ -41,12 +41,13 @@ class OnlineWorldSim(WorldSim):
                 contained = False
                 for new_robot_info in robots:
                     if robot.robot_id == new_robot_info.player_id:
+                        if new_robot_info.died:
+                            robot.die()
                         contained = True
                         break
                 if not contained:
                     dead_robots.append(robot)
             for dead in dead_robots:
-                dead.die()
                 dead.remove()
                 self.robots.remove(dead)
             dead_robots.clear()

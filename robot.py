@@ -22,6 +22,8 @@ def set_robot_values(robot, robot_info):
     robot.last_position = robot_info.last_position
     robot.forward_velocity_goal = robot_info.forward_velocity_goal
     robot.set_physics_body()
+    if robot_info.died:
+        robot.die()
 
 
 class Robot:
@@ -80,6 +82,7 @@ class Robot:
         self.health = int(health)
         self.to_remove = False
         self.is_dead = False
+        self.last_death_frame = 0
 
     @property
     def body_texture(self):
@@ -200,6 +203,7 @@ class Robot:
     def die(self):
         print("<cool tank explode animation> or something... (for robot ID " + str(self.robot_id) + ")")
         self.is_dead = True
+        self.last_death_frame = self.world_sim.physics_frame_count
         if self.should_respawn:
             self.respawn()
         else:

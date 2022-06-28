@@ -17,7 +17,7 @@ for arg in sys.argv:
 
 
 class RobotInfo:
-    def __init__(self, robot):
+    def __init__(self, robot, physics_frame=0):
         self.robot_body = robot.sim_body
         self.player_id = robot.robot_id
         self.health = robot.health
@@ -26,6 +26,11 @@ class RobotInfo:
         self.player_name = robot.player_name
         self.last_position = robot.last_position
         self.forward_velocity_goal = robot.forward_velocity_goal
+
+        self.died = False
+
+        if robot.last_death_frame == physics_frame > 0:
+            self.died = True
 
 
 class BulletInfo:

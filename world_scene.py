@@ -1,4 +1,6 @@
-from world_sim import SPWorldSim, OnlineWorldSim, ServerWorldSim
+from world_sim import SPWorldSim
+from client_world_sim import OnlineWorldSim
+from server_world_sim import ServerWorldSim
 from constants import Scene, ARENA_SIZE, DEBUG_MODE, Fonts
 from networking import ClientPacket
 from PyQt5.QtGui import QPainter, QPolygon
@@ -71,7 +73,7 @@ class WorldScene(QWidget):
 
         self.world_sim.arena.draw(qp)
 
-        # TODO: Maybe use less delta_time if physics can't keep up, to still extrapolate correctly
+        # TODO: Maybe use less delta_time if physics can't keep up, to still extrapolate correctly (SP only)
         for bullet in self.world_sim.bullets:
             bullet.draw(qp, self.world_sim.extrapolation_delta_time)
         for robot in self.world_sim.robots:

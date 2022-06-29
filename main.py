@@ -17,7 +17,7 @@ if not GameInfo.is_headless:
     from main_menu_scene import MainMenuScene
     from world_scene import SPWorldScene, OnlineWorldScene, ServerWorldScene
     from PyQt5.QtGui import QFont
-    from PyQt5.QtWidgets import QWidget, QApplication
+    from PyQt5.QtWidgets import QWidget, QApplication, QDesktopWidget
 
     class ArenaWindow(QWidget):
         def __init__(self):
@@ -27,12 +27,17 @@ if not GameInfo.is_headless:
 
             self.active_scene = None
 
-            self.init_ui()
+            self.init_window()
 
             self.switch_scene(Scene.MAIN_MENU)
 
-        def init_ui(self):
-            self.setGeometry(0, 0, WINDOW_SIZE, WINDOW_SIZE)
+        def init_window(self):
+            self.setFixedSize(WINDOW_SIZE, WINDOW_SIZE)
+
+            geometry_rect = self.frameGeometry()
+            center_point = QDesktopWidget().availableGeometry().center()
+            geometry_rect.moveCenter(center_point)
+            self.move(geometry_rect.topLeft())
 
         def closeEvent(self, event):
             self.running = False
@@ -74,7 +79,7 @@ if not GameInfo.is_headless:
                 self.active_scene = ServerWorldScene(self, WINDOW_SIZE)
 
 else:
-    from world_sim import ServerWorldSim
+    from server_world_sim import ServerWorldSim
 
 
 def main():

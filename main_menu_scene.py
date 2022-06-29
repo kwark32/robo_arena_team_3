@@ -5,7 +5,8 @@ from PyQt5.QtWidgets import QWidget
 from PyQt5.QtCore import Qt, QPoint
 from ui_elements import Button, Menu, TextField
 from util import Vector, ns_to_s
-from constants import DEBUG_MODE, GameInfo, Scene, Menus, Fonts, MAX_PLAYER_NAME_LENGTH, MAX_SERVER_IP_LENGTH
+from globals import GameInfo, Scene, Menus, Fonts
+from constants import DEBUG_MODE, MAX_PLAYER_NAME_LENGTH, MAX_SERVER_IP_LENGTH
 
 
 class MainMenu(Menu):

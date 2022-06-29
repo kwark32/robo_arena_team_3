@@ -4,7 +4,7 @@ import socket
 import select
 import pickle
 
-from constants import GameInfo
+from globals import GameInfo
 
 
 i = 0

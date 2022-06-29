@@ -1,7 +1,8 @@
 from PyQt5.QtCore import QPoint, Qt
 from PyQt5.QtGui import QPixmap, QColor, QFontMetricsF
 from util import Vector, get_main_path, is_point_inside_rect
-from constants import CARET_BLINK_RATE_NS, Fonts
+from globals import Fonts
+from constants import CARET_BLINK_RATE_NS
 
 
 ui_element_texture_path = get_main_path() + "/textures/ui/main_menu/"

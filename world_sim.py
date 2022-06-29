@@ -4,7 +4,8 @@ from robot import Robot, PlayerInput
 from json_interface import load_map
 from physics import PhysicsWorld
 from util import Vector, get_main_path, get_delta_time_s
-from constants import GameInfo, ARENA_SIZE, FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_FIXED_TIMESTEPS
+from globals import GameInfo
+from constants import ARENA_SIZE, FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_FIXED_TIMESTEPS
 
 
 class WorldSim:

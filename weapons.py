@@ -1,6 +1,7 @@
 from transform import SimpleBody
 from util import Vector, get_main_path, draw_img_with_rot, limit_rot
-from constants import GameInfo, ARENA_SIZE, FIXED_FPS
+from globals import GameInfo
+from constants import ARENA_SIZE, FIXED_FPS
 
 if not GameInfo.is_headless:
     from PyQt5.QtGui import QPixmap

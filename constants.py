@@ -1,35 +1,4 @@
 from util import s_to_ns
-from enum import IntEnum
-
-
-class Scene(IntEnum):
-    MAIN_MENU = 0
-    SP_WORLD = 1
-    ONLINE_WORLD = 2
-    SERVER_WORLD = 3
-
-
-class Menus(IntEnum):
-    MAIN_MENU = 0
-    ONLINE_OPTIONS = 1
-    SETTINGS = 2
-
-
-class GameInfo:
-    is_headless = False
-
-    placeholder_name = "Player"
-    local_player_name = placeholder_name
-
-    default_ip = "202.61.239.116"  # "127.0.0.1"
-    server_ip = default_ip
-    port = 54345
-    buffer_size = 4096
-
-
-class Fonts:
-    fps_font = None
-    text_field_font = None
 
 
 WINDOW_SIZE = 1000

@@ -1,6 +1,6 @@
 import sys
 
-from constants import GameInfo
+from globals import GameInfo
 
 headless_args = []
 for arg in sys.argv:
@@ -12,7 +12,8 @@ for arg in headless_args:
 headless_args.clear()
 
 if not GameInfo.is_headless:
-    from constants import Scene, WINDOW_SIZE, Fonts
+    from globals import Scene, Fonts
+    from constants import WINDOW_SIZE
     from main_menu_scene import MainMenuScene
     from world_scene import SPWorldScene, OnlineWorldScene, ServerWorldScene
     from PyQt5.QtGui import QFont

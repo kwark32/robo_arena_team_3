@@ -1,7 +1,8 @@
 from transform import SimBody
 from weapons import TankCannon
 from util import Vector, get_main_path, draw_img_with_rot
-from constants import GameInfo, ARENA_SIZE, FIXED_DELTA_TIME, ROBOT_HEALTH
+from globals import GameInfo
+from constants import ARENA_SIZE, FIXED_DELTA_TIME, ROBOT_HEALTH
 
 if not GameInfo.is_headless:
     from PyQt5.QtGui import QPixmap

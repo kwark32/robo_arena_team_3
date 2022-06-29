@@ -1,7 +1,8 @@
 from world_sim import SPWorldSim
 from client_world_sim import OnlineWorldSim
 from server_world_sim import ServerWorldSim
-from constants import Scene, ARENA_SIZE, DEBUG_MODE, Fonts
+from globals import Scene, Fonts
+from constants import ARENA_SIZE, DEBUG_MODE
 from networking import ClientPacket
 from PyQt5.QtGui import QPainter, QPolygon
 from PyQt5.QtWidgets import QWidget

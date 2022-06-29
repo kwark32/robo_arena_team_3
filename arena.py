@@ -1,6 +1,6 @@
 import numpy as np
 
-from constants import GameInfo
+from globals import GameInfo
 from util import Vector, get_main_path
 from effects import *
 

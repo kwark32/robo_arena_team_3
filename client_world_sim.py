@@ -3,7 +3,8 @@ from robot import PlayerInput, set_robot_values
 from weapons import set_bullet_values
 from util import get_delta_time_s, limit
 from networking import UDPClient, ClientPacket
-from constants import GameInfo, FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_EXTRAPOLATION_STEPS
+from globals import GameInfo
+from constants import FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_EXTRAPOLATION_STEPS
 
 
 class OnlineWorldSim(WorldSim):

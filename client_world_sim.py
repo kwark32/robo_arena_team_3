@@ -11,7 +11,6 @@ class OnlineWorldSim(WorldSim):
     def __init__(self):
         super().__init__()
 
-        self.local_player_robot = None
         self.previous_inputs = []
         self.udp_socket = UDPClient()
         self.last_packet_physics_frame = 0
@@ -51,6 +50,8 @@ class OnlineWorldSim(WorldSim):
             for dead in dead_robots:
                 dead.remove()
                 self.robots.remove(dead)
+                if dead is self.local_player_robot:
+                    self.local_player_robot = None
             dead_robots.clear()
 
     def set_bullets(self, bullets):

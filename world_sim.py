@@ -17,6 +17,7 @@ class WorldSim:
         self.physics_world = PhysicsWorld()
         self.arena = None
         self.robots = []
+        self.local_player_robot = None
         self.bullets = []
         self.player_input = PlayerInput()
 
@@ -42,9 +43,10 @@ class WorldSim:
         map_path = get_main_path() + "/test_map.json"
         self.arena = load_map(map_path, size, physics_world=self.physics_world)
 
-    def create_player(self, robot_id=-1, position=Vector(ARENA_SIZE / 2, ARENA_SIZE / 2)):
+    def create_player(self, robot_id=-1, position=Vector(ARENA_SIZE / 2, ARENA_SIZE / 2),
+                      player_name=GameInfo.local_player_name):
         player = Robot(self, robot_id=robot_id, is_player=True, has_ai=False,
-                       position=position, player_name=GameInfo.local_player_name)
+                       position=position, player_name=player_name)
         self.robots.append(player)
         return player
 
@@ -71,6 +73,8 @@ class WorldSim:
                 dead_robots.append(robot)
         for dead in dead_robots:
             self.robots.remove(dead)
+            if dead is self.local_player_robot:
+                self.local_player_robot = None
         dead_robots.clear()
 
     def fixed_update(self, delta_time):
@@ -124,8 +128,8 @@ class SPWorldSim(WorldSim):
     def __init__(self):
         super().__init__()
 
-        self.player = self.create_player()
-        self.player.input = self.player_input
+        self.local_player_robot = self.create_player(player_name="")
+        self.local_player_robot.input = self.player_input
         self.create_enemy_robot(position=Vector(250, 250))
         self.create_enemy_robot(position=Vector(250, 750))
         self.create_enemy_robot(position=Vector(750, 250))

@@ -90,7 +90,7 @@ def main():
         window.setWindowTitle("Robo Arena")
         window.show()
 
-        Fonts.fps_font = QFont("Noto Sans", 12)
+        Fonts.fps_font = QFont("Noto Sans", 10)
         Fonts.fps_color = Qt.red
         Fonts.text_field_font = QFont("Noto Sans", 16)
         Fonts.text_field_color = Qt.darkCyan

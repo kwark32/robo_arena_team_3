@@ -1,12 +1,13 @@
+from PyQt5.QtGui import QPainter, QPolygon
+from PyQt5.QtWidgets import QWidget
+from PyQt5.QtCore import Qt, QPoint
 from world_sim import SPWorldSim
 from client_world_sim import OnlineWorldSim
 from server_world_sim import ServerWorldSim
 from globals import Scene, Fonts
-from constants import ARENA_SIZE, DEBUG_MODE, PLAYER_NAME_OFFSET
+from constants import ARENA_SIZE, DEBUG_MODE
 from networking import ClientPacket
-from PyQt5.QtGui import QPainter, QPolygon, QFontMetricsF
-from PyQt5.QtWidgets import QWidget
-from PyQt5.QtCore import Qt, QPoint
+from ui_overlay import UIOverlay
 
 
 class WorldScene(QWidget):
@@ -19,8 +20,7 @@ class WorldScene(QWidget):
 
         self.world_sim = sim_class()
 
-        self.draw_player_names = False
-        self.name_tag_font_metrics = QFontMetricsF(Fonts.name_tag_font)
+        self.ui_overlay = UIOverlay()
 
         self.init_ui()
 
@@ -81,15 +81,9 @@ class WorldScene(QWidget):
         for robot in self.world_sim.robots:
             robot.draw(qp, self.world_sim.extrapolation_delta_time)
 
-        if self.draw_player_names:
-            qp.setFont(Fonts.name_tag_font)
-            qp.setPen(Fonts.name_tag_color)
-            for robot in self.world_sim.robots:
-                if robot.player_name != "":
-                    text_width = self.name_tag_font_metrics.width(robot.player_name)
-                    pos_x = robot.sim_body.position.x + PLAYER_NAME_OFFSET.x - round(text_width / 2)
-                    pos_y = robot.sim_body.position.y + PLAYER_NAME_OFFSET.y
-                    qp.drawText(pos_x, pos_y, robot.player_name)
+        self.ui_overlay.draw_name_tags(qp, self.world_sim.robots)
+        if self.world_sim.local_player_robot is not None:
+            self.ui_overlay.draw_health_bar(qp, self.world_sim.local_player_robot)
 
         # debugging physics shapes
         if DEBUG_MODE:
@@ -120,8 +114,6 @@ class OnlineWorldScene(WorldScene):
     def __init__(self, parent, size):
         super().__init__(parent, size, OnlineWorldSim)
 
-        self.draw_player_names = True
-
     def clean_mem(self):
         super().clean_mem()
 
@@ -134,7 +126,5 @@ class ServerWorldScene(WorldScene):
     def __init__(self, parent, size):
         super().__init__(parent, size, ServerWorldSim)
 
-        self.draw_player_names = True
-
-        self.world_sim.player = self.world_sim.create_player()
-        self.world_sim.player.input = self.world_sim.player_input
+        self.world_sim.local_player_robot = self.world_sim.create_player()
+        self.world_sim.local_player_robot.input = self.world_sim.player_input

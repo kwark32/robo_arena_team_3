@@ -2,7 +2,7 @@ from transform import SimBody
 from weapons import TankCannon
 from util import Vector, get_main_path, draw_img_with_rot
 from globals import GameInfo
-from constants import ARENA_SIZE, FIXED_DELTA_TIME, ROBOT_HEALTH
+from constants import ARENA_SIZE, FIXED_DELTA_TIME, MAX_ROBOT_HEALTH
 
 if not GameInfo.is_headless:
     from PyQt5.QtGui import QPixmap
@@ -30,7 +30,7 @@ def set_robot_values(robot, robot_info):
 class Robot:
     next_id = 0
 
-    def __init__(self, world_sim, robot_id=-1, is_player=False, has_ai=True, health=ROBOT_HEALTH,
+    def __init__(self, world_sim, robot_id=-1, is_player=False, has_ai=True,
                  size=Vector(40, 40), position=Vector(0, 0), rotation=0,
                  max_velocity=120, max_ang_velocity=4, max_accel=200, max_ang_accel=12, player_name=""):
 
@@ -80,7 +80,8 @@ class Robot:
 
         self.weapon = TankCannon(self.world_sim)
 
-        self.health = int(health)
+        self.max_health = MAX_ROBOT_HEALTH
+        self.health = self.max_health
         self.to_remove = False
         self.is_dead = False
         self.last_death_frame = 0
@@ -211,7 +212,7 @@ class Robot:
             self.remove()
 
     def respawn(self):
-        self.health = ROBOT_HEALTH
+        self.health = self.max_health
         self.sim_body.reset(position=Vector(ARENA_SIZE / 2, ARENA_SIZE / 2), rotation=0)
         self.extrapolation_body.set(self.sim_body)
         self.last_position = self.sim_body.position.copy()

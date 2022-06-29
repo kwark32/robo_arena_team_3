@@ -44,7 +44,9 @@ class WorldSim:
         self.arena = load_map(map_path, size, physics_world=self.physics_world)
 
     def create_player(self, robot_id=-1, position=Vector(ARENA_SIZE / 2, ARENA_SIZE / 2),
-                      player_name=GameInfo.local_player_name):
+                      player_name=None):
+        if player_name is None:
+            player_name = GameInfo.local_player_name
         player = Robot(self, robot_id=robot_id, is_player=True, has_ai=False,
                        position=position, player_name=player_name)
         self.robots.append(player)

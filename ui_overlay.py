@@ -23,14 +23,14 @@ class UIOverlay:
         for robot in robots:
             if robot.player_name != "":
                 text_width = self.name_tag_font_metrics.width(robot.player_name)
-                pos_x = robot.sim_body.position.x + PLAYER_NAME_OFFSET.x - round(text_width / 2)
-                pos_y = robot.sim_body.position.y + PLAYER_NAME_OFFSET.y
+                pos_x = robot.extrapolation_body.position.x + PLAYER_NAME_OFFSET.x - round(text_width / 2)
+                pos_y = robot.extrapolation_body.position.y + PLAYER_NAME_OFFSET.y
                 qp.drawText(pos_x, pos_y, robot.player_name)
 
     def draw_health_bar(self, qp, robot):
         health_fill = round((robot.health / robot.max_health) * self.health_bar_size.x)
-        x_pos = robot.sim_body.position.x + HEALTH_BAR_OFFSET.x - round(self.health_bar_bg_size.x / 2)
-        y_pos = robot.sim_body.position.y + HEALTH_BAR_OFFSET.y - round(self.health_bar_bg_size.y / 2)
+        x_pos = robot.extrapolation_body.position.x + HEALTH_BAR_OFFSET.x - round(self.health_bar_bg_size.x / 2)
+        y_pos = robot.extrapolation_body.position.y + HEALTH_BAR_OFFSET.y - round(self.health_bar_bg_size.y / 2)
         qp.drawPixmap(x_pos, y_pos, self.health_bar_bg)
         if health_fill > 0:
             qp.drawPixmap(x_pos, y_pos, self.health_bar, 0, 0, health_fill, 0)

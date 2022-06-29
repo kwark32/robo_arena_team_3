@@ -118,6 +118,7 @@ class OnlineWorldSim(WorldSim):
                 self.local_player_robot.input = self.player_input
 
     def fixed_update(self, delta_time):
+
         self.previous_inputs.append((self.player_input.copy(), self.physics_frame_count))
 
         packet = None
@@ -154,7 +155,7 @@ class OnlineWorldSim(WorldSim):
             self.set_robots(last_packet.robots)
             self.set_bullets(last_packet.bullets)
 
-            self.extrapolate(last_packet.physics_frame, delta_packet_physics_frames)
+            #self.extrapolate(last_packet.physics_frame, delta_packet_physics_frames)
 
             self.received_first_packet = True
 

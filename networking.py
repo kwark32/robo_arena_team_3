@@ -5,6 +5,7 @@ import select
 import pickle
 
 from globals import GameInfo
+from constants import SIMULATE_PING, SIMULATED_PING_STEPS
 
 
 i = 0
@@ -110,6 +111,9 @@ class UDPSocket:
 class UDPServer(UDPSocket):
     def __init__(self):
         super().__init__()
+        if SIMULATE_PING:
+            self.packets_in = []
+            self.packets_out = []
 
         self.udp_socket.bind(("", GameInfo.port))
         self.clients = {}  # client dict: address (str) -> client
@@ -123,10 +127,21 @@ class UDPServer(UDPSocket):
                 self.clients[address] = client
             if client is not None:
                 if client.last_rx_packet is None or packet.creation_time >= client.last_rx_packet.creation_time:
-                    client.last_rx_packet = packet
+                    if SIMULATE_PING:
+                        self.packets_in.append(packet)
+                        while len(self.packets_in) > SIMULATED_PING_STEPS:
+                            client.last_rx_packet = self.packets_in.pop(0)
+                    else:
+                        client.last_rx_packet = packet
 
     def send_packet(self, client, state_packet):
-        super().send_packet(client.address, state_packet)
+        self.packets_out.append((client.address, state_packet))
+        if SIMULATE_PING:
+            while len(self.packets_out) > SIMULATED_PING_STEPS:
+                outs = self.packets_out.pop(0)
+                super().send_packet(outs[0], outs[1])
+        else:
+            super().send_packet(client.address, state_packet)
 
 
 class UDPClient(UDPSocket):

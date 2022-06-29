@@ -277,7 +277,7 @@ class MainMenuScene(QWidget):
 
         if DEBUG_MODE:
             qp.setFont(Fonts.fps_font)
-            qp.setPen(Qt.red)
+            qp.setPen(Fonts.fps_color)
             qp.drawText(QPoint(5, 20), str(round(self.fps)))
 
         qp.end()

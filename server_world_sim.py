@@ -25,7 +25,8 @@ class ServerWorldSim(WorldSim):
                         existing_robot = robot
                         break
                 if existing_robot is None:
-                    existing_robot = self.create_enemy_robot(robot_id=client.player_id, has_ai=False)
+                    existing_robot = self.create_enemy_robot(robot_id=client.player_id, has_ai=False,
+                                                             player_name=client.player_name)
                     client.robot = existing_robot
                 existing_robot.input = client.last_rx_packet.player_input
         for disconnected in disconnected_clients:

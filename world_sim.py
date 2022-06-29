@@ -48,8 +48,9 @@ class WorldSim:
         self.robots.append(player)
         return player
 
-    def create_enemy_robot(self, robot_id=-1, position=Vector(ARENA_SIZE / 2, ARENA_SIZE / 2), has_ai=True):
-        enemy = Robot(self, robot_id=robot_id, has_ai=has_ai, position=position)
+    def create_enemy_robot(self, robot_id=-1, position=Vector(ARENA_SIZE / 2, ARENA_SIZE / 2),
+                           has_ai=True, player_name=""):
+        enemy = Robot(self, robot_id=robot_id, has_ai=has_ai, position=position, player_name=player_name)
         self.robots.append(enemy)
         return enemy
 

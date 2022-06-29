@@ -125,11 +125,11 @@ class TextField(UIElement):
         qp.setFont(Fonts.text_field_font)
 
         if len(self.text) > 0 or self.is_selected:
-            qp.setPen(Qt.darkCyan)
+            qp.setPen(Fonts.text_field_color)
             qp.drawText(QPoint(self.top_left_corner.x + self.text_offset.x,
                                self.top_left_corner.y + self.text_offset.y), draw_text)
         else:
-            qp.setPen(Qt.gray)
+            qp.setPen(Fonts.text_field_default_color)
             qp.drawText(QPoint(self.top_left_corner.x + self.text_offset.x,
                                self.top_left_corner.y + self.text_offset.y), self.placeholder_text)
 

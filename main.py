@@ -16,8 +16,9 @@ if not GameInfo.is_headless:
     from constants import WINDOW_SIZE
     from main_menu_scene import MainMenuScene
     from world_scene import SPWorldScene, OnlineWorldScene, ServerWorldScene
-    from PyQt5.QtGui import QFont
+    from PyQt5.QtGui import QFont, QColor
     from PyQt5.QtWidgets import QWidget, QApplication, QDesktopWidget
+    from PyQt5.QtCore import Qt
 
     class ArenaWindow(QWidget):
         def __init__(self):
@@ -90,7 +91,12 @@ def main():
         window.show()
 
         Fonts.fps_font = QFont("Noto Sans", 12)
+        Fonts.fps_color = Qt.red
         Fonts.text_field_font = QFont("Noto Sans", 16)
+        Fonts.text_field_color = Qt.darkCyan
+        Fonts.text_field_default_color = Qt.gray
+        Fonts.name_tag_font = QFont("Noto Sans", 11)
+        Fonts.name_tag_color = QColor(200, 200, 200)  # QColor(225, 50, 225)
 
         while window.running:  # main loop
             window.update()

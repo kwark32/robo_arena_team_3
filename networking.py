@@ -114,6 +114,9 @@ class UDPSocket:
     def send_packet(self, address, packet):
         self.udp_socket.sendto(pickle.dumps(packet), address)
 
+    def close(self):
+        self.udp_socket.close()
+
 
 class UDPServer(UDPSocket):
     def __init__(self):

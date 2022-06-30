@@ -145,11 +145,11 @@ class OnlineWorldSim(WorldSim):
                 return
 
             # TODO: calculate server_client_time_ns
-            server_client_time_ns = 0
+            server_client_latency_ns = 0
 
             # self.world_start_time_ns = last_packet.world_start_time
             self.world_start_time_ns = (self.curr_time_ns - last_packet.physics_frame * FIXED_DELTA_TIME_NS
-                                        - server_client_time_ns)
+                                        - server_client_latency_ns)
             self.curr_world_time_ns = self.curr_time_ns - self.world_start_time_ns
             delta_packet_physics_frames = last_packet.physics_frame - self.last_packet_physics_frame
             self.last_packet_physics_frame = last_packet.physics_frame

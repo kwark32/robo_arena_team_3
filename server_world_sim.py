@@ -9,6 +9,9 @@ class ServerWorldSim(WorldSim):
 
         self.udp_socket = UDPServer()
 
+    def clean_mem(self):
+        self.udp_socket.close()
+
     def fixed_update(self, delta_time):
         self.udp_socket.get_client_packets(self.curr_time_ns)
 

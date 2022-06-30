@@ -1,3 +1,10 @@
+## Weeks 7, 8, 9 & 10
+
+We added basic effects to the tiles of the arena such as increased/decreased movement speed and inflicted damage as well as a provisional falling animatien for the hole tile.
+
+
+
+
 ## Weeks 5 & 6
 
 We have better textures for almost anything now, including the robots (tanks).

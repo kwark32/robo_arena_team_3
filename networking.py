@@ -26,7 +26,6 @@ class RobotInfo:
         self.last_shot_frame = robot.weapon.last_shot_frame
         self.player_name = robot.player_name
         self.last_position = robot.last_position
-        self.forward_velocity_goal = robot.forward_velocity_goal
 
         self.died = False
 
@@ -135,8 +134,8 @@ class UDPServer(UDPSocket):
                         client.last_rx_packet = packet
 
     def send_packet(self, client, state_packet):
-        self.packets_out.append((client.address, state_packet))
         if SIMULATE_PING:
+            self.packets_out.append((client.address, state_packet))
             while len(self.packets_out) > SIMULATED_PING_STEPS:
                 outs = self.packets_out.pop(0)
                 super().send_packet(outs[0], outs[1])

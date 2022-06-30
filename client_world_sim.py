@@ -140,6 +140,7 @@ class OnlineWorldSim(WorldSim):
                     last_packet = p
 
             if last_packet.physics_frame < self.last_packet_physics_frame:
+                # print("received older packet")
                 super().fixed_update(delta_time)
                 return
 
@@ -155,9 +156,12 @@ class OnlineWorldSim(WorldSim):
             self.set_robots(last_packet.robots)
             self.set_bullets(last_packet.bullets)
 
-            #self.extrapolate(last_packet.physics_frame, delta_packet_physics_frames)
+            self.extrapolate(last_packet.physics_frame, delta_packet_physics_frames)
 
             self.received_first_packet = True
 
+            # print("got packet")
+
         else:
+            # print("no packet")
             super().fixed_update(delta_time)

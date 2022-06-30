@@ -21,7 +21,7 @@ def set_robot_values(robot, robot_info):
         robot.weapon = robot_info.weapon_class()
     robot.weapon.last_shot_frame = robot_info.last_shot_frame
     robot.last_position = robot_info.last_position
-    robot.forward_velocity_goal = robot_info.forward_velocity_goal
+    robot.forward_velocity_goal = 0
     robot.set_physics_body()
     if robot_info.died:
         robot.die()

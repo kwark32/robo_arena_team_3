@@ -30,4 +30,4 @@ CARET_BLINK_RATE_NS = s_to_ns(0.5)
 
 # Debug
 DEBUG_MODE = False
-SIMULATE_PING = True
+SIMULATE_PING = False

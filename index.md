@@ -2,6 +2,18 @@
 
 We added basic effects to the tiles of the arena such as increased/decreased movement speed and inflicted damage as well as a provisional falling animatien for the hole tile.
 
+We created a provisional arena design. We might implement a world generator later.
+
+In the design the tile types are representet by the following colors for now.
+
+    - brown -> dirt
+    - white -> hole
+    - black -> wall
+    - blue -> water
+    - yellow -> fire
+    - purple -> portal
+
+![Main menu](/robo_arena_arena_design.png)
 
 
 

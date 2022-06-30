@@ -12,6 +12,7 @@ In the design the tile types are representet by the following colors for now.
     - blue -> water
     - yellow -> fire
     - purple -> portal
+    - red -> lava
 
 ![Main menu](/robo_arena_arena_design.png)
 

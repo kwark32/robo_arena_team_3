@@ -18,7 +18,9 @@ In the design the tile types are representet by the following colours for now.
 
 We created soundtracks for the main menu and settings as well as for the arena.
 
-We implemented online multiplayer mode for the game so now players are able to host and join game sessions.
+We implemented local and online multiplayer mode for the game so now players are able to host and join game sessions.
+
+![Main menu](/local_multiplayer.png)
 
 We added a projectile weapon to the robots so now projectiles can be shot tapping or holding the spacebar.
 

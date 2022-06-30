@@ -22,6 +22,8 @@ We implemented online multiplayer mode for the game so now players are able to h
 
 We added a projectile weapon to the robots so now projectiles can be shot tapping or holding the spacebar.
 
+The robot health is indicated by a healthbar below the player name above the robot.
+
 ## Weeks 5 & 6
 
 We have better textures for almost anything now, including the robots (tanks).

@@ -13,7 +13,9 @@ class ServerWorldSim(WorldSim):
         self.udp_socket.close()
 
     def fixed_update(self, delta_time):
-        self.udp_socket.get_client_packets(self.curr_time_ns)
+        self.udp_socket.curr_time_ns = self.curr_time_ns
+
+        self.udp_socket.get_client_packets()
 
         disconnected_clients = []
         for key in self.udp_socket.clients:
@@ -53,11 +55,13 @@ class ServerWorldSim(WorldSim):
         for bullet in self.bullets:
             bullet_info_list.append(BulletInfo(bullet))
 
-        state_packet = StatePacket(creation_time=self.curr_time_ns, world_start_time=self.world_start_time_ns,
+        state_packet = StatePacket(creation_time=self.curr_time_ns,
                                    physics_frame=self.physics_frame_count, robots=robot_info_list,
                                    bullets=bullet_info_list)
 
         for key in self.udp_socket.clients:
-            client = self.udp_socket.clients[key]
-            state_packet.player_id = client.player_id
-            self.udp_socket.send_packet(client, state_packet)
+            if client.last_rx_packet is not None:
+                client = self.udp_socket.clients[key]
+                state_packet.player_id = client.player_id
+                state_packet.client_rtt_start = client.last_rx_packet.creation_time
+                self.udp_socket.send_packet(client, state_packet)

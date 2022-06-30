@@ -5,7 +5,7 @@ import select
 import pickle
 
 from globals import GameInfo
-from constants import SIMULATE_PING, SIMULATED_PING_STEPS
+from constants import SIMULATE_PING, SIMULATED_PING_NS
 
 
 i = 0
@@ -50,9 +50,9 @@ class Packet:
 
 
 class StatePacket(Packet):
-    def __init__(self, creation_time=0, world_start_time=0, physics_frame=0, player_id=0, robots=None, bullets=None):
+    def __init__(self, creation_time=0, physics_frame=0, player_id=0, robots=None, bullets=None):
         super().__init__(creation_time=creation_time)
-        self.world_start_time = world_start_time
+        self.client_rtt_start = 0
         self.physics_frame = physics_frame
         self.player_id = player_id
         self.robots = robots
@@ -97,6 +97,8 @@ class UDPSocket:
         self.udp_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         self._udp_socket_list = [self.udp_socket]
 
+        self.curr_time_ns = 0
+
     def get_packet_available(self):
         read_sockets, write_sockets, error_sockets = select.select(self._udp_socket_list, [], [], 0)
         return len(read_sockets) > 0
@@ -128,10 +130,10 @@ class UDPServer(UDPSocket):
         self.udp_socket.bind(("", GameInfo.port))
         self.clients = {}  # client dict: address (str) -> client
 
-    def get_client_packets(self, curr_time):
+    def get_client_packets(self):
         while self.get_packet_available():
             address, packet = self.get_packet()
-            packet.receive_time = curr_time
+            packet.receive_time = self.curr_time_ns
             client = self.clients.get(address)
             if client is None and not packet.disconnect:
                 client = Client(address, player_name=packet.player_name)
@@ -140,7 +142,8 @@ class UDPServer(UDPSocket):
                 if client.last_rx_packet is None or packet.creation_time >= client.last_rx_packet.creation_time:
                     if SIMULATE_PING:
                         self.packets_in.append(packet)
-                        while len(self.packets_in) > SIMULATED_PING_STEPS:
+                        while (len(self.packets_in) > 0
+                               and self.packets_in[0].receive_time + int(SIMULATED_PING_NS / 2) < self.curr_time_ns):
                             client.last_rx_packet = self.packets_in.pop(0)
                     else:
                         client.last_rx_packet = packet
@@ -148,9 +151,11 @@ class UDPServer(UDPSocket):
     def send_packet(self, client, state_packet):
         if SIMULATE_PING:
             self.packets_out.append((client.address, state_packet))
-            while len(self.packets_out) > SIMULATED_PING_STEPS:
-                outs = self.packets_out.pop(0)
-                super().send_packet(outs[0], outs[1])
+            print(int(SIMULATED_PING_NS / 2))
+            while (len(self.packets_out) > 0
+                   and self.packets_out[0][1].receive_time + int(SIMULATED_PING_NS / 2) < self.curr_time_ns):
+                pkt = self.packets_out.pop(0)
+                super().send_packet(pkt[0], pkt[1])
         else:
             super().send_packet(client.address, state_packet)
 
@@ -159,9 +164,9 @@ class UDPClient(UDPSocket):
     def __init__(self):
         super().__init__()
 
-    def get_packet(self, curr_time):
+    def get_packet(self):
         server_address, state_packet = super().get_packet()
-        state_packet.receive_time = curr_time
+        state_packet.receive_time = self.curr_time_ns
         return state_packet
 
     def send_packet(self, server, client_packet):

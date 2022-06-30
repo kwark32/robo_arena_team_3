@@ -131,3 +131,7 @@ def limit_rot(value):
 
 def is_point_inside_rect(point, top_left, bottom_right):
     return top_left.x <= point.x <= bottom_right.x and top_left.y <= point.y <= bottom_right.y
+
+
+def lerp(a, b, t):
+    return a + t * (b - a)

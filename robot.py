@@ -97,7 +97,7 @@ class Robot:
         return self._body_texture
 
     def draw(self, qp, delta_time):
-        self.extrapolation_body.step(delta_time)
+        #self.extrapolation_body.step(delta_time)
         draw_img_with_rot(qp, self.body_texture, self.size.x, self.size.y,
                           self.extrapolation_body.position, self.extrapolation_body.rotation)
 

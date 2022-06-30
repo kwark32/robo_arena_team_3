@@ -1,10 +1,10 @@
 from world_sim import WorldSim
 from robot import PlayerInput, set_robot_values
 from weapons import set_bullet_values
-from util import get_delta_time_s, limit
+from util import limit, lerp
 from networking import UDPClient, ClientPacket
 from globals import GameInfo
-from constants import FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_EXTRAPOLATION_STEPS
+from constants import FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_EXTRAPOLATION_STEPS, TIME_SYNC_LERP_AMOUNT
 
 
 class OnlineWorldSim(WorldSim):
@@ -14,6 +14,7 @@ class OnlineWorldSim(WorldSim):
         self.previous_inputs = []
         self.udp_socket = UDPClient()
         self.last_packet_physics_frame = 0
+        self.server_client_latency_ns = 0
 
         self.received_first_packet = False
 
@@ -82,7 +83,7 @@ class OnlineWorldSim(WorldSim):
                 self.bullets.remove(dead)
             dead_bullets.clear()
 
-    def extrapolate(self, packet_frame, delta_frames):
+    def extrapolate(self, packet_frame, extrapolation_count):
         if self.received_first_packet:
             prev_inputs_length = len(self.previous_inputs)
             for i in range(prev_inputs_length):
@@ -90,11 +91,7 @@ class OnlineWorldSim(WorldSim):
                     self.previous_inputs.pop(0)
                 else:
                     break
-            if delta_frames >= prev_inputs_length:
-                self.previous_inputs.clear()
 
-            extrapolation_count = int(get_delta_time_s(self.curr_world_time_ns, self.physics_world_time_ns)
-                                      / FIXED_DELTA_TIME)
             extrapolation_count = limit(extrapolation_count, 0, MAX_EXTRAPOLATION_STEPS)
 
             if extrapolation_count:
@@ -104,22 +101,43 @@ class OnlineWorldSim(WorldSim):
                 input_index = 0
                 for i in range(extrapolation_count):
                     while (input_index < prev_inputs_length
-                           and self.previous_inputs[input_index][1] < extrapolation_start_frame + i):
+                           and self.previous_inputs[input_index][1]
+                           < extrapolation_start_frame - extrapolation_count + i):
                         input_index += 1
                     if input_index < prev_inputs_length:
                         frame_inputs.append(self.previous_inputs[input_index][0])
                     else:
                         frame_inputs.append(PlayerInput())
 
+                i = len(self.previous_inputs) - 1
+                while i >= 0:
+                    if self.previous_inputs[i][1] <= packet_frame:
+                        self.previous_inputs.pop(i)
+                    i -= 1
+
                 for i in range(extrapolation_count):
                     self.local_player_robot.input = frame_inputs[i]
                     super().fixed_update(FIXED_DELTA_TIME)
 
-                self.local_player_robot.input = self.player_input
+                if len(self.previous_inputs) > 0:
+                    self.local_player_robot.input = self.previous_inputs[0]
+                else:
+                    self.local_player_robot.input = self.player_input
 
     def fixed_update(self, delta_time):
+        self.udp_socket.curr_time_ns = self.curr_time_ns
 
-        self.previous_inputs.append((self.player_input.copy(), self.physics_frame_count))
+        if self.received_first_packet:
+            input_delay_frames = round(self.server_client_latency_ns / FIXED_DELTA_TIME_NS)
+            if len(self.previous_inputs) <= MAX_EXTRAPOLATION_STEPS * 2:
+                self.previous_inputs.append((self.player_input.copy(), self.physics_frame_count - input_delay_frames))
+
+            input_to_use = self.player_input
+            for player_input in self.previous_inputs:
+                if player_input[1] > self.physics_frame_count - input_delay_frames:
+                    input_to_use = player_input[0]
+                    break
+            self.local_player_robot.input = input_to_use
 
         packet = None
         if self.player_id == -1 or self.player_input is None:
@@ -129,9 +147,11 @@ class OnlineWorldSim(WorldSim):
                                   player_name=GameInfo.local_player_name)
         self.udp_socket.send_packet(None, packet)
 
+        self.player_input.shoot_pressed = False
+
         new_packets = []
         while self.udp_socket.get_packet_available():
-            new_packets.append(self.udp_socket.get_packet(self.curr_time_ns))
+            new_packets.append(self.udp_socket.get_packet())
 
         if new_packets:
             last_packet = new_packets[0]
@@ -144,15 +164,16 @@ class OnlineWorldSim(WorldSim):
                 super().fixed_update(delta_time)
                 return
 
-            # TODO: calculate server_client_time_ns
-            server_client_latency_ns = 0
-
-            # self.world_start_time_ns = last_packet.world_start_time
-            self.world_start_time_ns = (self.curr_time_ns - last_packet.physics_frame * FIXED_DELTA_TIME_NS
-                                        - server_client_latency_ns)
+            self.server_client_latency_ns = (last_packet.receive_time - last_packet.client_rtt_start) >> 1
+            # print(self.server_client_latency_ns / 1000000)
+            new_wt = self.curr_time_ns - last_packet.physics_frame * FIXED_DELTA_TIME_NS - self.server_client_latency_ns
+            if not self.received_first_packet:
+                self.world_start_time_ns = new_wt
+            else:
+                self.world_start_time_ns = lerp(self.world_start_time_ns, new_wt, TIME_SYNC_LERP_AMOUNT)
             self.curr_world_time_ns = self.curr_time_ns - self.world_start_time_ns
-            delta_packet_physics_frames = last_packet.physics_frame - self.last_packet_physics_frame
             self.last_packet_physics_frame = last_packet.physics_frame
+            physics_frames_ahead = self.physics_frame_count - self.last_packet_physics_frame
             self.physics_frame_count = self.last_packet_physics_frame
             self.physics_world_time_ns = self.physics_frame_count * FIXED_DELTA_TIME_NS
 
@@ -161,7 +182,7 @@ class OnlineWorldSim(WorldSim):
             self.set_robots(last_packet.robots)
             self.set_bullets(last_packet.bullets)
 
-            self.extrapolate(last_packet.physics_frame, delta_packet_physics_frames)
+            self.extrapolate(self.last_packet_physics_frame, physics_frames_ahead)
 
             self.received_first_packet = True
 

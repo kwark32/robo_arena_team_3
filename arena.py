@@ -1,9 +1,9 @@
 import numpy as np
+import effects
 
 from PyQt5.QtCore import QPoint
 from PyQt5.QtGui import QPixmap, QPainter
 from util import Vector, get_main_path
-from effects import *
 
 
 tile_texture_path = get_main_path() + "/textures/tiles/"
@@ -41,12 +41,12 @@ class TileType:
 tile_type_dict = {
     "ground": TileType("ground"),
     "wall": TileType("wall", has_collision=True),
-    "earth": TileType("earth", effect_class=EarthTileEffect),
+    "earth": TileType("earth", effect_class=effects.EarthTileEffect),
     "tower_1": TileType("tower_1", has_collision=True),
-    "hole": TileType("hole", effect_class=HoleTileEffect),
-    "water": TileType("water", effect_class=WaterTileEffect),
-    "lava": TileType("lava", effect_class=LavaTileEffect),
-    "fire": TileType("fire", effect_class=FireTileEffect),
+    "hole": TileType("hole", effect_class=effects.HoleTileEffect),
+    "water": TileType("water", effect_class=effects.WaterTileEffect),
+    "lava": TileType("lava", effect_class=effects.LavaTileEffect),
+    "fire": TileType("fire", effect_class=effects.FireTileEffect),
     "portal_1": TileType("portal_1"),
     "portal_2": TileType("portal_2"),
 }

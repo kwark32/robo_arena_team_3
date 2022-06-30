@@ -1,124 +1,210 @@
 import time
 
-from PyQt5.QtGui import QPainter, QPixmap, QColor, QFont
+from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtCore import Qt, QPoint
-from util import Vector, get_main_path, ns_to_s, is_point_inside_rect
-from constants import DEBUG_MODE, Scene
+from ui_elements import Button, Menu, TextField
+from util import Vector, ns_to_s
+from globals import GameInfo, Scene, Menus, Fonts
+from constants import DEBUG_MODE, MAX_PLAYER_NAME_LENGTH, MAX_SERVER_IP_LENGTH
 
 
-button_texture_path = get_main_path() + "/textures/ui/main_menu_buttons/"
+class MainMenu(Menu):
+    class ExitButton(Button):
+        name = "exit"
 
+        def click(self):
+            self.main_widget.running = False
 
-# base class
-class Button:
-    def __init__(self, main_widget, position):
-        self.button_type = type(self)
-        if self.button_type is Button:
-            print("ERROR: Button base class should not be instantiated!")
+    class SingleplayerButton(Button):
+        name = "singleplayer"
 
-        self.main_widget = main_widget
+        def click(self):
+            self.main_widget.switch_scene(Scene.SP_WORLD)
 
-        self.position = position
-        self._texture = None
-        self._texture_size = None
+    class LocalMultiplayerButton(Button):
+        name = "local_multiplayer"
 
-        self.is_selected = False
+        def click(self):
+            print("Local multiplayer button clicked!")
 
-        self._top_left_corner = None
-        self._bottom_right_corner = None
+    class OnlineMultiplayerButton(Button):
+        name = "online_multiplayer"
 
-    @property
-    def texture(self):
-        if self._texture is None:
-            self.load_image()
-        return self._texture
+        def click(self):
+            self.menu.main_menu_scene.switch_menu(Menus.ONLINE_OPTIONS)
 
-    @property
-    def texture_size(self):
-        if self._texture_size is None:
-            self.load_image()
-        return self._texture_size
+    class SettingsButton(Button):
+        name = "settings"
 
-    @property
-    def top_left_corner(self):
-        if self._top_left_corner is None:
-            half_texture_size = self.texture_size.copy()
-            half_texture_size.div(2)
-            self._top_left_corner = self.position.copy()
-            self._top_left_corner.sub(half_texture_size)
-            self._top_left_corner.round()
-        return self._top_left_corner
+        def click(self):
+            self.menu.main_menu_scene.switch_menu(Menus.SETTINGS)
 
-    @property
-    def bottom_right_corner(self):
-        if self._bottom_right_corner is None:
-            half_texture_size = self.texture_size.copy()
-            half_texture_size.div(2)
-            self._bottom_right_corner = self.position.copy()
-            self._bottom_right_corner.add(half_texture_size)
-            self._bottom_right_corner.round()
-        return self._bottom_right_corner
+    def __init__(self, main_widget, size, main_menu_scene):
+        super().__init__(main_widget, size, main_menu_scene, "main-menu_bg")
 
-    def load_image(self):
-        filename = button_texture_path + self.button_type.name + ".png"
-        self._texture = QPixmap(filename)
-        self._texture_size = Vector(self._texture.width(), self._texture.height())
-        if self._texture_size.x == 0 or self._texture_size.y == 0:
-            print("ERROR: texture for " + self.name
-                  + " has 0 size or is missing at " + filename + "!")
+        self.elements.append(MainMenu.ExitButton(main_widget, Vector(self.size / 2, 850), self))
+        self.elements.append(MainMenu.SingleplayerButton(main_widget, Vector(self.size / 2, 300), self))
+        self.elements.append(MainMenu.OnlineMultiplayerButton(main_widget, Vector(self.size / 2, 425), self))
+        self.elements.append(MainMenu.LocalMultiplayerButton(main_widget, Vector(self.size / 2, 525), self))
+        self.elements.append(MainMenu.SettingsButton(main_widget, Vector(self.size / 2, 675), self))
 
-    def draw(self, qp):
-        if self.is_selected:
-            qp.fillRect(self.top_left_corner.x, self.top_left_corner.y,
-                        self.texture_size.x, self.texture_size.y, QColor(80, 80, 80))
-
-        qp.drawPixmap(self.top_left_corner.x, self.top_left_corner.y, self.texture)
-
-    def click(self):
-        pass
-
-
-class ExitButton(Button):
-    name = "exit"
-
-    def click(self):
+    def escape_pressed(self):
         self.main_widget.running = False
 
 
-class SingleplayerButton(Button):
-    name = "singleplayer"
+class OnlineOptions(Menu):
+    class BackButton(Button):
+        name = "back"
 
-    def click(self):
-        self.main_widget.switch_scene(Scene.SP_WORLD)
+        def click(self):
+            self.menu.main_menu_scene.switch_menu(Menus.MAIN_MENU)
+
+    class PlayerNameField(TextField):
+        name = "player_name"
+
+        def __init__(self, main_widget, position, menu, text_offset=Vector(0, 0), max_text_length=-1):
+            super().__init__(main_widget, position, menu, text_offset=text_offset, max_text_length=max_text_length)
+
+            self.placeholder_text = GameInfo.placeholder_name
+            if GameInfo.local_player_name != GameInfo.placeholder_name:
+                self.text = GameInfo.local_player_name
+
+    class ServerIPField(TextField):
+        name = "server_ip"
+
+        def __init__(self, main_widget, position, menu, text_offset=Vector(0, 0), max_text_length=-1):
+            super().__init__(main_widget, position, menu, text_offset=text_offset, max_text_length=max_text_length)
+
+            self.placeholder_text = GameInfo.default_ip
+            if GameInfo.server_ip != GameInfo.default_ip:
+                self.text = GameInfo.server_ip
+
+            self.dot_count = 0
+            self.number_counts = [0, 0, 0, 0]
+
+        def key_press(self, key):
+            keycode = int(key)
+            valid_input = True
+
+            if key == Qt.Key_Backspace:
+                if len(self.text) > 0:
+                    last = self.text[-1]
+                    if last == '.':
+                        self.dot_count -= 1
+                    elif ord('0') <= ord(last) <= ord('9'):
+                        self.number_counts[self.dot_count] -= 1
+
+            elif keycode == ord('.') and self.dot_count < 3 and self.number_counts[self.dot_count] > 0:
+                self.dot_count += 1
+
+            elif (ord('0') <= keycode <= ord('9')
+                  and self.number_counts[self.dot_count] < 3
+                  and (self.number_counts[self.dot_count] == 0
+                       or int(self.text[-self.number_counts[self.dot_count]:]) * 10 + keycode - ord('0') <= 255)):
+                self.number_counts[self.dot_count] += 1
+
+            else:
+                valid_input = False
+
+            if valid_input:
+                super().key_press(key)
+
+    class JoinButton(Button):
+        name = "join"
+
+        def __init__(self, main_widget, position, menu):
+            super().__init__(main_widget, position, menu)
+
+            self.player_name_field = None
+            self.server_ip_field = None
+
+        def click(self):
+            if self.player_name_field is not None and len(self.player_name_field.text) > 0:
+                GameInfo.local_player_name = self.player_name_field.text
+            else:
+                GameInfo.local_player_name = GameInfo.placeholder_name
+
+            if self.server_ip_field is not None and len(self.server_ip_field.text) > 0:
+                GameInfo.server_ip = self.server_ip_field.text
+            else:
+                GameInfo.server_ip = GameInfo.default_ip
+
+            self.main_widget.switch_scene(Scene.ONLINE_WORLD)
+
+    class HostButton(Button):
+        name = "host"
+
+        def __init__(self, main_widget, position, menu):
+            super().__init__(main_widget, position, menu)
+
+            self.player_name_field = None
+            self.server_ip_field = None
+
+        def click(self):
+            if self.player_name_field is not None and len(self.player_name_field.text) > 0:
+                GameInfo.local_player_name = self.player_name_field.text
+            else:
+                GameInfo.local_player_name = GameInfo.placeholder_name
+
+            if self.server_ip_field is not None and len(self.server_ip_field.text) > 0:
+                GameInfo.server_ip = self.server_ip_field.text
+            else:
+                GameInfo.server_ip = GameInfo.default_ip
+
+            self.main_widget.switch_scene(Scene.SERVER_WORLD)
+
+    def __init__(self, main_widget, size, main_menu_scene):
+        super().__init__(main_widget, size, main_menu_scene, "online-options_bg")
+
+        self.elements.append(OnlineOptions.BackButton(main_widget, Vector(self.size / 2, 850), self))
+        player_name_field = OnlineOptions.PlayerNameField(main_widget, Vector(self.size / 2, 300),
+                                                          self, text_offset=Vector(255, 50),
+                                                          max_text_length=MAX_PLAYER_NAME_LENGTH)
+        self.elements.append(player_name_field)
+        server_ip_field = OnlineOptions.ServerIPField(main_widget, Vector(self.size / 2, 425),
+                                                      self, text_offset=Vector(255, 50),
+                                                      max_text_length=MAX_SERVER_IP_LENGTH)
+        self.elements.append(server_ip_field)
+        join_button = OnlineOptions.JoinButton(main_widget, Vector(self.size / 2 - 200, 600), self)
+        join_button.player_name_field = player_name_field
+        join_button.server_ip_field = server_ip_field
+        self.elements.append(join_button)
+        host_button = OnlineOptions.HostButton(main_widget, Vector(self.size / 2 + 200, 600), self)
+        host_button.player_name_field = player_name_field
+        host_button.server_ip_field = server_ip_field
+        self.elements.append(host_button)
+
+    def escape_pressed(self):
+        self.main_menu_scene.switch_menu(Menus.MAIN_MENU)
 
 
-class LocalMultiplayerButton(Button):
-    name = "local_multiplayer"
+class Settings(Menu):
+    class BackButton(Button):
+        name = "back"
 
-    def click(self):
-        print("Local multiplayer button clicked!")
-        print("TODO: Move host button to separate (and implement local multiplayer)")
-        self.main_widget.switch_scene(Scene.SERVER_WORLD)
+        def click(self):
+            self.menu.main_menu_scene.switch_menu(Menus.MAIN_MENU)
 
+    def __init__(self, main_widget, size, main_menu_scene):
+        super().__init__(main_widget, size, main_menu_scene, "settings_bg")
 
-class OnlineMultiplayerButton(Button):
-    name = "online_multiplayer"
+        self.elements.append(Settings.BackButton(main_widget, Vector(self.size / 2, 850), self))
 
-    def click(self):
-        self.main_widget.switch_scene(Scene.ONLINE_WORLD)
+    def escape_pressed(self):
+        self.main_menu_scene.switch_menu(Menus.MAIN_MENU)
 
 
 class MainMenuScene(QWidget):
     def __init__(self, parent, size):
         super().__init__(parent)
 
-        self.parent = parent
+        self.main_widget = self.parentWidget()
 
+        self.parent = parent
         self.size = size
 
-        self.buttons = []
-        self.selected_button = None
+        self.active_menu = MainMenu(self.main_widget, self.size, self)
         self.is_clicking = False
 
         self.init_ui()
@@ -133,16 +219,27 @@ class MainMenuScene(QWidget):
     def init_ui(self):
         self.setGeometry(0, 0, self.size, self.size)
         self.setMouseTracking(True)
-
-        self.buttons.append(ExitButton(self.parentWidget(), Vector(self.size / 2, 800)))
-        self.buttons.append(SingleplayerButton(self.parentWidget(), Vector(self.size / 2, 350)))
-        self.buttons.append(OnlineMultiplayerButton(self.parentWidget(), Vector(self.size / 2, 500)))
-        self.buttons.append(LocalMultiplayerButton(self.parentWidget(), Vector(self.size / 2, 600)))
-
         self.show()
+
+    def switch_menu(self, menu):
+        self.active_menu = None
+        if menu == Menus.MAIN_MENU:
+            self.active_menu = MainMenu(self.main_widget, self.size, self)
+        elif menu == Menus.ONLINE_OPTIONS:
+            self.active_menu = OnlineOptions(self.main_widget, self.size, self)
+        elif menu == Menus.SETTINGS:
+            self.active_menu = Settings(self.main_widget, self.size, self)
 
     def clean_mem(self):
         pass
+
+    def keyPressEvent(self, event):
+        if self.active_menu is not None:
+            self.active_menu.key_press_event(event)
+
+    def keyReleaseEvent(self, event):
+        if self.active_menu is not None:
+            self.active_menu.key_release_event(event)
 
     def mouseMoveEvent(self, event):
         self.mouse_position.x = event.x()
@@ -155,23 +252,16 @@ class MainMenuScene(QWidget):
         if event.button() == Qt.LeftButton:
             self.is_clicking = True
 
-    def update_ui(self):
+    def paintEvent(self, event):
         curr_time_ns = time.time_ns()
         # delta_time = ns_to_s(curr_time_ns - self._last_frame_time_ns)
         self._last_frame_time_ns = curr_time_ns
 
-        self.selected_button = None
-        for button in self.buttons:
-            if is_point_inside_rect(self.mouse_position, button.top_left_corner, button.bottom_right_corner):
-                button.is_selected = True
-                self.selected_button = button
-            else:
-                button.is_selected = False
-
         if self.is_clicking:
+            self.active_menu.click_element()
             self.is_clicking = False
-            if self.selected_button is not None:
-                self.selected_button.click()
+
+        self.active_menu.update_ui(self.mouse_position, curr_time_ns)
 
         if DEBUG_MODE:
             self._frames_since_last_show += 1
@@ -181,27 +271,13 @@ class MainMenuScene(QWidget):
                 self._frames_since_last_show = 0
                 self._last_fps_show_time = curr_time_ns
 
-    def paintEvent(self, event):
-        self.update_ui()
-
         qp = QPainter(self)
-        qp.setFont(QFont("sans serif", 12))
-        qp.setPen(Qt.red)
 
-        qp.fillRect(0, 0, self.size, self.size, QColor(50, 50, 50))
-
-        qp.setFont(QFont("sans serif", 85))
-        qp.setPen(Qt.darkCyan)
-        qp.drawText(QPoint(210, 210), "Robo Arena")
-        # draw static menu background
-        # qp.drawPixmap(QPoint(), <menu background pixmap>)
-
-        for button in self.buttons:
-            button.draw(qp)
+        self.active_menu.draw(qp)
 
         if DEBUG_MODE:
-            qp.setFont(QFont("sans serif", 12))
-            qp.setPen(Qt.red)
+            qp.setFont(Fonts.fps_font)
+            qp.setPen(Fonts.fps_color)
             qp.drawText(QPoint(5, 20), str(round(self.fps)))
 
         qp.end()

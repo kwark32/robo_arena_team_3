@@ -1,6 +1,6 @@
 import sys
 
-from constants import GameInfo
+from globals import GameInfo
 
 headless_args = []
 for arg in sys.argv:
@@ -12,10 +12,13 @@ for arg in headless_args:
 headless_args.clear()
 
 if not GameInfo.is_headless:
-    from constants import Scene, WINDOW_SIZE
+    from globals import Scene, Fonts
+    from constants import WINDOW_SIZE
     from main_menu_scene import MainMenuScene
     from world_scene import SPWorldScene, OnlineWorldScene, ServerWorldScene
-    from PyQt5.QtWidgets import QWidget, QApplication
+    from PyQt5.QtGui import QFont, QColor
+    from PyQt5.QtWidgets import QWidget, QApplication, QDesktopWidget
+    from PyQt5.QtCore import Qt
 
     class ArenaWindow(QWidget):
         def __init__(self):
@@ -25,12 +28,17 @@ if not GameInfo.is_headless:
 
             self.active_scene = None
 
-            self.init_ui()
+            self.init_window()
 
             self.switch_scene(Scene.MAIN_MENU)
 
-        def init_ui(self):
-            self.setGeometry(0, 0, WINDOW_SIZE, WINDOW_SIZE)
+        def init_window(self):
+            self.setFixedSize(WINDOW_SIZE, WINDOW_SIZE)
+
+            geometry_rect = self.frameGeometry()
+            center_point = QDesktopWidget().availableGeometry().center()
+            geometry_rect.moveCenter(center_point)
+            self.move(geometry_rect.topLeft())
 
         def closeEvent(self, event):
             self.running = False
@@ -72,7 +80,7 @@ if not GameInfo.is_headless:
                 self.active_scene = ServerWorldScene(self, WINDOW_SIZE)
 
 else:
-    from world_sim import ServerWorldSim
+    from server_world_sim import ServerWorldSim
 
 
 def main():
@@ -81,6 +89,14 @@ def main():
         window = ArenaWindow()
         window.setWindowTitle("Robo Arena")
         window.show()
+
+        Fonts.fps_font = QFont("Noto Sans", 10)
+        Fonts.fps_color = Qt.red
+        Fonts.text_field_font = QFont("Noto Sans", 16)
+        Fonts.text_field_color = Qt.darkCyan
+        Fonts.text_field_default_color = Qt.gray
+        Fonts.name_tag_font = QFont("Noto Sans", 11)
+        Fonts.name_tag_color = QColor(200, 200, 200)  # QColor(225, 50, 225)
 
         while window.running:  # main loop
             window.update()

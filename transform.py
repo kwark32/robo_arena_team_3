@@ -4,9 +4,8 @@ from util import Vector, limit, limit_rot
 def pos_change_from_velocity_accel(delta_time, velocity, accel, max_velocity, max_accel, dont_modify=False):
     if dont_modify:
         accel = accel.copy()
-        accel.limit_magnitude(max_accel)
-    else:
-        accel.limit_magnitude(max_accel)
+
+    accel.limit_magnitude(max_accel)
 
     velocity_change = accel.copy()
     velocity_change.mult(delta_time)
@@ -14,9 +13,8 @@ def pos_change_from_velocity_accel(delta_time, velocity, accel, max_velocity, ma
 
     if dont_modify:
         velocity = velocity.copy()
-        velocity.limit_magnitude(max_velocity)
-    else:
-        velocity.limit_magnitude(max_velocity)
+
+    velocity.limit_magnitude(max_velocity)
 
     position_change = velocity.copy()
     position_change.mult(delta_time)
@@ -125,7 +123,7 @@ class SimBody:
 
     def step(self, delta_time):
         if self._was_reset:
-            self._was_reset = True
+            self._was_reset = False
             return
 
         if self.max_velocity < 0:
@@ -167,4 +165,4 @@ class SimBody:
         self.velocity = Vector(0, 0)  # in px/s
         self.local_velocity = Vector(0, 0)  # in px/s, local to robot
 
-        self._was_reset = False
+        self._was_reset = True

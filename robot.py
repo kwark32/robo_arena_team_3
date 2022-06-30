@@ -1,7 +1,8 @@
 from transform import SimBody
 from weapons import TankCannon
 from util import Vector, get_main_path, draw_img_with_rot
-from constants import GameInfo, ARENA_SIZE, FIXED_DELTA_TIME, ROBOT_HEALTH
+from globals import GameInfo
+from constants import ARENA_SIZE, FIXED_DELTA_TIME, MAX_ROBOT_HEALTH
 
 if not GameInfo.is_headless:
     from PyQt5.QtGui import QPixmap
@@ -20,14 +21,16 @@ def set_robot_values(robot, robot_info):
         robot.weapon = robot_info.weapon_class()
     robot.weapon.last_shot_frame = robot_info.last_shot_frame
     robot.last_position = robot_info.last_position
-    robot.forward_velocity_goal = robot_info.forward_velocity_goal
+    robot.forward_velocity_goal = 0
     robot.set_physics_body()
+    if robot_info.died:
+        robot.die()
 
 
 class Robot:
     next_id = 0
 
-    def __init__(self, world_sim, robot_id=-1, is_player=False, has_ai=True, health=ROBOT_HEALTH,
+    def __init__(self, world_sim, robot_id=-1, is_player=False, has_ai=True,
                  size=Vector(40, 40), position=Vector(0, 0), rotation=0,
                  max_velocity=120, max_ang_velocity=4, max_accel=200, max_ang_accel=12, player_name=""):
 
@@ -52,6 +55,10 @@ class Robot:
         self.is_player = is_player
         self.has_ai = has_ai
 
+        self.should_respawn = True
+        if has_ai:
+            self.should_respawn = False
+
         self.input = None
 
         self.size = size
@@ -73,9 +80,11 @@ class Robot:
 
         self.weapon = TankCannon(self.world_sim)
 
-        self.health = int(health)
+        self.max_health = MAX_ROBOT_HEALTH
+        self.health = self.max_health
         self.to_remove = False
         self.is_dead = False
+        self.last_death_frame = 0
 
     @property
     def body_texture(self):
@@ -93,8 +102,11 @@ class Robot:
                           self.extrapolation_body.position, self.extrapolation_body.rotation)
 
     def update(self, delta_time):
-        if self.is_dead:
+        if int(self.health) <= 0:
+            self.health = 0
             self.die()
+            if not self.should_respawn:
+                return
 
         self.revert_effects()
 
@@ -191,14 +203,19 @@ class Robot:
         expired_effects.clear()
 
     def take_damage(self, damage):
-        self.health -= int(damage)
-        if self.health <= 0:
-            self.health = 0
-            self.is_dead = True
+        self.health -= damage
 
     def die(self):
         print("<cool tank explode animation> or something... (for robot ID " + str(self.robot_id) + ")")
-        self.health = ROBOT_HEALTH
+        self.is_dead = True
+        self.last_death_frame = self.world_sim.physics_frame_count
+        if self.should_respawn:
+            self.respawn()
+        else:
+            self.remove()
+
+    def respawn(self):
+        self.health = self.max_health
         self.sim_body.reset(position=Vector(ARENA_SIZE / 2, ARENA_SIZE / 2), rotation=0)
         self.extrapolation_body.set(self.sim_body)
         self.last_position = self.sim_body.position.copy()
@@ -209,7 +226,9 @@ class Robot:
 
     def remove(self):
         self.to_remove = True
-        self.physics_world.world.DestroyBody(self.physics_body)
+        if self.physics_body is not None:
+            self.physics_world.world.DestroyBody(self.physics_body)
+            self.physics_body = None
 
 
 class PlayerInput:

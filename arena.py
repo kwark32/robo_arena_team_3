@@ -1,9 +1,12 @@
 import numpy as np
 import effects
 
-from PyQt5.QtCore import QPoint
-from PyQt5.QtGui import QPixmap, QPainter
+from globals import GameInfo
 from util import Vector, get_main_path
+
+if not GameInfo.is_headless:
+    from PyQt5.QtCore import QPoint
+    from PyQt5.QtGui import QPixmap, QPainter
 
 
 tile_texture_path = get_main_path() + "/textures/tiles/"
@@ -54,9 +57,9 @@ tile_type_dict = {
 
 class Arena:
     def __init__(self, size, tile_count):
-        self.size = int(size)
-        self.tile_count = int(tile_count)
-        self.tile_size = int(self.size / self.tile_count)
+        self.size = round(size)
+        self.tile_count = round(tile_count)
+        self.tile_size = round(self.size / self.tile_count)
         self.tiles = self.get_empty_tiles()
         self.background_pixmap = None
 
@@ -83,7 +86,7 @@ class Arena:
                     # draw tile image
                     painter.drawPixmap(x_pos, y_pos, curr_tile_type.texture,
                                        tile_in_img_offset.x * self.tile_size, tile_in_img_offset.y * self.tile_size,
-                                       curr_tile_type.texture_size.x, curr_tile_type.texture_size.y)
+                                       self.tile_size, self.tile_size)
 
             painter.end()
 

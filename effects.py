@@ -1,4 +1,4 @@
-from constants import FIXED_DELTA_TIME, ROBOT_HEALTH
+from constants import FIXED_DELTA_TIME
 
 
 class RobotEffect:
@@ -52,7 +52,7 @@ class WaterTileEffect(SpeedEffect):
     def apply(self, robot, delta_time=0):
         super().apply(robot, delta_time=delta_time)
 
-        if robot.health < ROBOT_HEALTH / 2:
+        if robot.health < robot.max_health / 2:
             robot.take_damage(self.effect_class.damage_per_second * delta_time)
 
 

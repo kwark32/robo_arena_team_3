@@ -4,7 +4,7 @@ We added basic effects to the tiles of the arena such as increased/decreased mov
 
 We created a provisional arena design. We might implement a world generator later.
 
-In the design the tile types are representet by the following colors for now.
+In the design the tile types are representet by the following colours for now.
 
     - brown -> dirt
     - white -> hole
@@ -16,7 +16,11 @@ In the design the tile types are representet by the following colors for now.
 
 ![Main menu](/robo_arena_arena_design.png)
 
+We created soundtracks for the main menu and settings as well as for the arena.
 
+We implemented online multiplayer mode for the game so now players are able to host and join game sessions.
+
+We added a projectile weapon to the robots so now projectiles can be shot tapping or holding the spacebar.
 
 ## Weeks 5 & 6
 

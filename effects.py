@@ -37,13 +37,13 @@ class StunEffect(SpeedEffect):
 
 
 class EarthTileEffect(SpeedEffect):
-    speed_gain = -60
-    ang_speed_gain = -2
+    speed_gain = -30
+    ang_speed_gain = -1
 
 
 class WaterTileEffect(SpeedEffect):
-    speed_gain = -90
-    ang_speed_gain = -3
+    speed_gain = -60
+    ang_speed_gain = -2
     damage_per_second = 200
 
     def __init__(self, duration=(FIXED_DELTA_TIME / 2)):  # duration: half physics frame (gets applied 1 frame)
@@ -92,3 +92,17 @@ class HoleTileEffect(StunEffect):
     def revert(self, robot):
         if self.start_rotation is not None:
             robot.sim_body.rotation = self.start_rotation
+
+
+class LavaTileEffect(SpeedEffect):
+    speed_gain = -90
+    ang_speed_gain = -3
+    damage_per_second = 400
+
+    def __init__(self, duration=(FIXED_DELTA_TIME / 2)):  # duration: half physics frame (gets applied 1 frame)
+        super().__init__(duration=duration)
+
+    def apply(self, robot, delta_time=0):
+        super().apply(robot, delta_time=delta_time)
+
+        robot.take_damage(self.effect_class.damage_per_second * delta_time)

@@ -1,4 +1,5 @@
 import numpy as np
+import effects
 
 from PyQt5.QtCore import QPoint
 from PyQt5.QtGui import QPixmap, QPainter
@@ -9,9 +10,10 @@ tile_texture_path = get_main_path() + "/textures/tiles/"
 
 
 class TileType:
-    def __init__(self, name, has_collision):
+    def __init__(self, name, has_collision=False, effect_class=None):
         self.name = name
         self.has_collision = has_collision
+        self.effect_class = effect_class
         self._texture = None
         self._texture_size = None
 
@@ -37,16 +39,16 @@ class TileType:
 
 
 tile_type_dict = {
-    "ground": TileType("ground", False),
-    "wall": TileType("wall", True),
-    "earth": TileType("earth", False),
-    "tower_1": TileType("tower_1", True),
-    "hole": TileType("hole", False),
-    "water": TileType("water", False),
-    "lava": TileType("lava", False),
-    "fire": TileType("fire", False),
-    "portal_1": TileType("portal_1", False),
-    "portal_2": TileType("portal_2", False),
+    "ground": TileType("ground"),
+    "wall": TileType("wall", has_collision=True),
+    "earth": TileType("earth", effect_class=effects.EarthTileEffect),
+    "tower_1": TileType("tower_1", has_collision=True),
+    "hole": TileType("hole", effect_class=effects.HoleTileEffect),
+    "water": TileType("water", effect_class=effects.WaterTileEffect),
+    "lava": TileType("lava", effect_class=effects.LavaTileEffect),
+    "fire": TileType("fire", effect_class=effects.FireTileEffect),
+    "portal_1": TileType("portal_1"),
+    "portal_2": TileType("portal_2"),
 }
 
 

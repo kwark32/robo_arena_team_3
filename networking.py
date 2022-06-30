@@ -4,7 +4,7 @@ import select
 import pickle
 
 
-server_ip = "127.0.0.1"
+server_ip = "202.61.239.116"  # "127.0.0.1"
 port = 54345
 server_ip_port = server_ip, port
 buffer_size = 4096
@@ -100,18 +100,19 @@ class UDPServer(UDPSocket):
     def __init__(self):
         super().__init__()
 
-        self.udp_socket.bind((server_ip, port))
+        self.udp_socket.bind(("", port))
         self.clients = {}  # client dict: address (str) -> client
 
     def get_client_packets(self):
         while self.get_packet_available():
             address, packet = self.get_packet()
             client = self.clients.get(address)
-            if client is None and not packet.disconnect:
-                client = Client(address)
-                self.clients[address] = client
-            if client.last_rx_packet is None or packet.creation_time >= client.last_rx_packet.creation_time:
-                client.last_rx_packet = packet
+            if not packet.disconnect:
+                if client is None:
+                    client = Client(address)
+                    self.clients[address] = client
+                if client.last_rx_packet is None or packet.creation_time >= client.last_rx_packet.creation_time:
+                    client.last_rx_packet = packet
 
     def send_packet(self, client, state_packet):
         super().send_packet(client.address, state_packet)

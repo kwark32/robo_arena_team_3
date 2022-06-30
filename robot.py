@@ -38,9 +38,16 @@ class Robot:
 
         self.player_name = player_name
 
+        self.max_velocity = max_velocity
+        self.max_ang_velocity = max_ang_velocity
+        self.max_accel = max_accel
+        self.max_ang_accel = max_ang_accel
+
         self.sim_body = SimBody(position=position, rotation=rotation, max_velocity=max_velocity,
                                 max_ang_velocity=max_ang_velocity, max_accel=max_accel, max_ang_accel=max_ang_accel)
         self.extrapolation_body = self.sim_body.copy()
+
+        self.effects = []
 
         self.is_player = is_player
         self.has_ai = has_ai
@@ -88,6 +95,14 @@ class Robot:
     def update(self, delta_time):
         if self.is_dead:
             self.die()
+
+        self.revert_effects()
+
+        current_tile = self.get_center_tile()
+        if current_tile.effect_class is not None:
+            self.effects.append(current_tile.effect_class())
+
+        self.apply_effects(delta_time)
 
         # last_forward_velocity_goal = self.forward_velocity_goal
 
@@ -141,6 +156,16 @@ class Robot:
         self.sim_body.ang_accel = self.sim_body.max_ang_accel
         self.sim_body.local_accel.y = self.sim_body.max_accel
 
+    def get_center_tile(self):
+        tile_size = self.world_sim.arena.tile_size
+        tile_count = self.world_sim.arena.tile_count
+        tile_position = self.sim_body.position.copy()
+        tile_position.div(tile_size)
+        tile_position.x = int(tile_position.x)
+        tile_position.y = int(tile_position.y)
+        tile_position.limit_by_scalar(0, tile_count - 1)
+        return self.world_sim.arena.tiles[tile_position.y][tile_position.x]
+
     def set_physics_body(self):
         self.physics_body.transform = ((self.sim_body.position.x, ARENA_SIZE - self.sim_body.position.y),
                                        -self.sim_body.rotation)
@@ -149,6 +174,21 @@ class Robot:
         if self.physics_body is not None:
             self.sim_body.position.x = self.physics_body.position[0]
             self.sim_body.position.y = ARENA_SIZE - self.physics_body.position[1]
+
+    def apply_effects(self, delta_time):
+        for effect in self.effects:
+            effect.apply(self, delta_time)
+
+    def revert_effects(self):
+        expired_effects = []
+        for effect in self.effects:
+            effect.revert(self)
+            if effect.duration <= 0:
+                expired_effects.append(effect)
+
+        for expired in expired_effects:
+            self.effects.remove(expired)
+        expired_effects.clear()
 
     def take_damage(self, damage):
         self.health -= int(damage)
@@ -165,6 +205,7 @@ class Robot:
         self.forward_velocity_goal = 0
         self.set_physics_body()
         self.is_dead = False
+        self.effects.clear()
 
     def remove(self):
         self.to_remove = True
@@ -188,3 +229,7 @@ class PlayerInput:
         player_input.right = self.right
         player_input.shoot = self.shoot
         player_input.shoot_pressed = self.shoot_pressed
+
+    def to_string(self):
+        return ("PlayerInput {\n  Up: " + self.up + "\n  Down: " + self.down + "\n  Left: " + self.left + "\n  Right: "
+                + self.right + "\n  Shoot: " + self.shoot + "\n  Shoot Pressed: " + self.shoot_pressed + "\n}")

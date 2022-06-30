@@ -10,14 +10,14 @@ class ServerWorldSim(WorldSim):
         self.udp_socket = UDPServer()
 
     def fixed_update(self, delta_time):
-        self.udp_socket.get_client_packets()
+        self.udp_socket.get_client_packets(self.curr_time_ns)
 
         disconnected_clients = []
         for key in self.udp_socket.clients:
             client = self.udp_socket.clients[key]
             if client.last_rx_packet is None:
                 continue
-            if (client.last_rx_packet.creation_time + CLIENT_DISCONNECT_TIMEOUT_NS < self.curr_time_ns
+            if (client.last_rx_packet.receive_time + CLIENT_DISCONNECT_TIMEOUT_NS < self.curr_time_ns
                     or client.last_rx_packet.disconnect):
                 disconnected_clients.append(client)
             else:

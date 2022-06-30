@@ -46,6 +46,7 @@ class Packet:
         self.creation_time = creation_time
         if self.creation_time == 0:
             self.creation_time = time.time_ns()
+        self.receive_time = 0
 
 
 class StatePacket(Packet):
@@ -68,6 +69,13 @@ class ClientPacket(Packet):
         self.player_input = player_input
         self.player_name = player_name
         self.disconnect = disconnect
+
+    def to_string(self):
+        p_input = "None"
+        if self.player_input is not None:
+            p_input = self.player_input.to_string()
+        return ("{\n" + p_input + "\n name: "
+                + self.player_name + "\n disconnect: " + str(self.disconnect) + "\n}")
 
 
 class Client:
@@ -117,9 +125,10 @@ class UDPServer(UDPSocket):
         self.udp_socket.bind(("", GameInfo.port))
         self.clients = {}  # client dict: address (str) -> client
 
-    def get_client_packets(self):
+    def get_client_packets(self, curr_time):
         while self.get_packet_available():
             address, packet = self.get_packet()
+            packet.receive_time = curr_time
             client = self.clients.get(address)
             if client is None and not packet.disconnect:
                 client = Client(address, player_name=packet.player_name)
@@ -147,8 +156,9 @@ class UDPClient(UDPSocket):
     def __init__(self):
         super().__init__()
 
-    def get_packet(self):
+    def get_packet(self, curr_time):
         server_address, state_packet = super().get_packet()
+        state_packet.receive_time = curr_time
         return state_packet
 
     def send_packet(self, server, client_packet):

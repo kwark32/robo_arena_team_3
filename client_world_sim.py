@@ -131,7 +131,7 @@ class OnlineWorldSim(WorldSim):
 
         new_packets = []
         while self.udp_socket.get_packet_available():
-            new_packets.append(self.udp_socket.get_packet())
+            new_packets.append(self.udp_socket.get_packet(self.curr_time_ns))
 
         if new_packets:
             last_packet = new_packets[0]
@@ -144,7 +144,12 @@ class OnlineWorldSim(WorldSim):
                 super().fixed_update(delta_time)
                 return
 
-            self.world_start_time_ns = last_packet.world_start_time
+            # TODO: calculate server_client_time_ns
+            server_client_time_ns = 0
+
+            # self.world_start_time_ns = last_packet.world_start_time
+            self.world_start_time_ns = (self.curr_time_ns - last_packet.physics_frame * FIXED_DELTA_TIME_NS
+                                        - server_client_time_ns)
             self.curr_world_time_ns = self.curr_time_ns - self.world_start_time_ns
             delta_packet_physics_frames = last_packet.physics_frame - self.last_packet_physics_frame
             self.last_packet_physics_frame = last_packet.physics_frame

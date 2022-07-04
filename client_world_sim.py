@@ -1,6 +1,5 @@
 from world_sim import WorldSim
-from robot import PlayerInput, set_robot_values
-from weapons import set_bullet_values
+from robot import PlayerInput
 from util import limit, lerp
 from networking import UDPClient, ClientPacket
 from globals import GameInfo
@@ -32,9 +31,10 @@ class OnlineWorldSim(WorldSim):
                     self.local_player_robot.input = self.player_input
                     existing_robot = self.local_player_robot
                 else:
-                    existing_robot = self.create_enemy_robot(robot_id=new_robot_info.player_id, has_ai=False)
+                    existing_robot = self.create_enemy_robot(has_ai=False)
+                    existing_robot.robot_bullet_id = new_robot_info.player_id
 
-            set_robot_values(existing_robot, new_robot_info)
+            new_robot_info.set_robot_values(existing_robot)
 
         if len(self.robots) > len(robots):
             dead_robots = []
@@ -66,7 +66,7 @@ class OnlineWorldSim(WorldSim):
             if existing_bullet is None:
                 existing_bullet = new_bullet_info.bullet_class(self)
 
-            set_bullet_values(existing_bullet, new_bullet_info)
+            new_bullet_info.set_bullet_values(existing_bullet)
 
         if len(self.bullets) > len(bullets):
             dead_bullets = []
@@ -140,7 +140,7 @@ class OnlineWorldSim(WorldSim):
             self.local_player_robot.input = input_to_use
 
         packet = None
-        if self.player_id == -1 or self.player_input is None:
+        if self.local_player_robot is None or self.player_input is None:
             packet = ClientPacket(creation_time=self.curr_time_ns, player_name=GameInfo.local_player_name)
         else:
             packet = ClientPacket(creation_time=self.curr_time_ns, player_input=self.player_input,
@@ -178,7 +178,7 @@ class OnlineWorldSim(WorldSim):
             self.physics_world_time_ns = self.physics_frame_count * FIXED_DELTA_TIME_NS
 
             # Set all variables from last packet
-            self.player_id = last_packet.player_id
+            GameInfo.local_player_id = last_packet.player_id
             self.set_robots(last_packet.robots)
             self.set_bullets(last_packet.bullets)
 

@@ -17,30 +17,6 @@ for arg in sys.argv:
     i += 1
 
 
-class RobotInfo:
-    def __init__(self, robot, physics_frame=0):
-        self.robot_body = robot.sim_body
-        self.player_id = robot.robot_id
-        self.health = robot.health
-        self.weapon_class = robot.weapon.weapon_type
-        self.last_shot_frame = robot.weapon.last_shot_frame
-        self.player_name = robot.player_name
-        self.last_position = robot.last_position
-
-        self.died = False
-
-        if robot.last_death_frame == physics_frame > 0:
-            self.died = True
-
-
-class BulletInfo:
-    def __init__(self, bullet):
-        self.bullet_id = bullet.bullet_id
-        self.bullet_body = bullet.sim_body
-        self.bullet_class = bullet.bullet_type
-        self.from_player_id = bullet.source_id
-
-
 class Packet:
     def __init__(self, creation_time=0):
         self.creation_time = creation_time
@@ -79,14 +55,13 @@ class ClientPacket(Packet):
 
 
 class Client:
-    next_player_id = 10
-
     def __init__(self, address, player_id=-1, player_name=""):
         self.address = address
         self.player_id = player_id
         if player_id == -1:
-            self.player_id = Client.next_player_id
-            Client.next_player_id += 1
+            self.player_id = GameInfo.next_player_id
+            GameInfo.next_player_id += 1
+
         self.player_name = player_name
         self.last_rx_packet = None
         self.robot = None

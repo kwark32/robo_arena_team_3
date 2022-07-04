@@ -4,7 +4,7 @@ from PyQt5.QtCore import Qt, QPoint
 from world_sim import SPWorldSim
 from client_world_sim import OnlineWorldSim
 from server_world_sim import ServerWorldSim
-from globals import Scene, Fonts
+from globals import Scene, Fonts, GameInfo
 from constants import ARENA_SIZE, DEBUG_MODE
 from networking import ClientPacket
 from ui_overlay import UIOverlay
@@ -126,5 +126,5 @@ class ServerWorldScene(WorldScene):
     def __init__(self, parent, size):
         super().__init__(parent, size, ServerWorldSim)
 
-        self.world_sim.local_player_robot = self.world_sim.create_player()
+        self.world_sim.local_player_robot = self.world_sim.create_player(robot_id=GameInfo.local_player_id)
         self.world_sim.local_player_robot.input = self.world_sim.player_input

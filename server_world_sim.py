@@ -1,6 +1,8 @@
 from world_sim import WorldSim
-from networking import UDPServer, RobotInfo, BulletInfo, StatePacket
+from networking import UDPServer, StatePacket
 from constants import CLIENT_DISCONNECT_TIMEOUT_NS
+from robot import RobotInfo
+from weapons import BulletInfo
 
 
 class ServerWorldSim(WorldSim):

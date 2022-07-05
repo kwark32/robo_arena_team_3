@@ -58,7 +58,7 @@ class Client:
     def __init__(self, address, player_id=-1, player_name=""):
         self.address = address
         self.player_id = player_id
-        if player_id == -1:
+        if player_id < 0:
             self.player_id = GameInfo.next_player_id
             GameInfo.next_player_id += 1
 
@@ -109,28 +109,31 @@ class UDPServer(UDPSocket):
         while self.get_packet_available():
             address, packet = self.get_packet()
             packet.receive_time = self.curr_time_ns
+
+            if SIMULATE_PING:
+                self.packets_in.append((address, packet))
+                while (len(self.packets_in) > 0
+                       and self.packets_in[0][1].receive_time + int(SIMULATED_PING_NS / 2) < self.curr_time_ns):
+                    address, packet = self.packets_in.pop(0)
+
             client = self.clients.get(address)
             if client is None and not packet.disconnect:
                 client = Client(address, player_name=packet.player_name)
                 self.clients[address] = client
             if client is not None:
+                print("rx valid client packet, player name: " + packet.player_name)
                 if client.last_rx_packet is None or packet.creation_time >= client.last_rx_packet.creation_time:
-                    if SIMULATE_PING:
-                        self.packets_in.append(packet)
-                        while (len(self.packets_in) > 0
-                               and self.packets_in[0].receive_time + int(SIMULATED_PING_NS / 2) < self.curr_time_ns):
-                            client.last_rx_packet = self.packets_in.pop(0)
-                    else:
-                        client.last_rx_packet = packet
+                    client.last_rx_packet = packet
 
     def send_packet(self, client, state_packet):
         if SIMULATE_PING:
             self.packets_out.append((client.address, state_packet))
-            print(int(SIMULATED_PING_NS / 2))
+            # print(int(SIMULATED_PING_NS / 2))
             while (len(self.packets_out) > 0
                    and self.packets_out[0][1].receive_time + int(SIMULATED_PING_NS / 2) < self.curr_time_ns):
                 pkt = self.packets_out.pop(0)
                 super().send_packet(pkt[0], pkt[1])
+                print("sending delayed packet to " + str(pkt[0]))
         else:
             super().send_packet(client.address, state_packet)
 

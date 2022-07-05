@@ -15,6 +15,7 @@ class RobotInfo:
     def __init__(self, robot, physics_frame=0):
         self.robot_body = robot.sim_body
         self.player_id = robot.robot_id
+        self.next_bullet_id = robot.next_bullet_id
         self.health = robot.health
         self.weapon_class = robot.weapon.weapon_type
         self.last_shot_frame = robot.weapon.last_shot_frame
@@ -28,6 +29,7 @@ class RobotInfo:
 
     def set_robot_values(self, robot):
         robot.robot_id = self.player_id
+        robot.next_bullet_id = self.next_bullet_id
         robot.player_name = self.player_name
         robot.sim_body = self.robot_body
         robot.extrapolation_body = self.robot_body.copy()
@@ -43,14 +45,14 @@ class RobotInfo:
 
 
 class Robot:
-    def __init__(self, world_sim, robot_id=None, is_player=False, has_ai=True,
+    def __init__(self, world_sim, robot_id=-1, is_player=False, has_ai=True,
                  size=Vector(40, 40), position=Vector(0, 0), rotation=0,
                  max_velocity=120, max_ang_velocity=4, max_accel=200, max_ang_accel=12, player_name=""):
-        if robot_id is None:
-            self.robot_bullet_id = (GameInfo.next_player_id, 0)
+        self.robot_id = robot_id
+        if robot_id < 0:
+            self.robot_id = GameInfo.next_player_id
             GameInfo.next_player_id += 1
-        else:
-            self.robot_bullet_id = (robot_id, 0)
+        self.next_bullet_id = 0
 
         self.player_name = player_name
 
@@ -100,13 +102,9 @@ class Robot:
         self.last_death_frame = 0
 
     @property
-    def id(self):
-        return self.robot_bullet_id[0]
-
-    @property
-    def next_bullet_id(self):
-        self.robot_bullet_id = (self.robot_bullet_id[0], self.robot_bullet_id[1] + 1)
-        return self.robot_bullet_id[1]
+    def get_next_bullet_id(self):
+        self.next_bullet_id += 1
+        return self.next_bullet_id
 
     @property
     def body_texture(self):
@@ -161,7 +159,8 @@ class Robot:
                 if self.input.shoot or self.input.shoot_pressed:
                     self.input.shoot_pressed = False
                     if self.weapon is not None:
-                        self.weapon.shoot(self.id, self.next_bullet_id, self.sim_body.position, self.sim_body.rotation)
+                        self.weapon.shoot(self.robot_id, self.get_next_bullet_id,
+                                          self.sim_body.position, self.sim_body.rotation)
 
                 # if ((self.forward_velocity_goal == 0 and last_forward_velocity_goal != 0)
                 #         or (self.forward_velocity_goal == 1 and self.sim_body.local_velocity.y < 0)
@@ -225,7 +224,7 @@ class Robot:
         self.health -= damage
 
     def die(self):
-        print("<cool tank explode animation> or something... (for robot ID " + str(self.id) + ")")
+        print("<cool tank explode animation> or something... (for robot ID " + str(self.robot_id) + ")")
         self.is_dead = True
         self.last_death_frame = self.world_sim.physics_frame_count
         if self.should_respawn:

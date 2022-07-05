@@ -41,7 +41,7 @@ class WorldSim:
         map_path = get_main_path() + "/test_map.json"
         self.arena = load_map(map_path, size, physics_world=self.physics_world)
 
-    def create_player(self, robot_id=None, position=Vector(ARENA_SIZE / 2, ARENA_SIZE / 2),
+    def create_player(self, robot_id=-1, position=Vector(ARENA_SIZE / 2, ARENA_SIZE / 2),
                       player_name=None):
         if player_name is None:
             player_name = GameInfo.local_player_name
@@ -50,7 +50,7 @@ class WorldSim:
         self.robots.append(player)
         return player
 
-    def create_enemy_robot(self, robot_id=None, position=Vector(ARENA_SIZE / 2, ARENA_SIZE / 2),
+    def create_enemy_robot(self, robot_id=-1, position=Vector(ARENA_SIZE / 2, ARENA_SIZE / 2),
                            has_ai=True, player_name=""):
         enemy = Robot(self, robot_id=robot_id, has_ai=has_ai, position=position, player_name=player_name)
         self.robots.append(enemy)

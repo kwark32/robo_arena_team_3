@@ -26,13 +26,12 @@ class OnlineWorldSim(WorldSim):
                     break
 
             if existing_robot is None:
-                if self.player_id == new_robot_info.player_id:
-                    self.local_player_robot = self.create_player(robot_id=self.player_id)
-                    self.local_player_robot.input = self.player_input
+                if GameInfo.local_player_id == new_robot_info.player_id:
+                    GameInfo.local_player_id = self.create_player(robot_id=GameInfo.local_player_id)
+                    GameInfo.local_player_id.input = self.player_input
                     existing_robot = self.local_player_robot
                 else:
-                    existing_robot = self.create_enemy_robot(has_ai=False)
-                    existing_robot.robot_bullet_id = new_robot_info.player_id
+                    existing_robot = self.create_enemy_robot(has_ai=False, robot_id=new_robot_info.player_id)
 
             new_robot_info.set_robot_values(existing_robot)
 

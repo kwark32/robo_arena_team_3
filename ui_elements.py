@@ -5,7 +5,7 @@ from globals import Fonts
 from constants import CARET_BLINK_RATE_NS
 
 
-ui_element_texture_path = get_main_path() + "/textures/ui/main_menu/"
+ui_element_texture_path = get_main_path() + "/textures/ui/graphic_main_menu_buttons/"
 
 
 # absolute base class
@@ -76,7 +76,7 @@ class UIElement:
     def draw(self, qp):
         if self.is_selected:
             qp.fillRect(self.top_left_corner.x, self.top_left_corner.y,
-                        self.texture_size.x, self.texture_size.y, QColor(80, 80, 80))
+                        self.texture_size.x, self.texture_size.y, QColor(0, 0, 0))
 
         qp.drawPixmap(self.top_left_corner.x, self.top_left_corner.y, self.texture)
 

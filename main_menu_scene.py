@@ -40,14 +40,18 @@ class MainMenu(Menu):
         def click(self):
             self.menu.main_menu_scene.switch_menu(Menus.SETTINGS)
 
-    def __init__(self, main_widget, size, main_menu_scene):
-        super().__init__(main_widget, size, main_menu_scene, "main-menu_bg")
+    class Logo(Button):
+        name = "logo"
 
-        self.elements.append(MainMenu.ExitButton(main_widget, Vector(self.size / 2, 850), self))
+    def __init__(self, main_widget, size, main_menu_scene):
+        super().__init__(main_widget, size, main_menu_scene, "black_bg")
+
+        self.elements.append(MainMenu.ExitButton(main_widget, Vector(self.size / 2, 900), self))
         self.elements.append(MainMenu.SingleplayerButton(main_widget, Vector(self.size / 2, 300), self))
-        self.elements.append(MainMenu.OnlineMultiplayerButton(main_widget, Vector(self.size / 2, 425), self))
-        self.elements.append(MainMenu.LocalMultiplayerButton(main_widget, Vector(self.size / 2, 525), self))
-        self.elements.append(MainMenu.SettingsButton(main_widget, Vector(self.size / 2, 675), self))
+        self.elements.append(MainMenu.OnlineMultiplayerButton(main_widget, Vector(self.size / 2, 450), self))
+        self.elements.append(MainMenu.LocalMultiplayerButton(main_widget, Vector(self.size / 2, 600), self))
+        self.elements.append(MainMenu.SettingsButton(main_widget, Vector(self.size / 2, 750), self))
+        self.elements.append(MainMenu.Logo(main_widget, Vector(self.size / 2, 120), self))
 
     def escape_pressed(self):
         self.main_widget.running = False
@@ -155,7 +159,7 @@ class OnlineOptions(Menu):
             self.main_widget.switch_scene(Scene.SERVER_WORLD)
 
     def __init__(self, main_widget, size, main_menu_scene):
-        super().__init__(main_widget, size, main_menu_scene, "online-options_bg")
+        super().__init__(main_widget, size, main_menu_scene, "black_bg")
 
         self.elements.append(OnlineOptions.BackButton(main_widget, Vector(self.size / 2, 850), self))
         player_name_field = OnlineOptions.PlayerNameField(main_widget, Vector(self.size / 2, 300),
@@ -187,7 +191,7 @@ class Settings(Menu):
             self.menu.main_menu_scene.switch_menu(Menus.MAIN_MENU)
 
     def __init__(self, main_widget, size, main_menu_scene):
-        super().__init__(main_widget, size, main_menu_scene, "settings_bg")
+        super().__init__(main_widget, size, main_menu_scene, "black_bg")
 
         self.elements.append(Settings.BackButton(main_widget, Vector(self.size / 2, 850), self))
 

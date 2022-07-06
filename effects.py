@@ -1,10 +1,12 @@
 from constants import FIXED_DELTA_TIME
+import random
 
 
 class RobotEffect:
     def __init__(self, duration):
         self.effect_class = type(self)
         self.duration = duration
+        self.world_sim = None
 
     def apply(self, robot, delta_time=0):
         self.duration -= delta_time
@@ -106,3 +108,51 @@ class LavaTileEffect(SpeedEffect):
         super().apply(robot, delta_time=delta_time)
 
         robot.take_damage(self.effect_class.damage_per_second * delta_time)
+
+
+class Portal1TileEffect(RobotEffect):
+    def __init__(self, duration=(FIXED_DELTA_TIME / 2)):  # duration: half physics frame (gets applied 1 frame)
+        super().__init__(duration)
+
+    def apply(self, robot, delta_time=0):
+        super().apply(robot, delta_time=delta_time)
+
+        apply_portal_effect(self.world_sim, robot, portal_type_1=True)
+
+
+class Portal2TileEffect(RobotEffect):
+    def __init__(self, duration=(FIXED_DELTA_TIME / 2)):  # duration: half physics frame (gets applied 1 frame)
+        super().__init__(duration)
+
+    def apply(self, robot, delta_time=0):
+        super().apply(robot, delta_time=delta_time)
+
+        apply_portal_effect(self.world_sim, robot, portal_type_1=False)
+
+
+def apply_portal_effect(world_sim, robot, portal_type_1=True):
+    portal_type = 2
+    if portal_type_1:
+        portal_type = 1
+
+    last_tp_frame = robot.effect_data.get(("PortalTileEffect", "last_tp_frame"))
+    if last_tp_frame is None:
+        last_tp_frame = -0
+    last_tp_type = robot.effect_data.get(("PortalTileEffect", "last_tp_type"))
+    if last_tp_type is None:
+        last_tp_type = not portal_type_1
+
+    if world_sim.physics_frame_count > last_tp_frame + 1 or portal_type == last_tp_type:
+        if portal_type_1:
+            portals = world_sim.arena.portal_2_tiles
+        else:
+            portals = world_sim.arena.portal_1_tiles
+        portal = random.choice(portals)
+        pos = portal.copy()
+        pos.mult(world_sim.arena.tile_size)
+        pos.add_scalar(world_sim.arena.tile_size / 2)
+        robot.set_position(pos)
+
+        robot.effect_data[("PortalTileEffect", "last_tp_type")] = portal_type
+
+    robot.effect_data[("PortalTileEffect", "last_tp_frame")] = world_sim.physics_frame_count

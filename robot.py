@@ -51,6 +51,7 @@ class Robot:
         self.extrapolation_body = self.sim_body.copy()
 
         self.effects = []
+        self.effect_data = {}
 
         self.is_player = is_player
         self.has_ai = has_ai
@@ -112,7 +113,9 @@ class Robot:
 
         current_tile = self.get_center_tile()
         if current_tile.effect_class is not None:
-            self.effects.append(current_tile.effect_class())
+            effect = current_tile.effect_class()
+            self.effects.append(effect)
+            effect.world_sim = self.world_sim
 
         self.apply_effects(delta_time)
 
@@ -229,6 +232,18 @@ class Robot:
         if self.physics_body is not None:
             self.physics_world.world.DestroyBody(self.physics_body)
             self.physics_body = None
+
+    def set_position(self, position, stop_robot=False, stop_robot_rotation=False):
+        self.last_position = position.copy()
+        self.sim_body.position = position.copy()
+        if stop_robot:
+            self.real_velocity = (0, 0)
+            self.sim_body.velocity = (0, 0)
+            self.sim_body.local_velocity = (0, 0)
+        if stop_robot_rotation:
+            self.sim_body.ang_velocity = 0
+        self.extrapolation_body.set(self.sim_body)
+        self.set_physics_body()
 
 
 class PlayerInput:

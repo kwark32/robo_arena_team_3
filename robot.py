@@ -108,6 +108,8 @@ class Robot:
             self.die()
             if not self.should_respawn:
                 return
+            elif self.health > self.max_health:
+                self.health = self.max_health
 
         self.revert_effects()
 

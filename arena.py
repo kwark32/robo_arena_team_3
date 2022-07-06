@@ -50,8 +50,8 @@ tile_type_dict = {
     "water": TileType("water", effect_class=effects.WaterTileEffect),
     "lava": TileType("lava", effect_class=effects.LavaTileEffect),
     "fire": TileType("fire", effect_class=effects.FireTileEffect),
-    "portal_1": TileType("portal_1"),
-    "portal_2": TileType("portal_2"),
+    "portal_1": TileType("portal_1", effect_class=effects.Portal1TileEffect),
+    "portal_2": TileType("portal_2", effect_class=effects.Portal2TileEffect),
 }
 
 
@@ -61,11 +61,38 @@ class Arena:
         self.tile_count = round(tile_count)
         self.tile_size = round(self.size / self.tile_count)
         self.tiles = self.get_empty_tiles()
+
+        self._portal_tiles = None
+
         self.background_pixmap = None
+
+    @property
+    def portal_1_tiles(self):
+        if self._portal_tiles is None:
+            self.get_portal_tiles()
+        return self._portal_tiles[0]
+
+    @property
+    def portal_2_tiles(self):
+        if self._portal_tiles is None:
+            self.get_portal_tiles()
+        return self._portal_tiles[1]
 
     def get_empty_tiles(self):
         # get array of empty tiles with correct dimensions
         return np.empty((self.tile_count, self.tile_count), dtype=TileType)
+
+    # get different portal tiles for portal tile effects
+    def get_portal_tiles(self):
+        self._portal_tiles = [[], []]
+        for y in range(self.tile_count):
+            for x in range(self.tile_count):
+                tile_type = self.tiles[y][x]
+                if tile_type.name == "portal_1":
+                    self._portal_tiles[0].append(Vector(x, y))
+                if tile_type.name == "portal_2":
+                    self._portal_tiles[1].append(Vector(x, y))
+        return self._portal_tiles
 
     def draw(self, qp):
         if self.background_pixmap is None:

@@ -38,6 +38,21 @@ class StatePacket(Packet):
         if self.bullets is None:
             self.bullets = []
 
+    def to_string(self):
+        ret = ("{\n  rtt start time: " + str(self.client_rtt_start) + "\n  physics frame: " + str(self.physics_frame)
+               + "\n  player ID: " + str(self.player_id) + "\n  robot IDs: {")
+        for robot in self.robots:
+            ret += str(robot.player_id) + ", "
+        if len(self.robots) > 0:
+            ret = ret[:-2]
+        ret += "}\n  bullet IDs: {"
+        for bullet in self.bullets:
+            ret += "(" + str(bullet.source_id) + ", " + str(bullet.bullet_id) + ")" + ", "
+        if len(self.bullets) > 0:
+            ret = ret[:-2]
+        ret += "}\n}"
+        return ret
+
 
 class ClientPacket(Packet):
     def __init__(self, creation_time=0, player_input=None, player_name="", disconnect=False):
@@ -50,8 +65,8 @@ class ClientPacket(Packet):
         p_input = "None"
         if self.player_input is not None:
             p_input = self.player_input.to_string()
-        return ("{\n" + p_input + "\n name: "
-                + self.player_name + "\n disconnect: " + str(self.disconnect) + "\n}")
+        return ("{\n  input: " + p_input + "\n  name: "
+                + self.player_name + "\n  disconnect: " + str(self.disconnect) + "\n}")
 
 
 class Client:
@@ -109,21 +124,24 @@ class UDPServer(UDPSocket):
         while self.get_packet_available():
             address, packet = self.get_packet()
             packet.receive_time = self.curr_time_ns
+            print("received client packet:\n" + packet.to_string() + "\n")
 
+            popped = False
             if SIMULATE_PING:
                 self.packets_in.append((address, packet))
                 while (len(self.packets_in) > 0
                        and self.packets_in[0][1].receive_time + int(SIMULATED_PING_NS / 2) < self.curr_time_ns):
                     address, packet = self.packets_in.pop(0)
+                    popped = True
 
-            client = self.clients.get(address)
-            if client is None and not packet.disconnect:
-                client = Client(address, player_name=packet.player_name)
-                self.clients[address] = client
-            if client is not None:
-                print("rx valid client packet, player name: " + packet.player_name)
-                if client.last_rx_packet is None or packet.creation_time >= client.last_rx_packet.creation_time:
-                    client.last_rx_packet = packet
+            if not SIMULATE_PING or popped:
+                client = self.clients.get(address)
+                if client is None and not packet.disconnect:
+                    client = Client(address, player_name=packet.player_name)
+                    self.clients[address] = client
+                if client is not None:
+                    if client.last_rx_packet is None or packet.creation_time >= client.last_rx_packet.creation_time:
+                        client.last_rx_packet = packet
 
     def send_packet(self, client, state_packet):
         if SIMULATE_PING:
@@ -133,7 +151,7 @@ class UDPServer(UDPSocket):
                    and self.packets_out[0][1].receive_time + int(SIMULATED_PING_NS / 2) < self.curr_time_ns):
                 pkt = self.packets_out.pop(0)
                 super().send_packet(pkt[0], pkt[1])
-                print("sending delayed packet to " + str(pkt[0]))
+                print("sending delayed packet to " + str(pkt[0]) + ":\n" + pkt[1].to_string() + "\n")
         else:
             super().send_packet(client.address, state_packet)
 

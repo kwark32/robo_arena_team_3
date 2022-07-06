@@ -10,6 +10,8 @@ class OnlineWorldSim(WorldSim):
     def __init__(self):
         super().__init__()
 
+        GameInfo.local_player_id = -1
+
         self.previous_inputs = []
         self.udp_socket = UDPClient()
         self.last_packet_physics_frame = 0
@@ -27,8 +29,8 @@ class OnlineWorldSim(WorldSim):
 
             if existing_robot is None:
                 if GameInfo.local_player_id == new_robot_info.player_id:
-                    GameInfo.local_player_id = self.create_player(robot_id=GameInfo.local_player_id)
-                    GameInfo.local_player_id.input = self.player_input
+                    self.local_player_robot = self.create_player(robot_id=new_robot_info.player_id)
+                    self.local_player_robot.input = self.player_input
                     existing_robot = self.local_player_robot
                 else:
                     existing_robot = self.create_enemy_robot(has_ai=False, robot_id=new_robot_info.player_id)
@@ -37,13 +39,18 @@ class OnlineWorldSim(WorldSim):
 
         if len(self.robots) > len(robots):
             dead_robots = []
+            # robot_ids = []
             for robot in self.robots:
                 contained = False
                 for new_robot_info in robots:
                     if robot.robot_id == new_robot_info.player_id:
-                        if new_robot_info.died:
-                            robot.die()
-                        contained = True
+                        # if robot.robot_id in robot_ids:
+                        #     contained = False
+                        # else:
+                        #    robot_ids.append(robot.robot_id)
+                        if new_robot_info.died:  # indent
+                            robot.die()  # indent
+                        contained = True  # indent
                         break
                 if not contained:
                     dead_robots.append(robot)
@@ -69,11 +76,15 @@ class OnlineWorldSim(WorldSim):
 
         if len(self.bullets) > len(bullets):
             dead_bullets = []
+            # bullet_ids = []
             for bullet in self.bullets:
                 contained = False
                 for new_bullet_info in bullets:
                     if bullet.bullet_id == new_bullet_info.bullet_id:
-                        contained = True
+                        # if bullet.robot_id in bullet_ids:
+                        #     contained = False
+                        # else:
+                        contained = True  # indent
                         break
                 if not contained:
                     dead_bullets.append(bullet)
@@ -124,9 +135,10 @@ class OnlineWorldSim(WorldSim):
                     self.local_player_robot.input = self.player_input
 
     def fixed_update(self, delta_time):
+        print(self.curr_time_ns - self.udp_socket.curr_time_ns)
         self.udp_socket.curr_time_ns = self.curr_time_ns
 
-        if self.received_first_packet:
+        if self.local_player_robot is not None:
             input_delay_frames = round(self.server_client_latency_ns / FIXED_DELTA_TIME_NS)
             if len(self.previous_inputs) <= MAX_EXTRAPOLATION_STEPS * 2:
                 self.previous_inputs.append((self.player_input.copy(), self.physics_frame_count - input_delay_frames))
@@ -144,6 +156,7 @@ class OnlineWorldSim(WorldSim):
         else:
             packet = ClientPacket(creation_time=self.curr_time_ns, player_input=self.player_input,
                                   player_name=GameInfo.local_player_name)
+        print("sending packet on frame " + str(self.physics_frame_count))
         self.udp_socket.send_packet(None, packet)
 
         self.player_input.shoot_pressed = False
@@ -163,16 +176,17 @@ class OnlineWorldSim(WorldSim):
                 super().fixed_update(delta_time)
                 return
 
-            self.server_client_latency_ns = (last_packet.receive_time - last_packet.client_rtt_start) >> 1
-            # print(self.server_client_latency_ns / 1000000)
+            #self.server_client_latency_ns = (last_packet.receive_time - last_packet.client_rtt_start) >> 1
+            self.server_client_latency_ns = 200000000
+            print(self.server_client_latency_ns / 1000000)
             new_wt = self.curr_time_ns - last_packet.physics_frame * FIXED_DELTA_TIME_NS - self.server_client_latency_ns
-            if not self.received_first_packet:
+            if self.local_player_robot is None:
                 self.world_start_time_ns = new_wt
             else:
                 self.world_start_time_ns = lerp(self.world_start_time_ns, new_wt, TIME_SYNC_LERP_AMOUNT)
             self.curr_world_time_ns = self.curr_time_ns - self.world_start_time_ns
             self.last_packet_physics_frame = last_packet.physics_frame
-            physics_frames_ahead = self.physics_frame_count - self.last_packet_physics_frame
+            physics_frames_ahead = int(self.server_client_latency_ns / FIXED_DELTA_TIME_NS)
             self.physics_frame_count = self.last_packet_physics_frame
             self.physics_world_time_ns = self.physics_frame_count * FIXED_DELTA_TIME_NS
 
@@ -182,8 +196,6 @@ class OnlineWorldSim(WorldSim):
             self.set_bullets(last_packet.bullets)
 
             self.extrapolate(self.last_packet_physics_frame, physics_frames_ahead)
-
-            self.received_first_packet = True
 
             # print("got packet")
 

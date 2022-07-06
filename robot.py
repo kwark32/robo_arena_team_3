@@ -50,6 +50,9 @@ class Robot:
                  max_velocity=120, max_ang_velocity=4, max_accel=200, max_ang_accel=12, player_name=""):
         self.robot_id = robot_id
         if robot_id < 0:
+            for robot in world_sim.robots:
+                if robot.robot_id >= GameInfo.next_player_id:
+                    GameInfo.next_player_id = robot.robot_id + 1
             self.robot_id = GameInfo.next_player_id
             GameInfo.next_player_id += 1
         self.next_bullet_id = 0

@@ -15,7 +15,7 @@ class BulletInfo:
         self.bullet_id = bullet.bullet_id
         self.bullet_body = bullet.sim_body
         self.bullet_class = bullet.bullet_type
-        self.from_player_id = bullet.source_id
+        self.source_id = bullet.source_id
         self.creation_frame = bullet.creation_frame
 
     def set_bullet_values(self, bullet):
@@ -23,7 +23,7 @@ class BulletInfo:
         bullet.sim_body = self.bullet_body
         bullet.extrapolation_body = self.bullet_body.copy()
         bullet.bullet_type = self.bullet_class
-        bullet.source_id = self.from_player_id
+        bullet.source_id = self.source_id
         bullet.creation_frame = self.creation_frame
 
 

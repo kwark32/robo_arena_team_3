@@ -43,6 +43,7 @@ class MainMenu(Menu):
     class Logo(Button):
         name = "logo"
 
+
     def __init__(self, main_widget, size, main_menu_scene):
         super().__init__(main_widget, size, main_menu_scene, "black_bg")
 
@@ -63,6 +64,12 @@ class OnlineOptions(Menu):
 
         def click(self):
             self.menu.main_menu_scene.switch_menu(Menus.MAIN_MENU)
+
+    class PlayerNameHeader(Button):
+        name = "player_name_header"
+
+    class ServerIpHeader(Button):
+        name = "server_ip_header"
 
     class PlayerNameField(TextField):
         name = "player_name"
@@ -161,20 +168,22 @@ class OnlineOptions(Menu):
     def __init__(self, main_widget, size, main_menu_scene):
         super().__init__(main_widget, size, main_menu_scene, "black_bg")
 
-        self.elements.append(OnlineOptions.BackButton(main_widget, Vector(self.size / 2, 850), self))
-        player_name_field = OnlineOptions.PlayerNameField(main_widget, Vector(self.size / 2, 300),
-                                                          self, text_offset=Vector(255, 50),
+        self.elements.append(OnlineOptions.BackButton(main_widget, Vector(self.size / 2, 900), self))
+        self.elements.append(OnlineOptions.ServerIpHeader(main_widget, Vector(self.size / 2, 425), self))
+        self.elements.append(OnlineOptions.PlayerNameHeader(main_widget, Vector(self.size / 2, 100), self))
+        player_name_field = OnlineOptions.PlayerNameField(main_widget, Vector(self.size / 2, 250),
+                                                          self, text_offset=Vector(60, 83),
                                                           max_text_length=MAX_PLAYER_NAME_LENGTH)
         self.elements.append(player_name_field)
-        server_ip_field = OnlineOptions.ServerIPField(main_widget, Vector(self.size / 2, 425),
-                                                      self, text_offset=Vector(255, 50),
+        server_ip_field = OnlineOptions.ServerIPField(main_widget, Vector(self.size / 2, 575),
+                                                      self, text_offset=Vector(60, 83),
                                                       max_text_length=MAX_SERVER_IP_LENGTH)
         self.elements.append(server_ip_field)
-        join_button = OnlineOptions.JoinButton(main_widget, Vector(self.size / 2 - 200, 600), self)
+        join_button = OnlineOptions.JoinButton(main_widget, Vector(self.size / 2 - 220, 735), self)
         join_button.player_name_field = player_name_field
         join_button.server_ip_field = server_ip_field
         self.elements.append(join_button)
-        host_button = OnlineOptions.HostButton(main_widget, Vector(self.size / 2 + 200, 600), self)
+        host_button = OnlineOptions.HostButton(main_widget, Vector(self.size / 2 + 220, 735), self)
         host_button.player_name_field = player_name_field
         host_button.server_ip_field = server_ip_field
         self.elements.append(host_button)
@@ -193,7 +202,7 @@ class Settings(Menu):
     def __init__(self, main_widget, size, main_menu_scene):
         super().__init__(main_widget, size, main_menu_scene, "black_bg")
 
-        self.elements.append(Settings.BackButton(main_widget, Vector(self.size / 2, 850), self))
+        self.elements.append(Settings.BackButton(main_widget, Vector(self.size / 2, 900), self))
 
     def escape_pressed(self):
         self.main_menu_scene.switch_menu(Menus.MAIN_MENU)

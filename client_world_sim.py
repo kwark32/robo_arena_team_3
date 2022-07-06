@@ -176,17 +176,18 @@ class OnlineWorldSim(WorldSim):
                 super().fixed_update(delta_time)
                 return
 
-            #self.server_client_latency_ns = (last_packet.receive_time - last_packet.client_rtt_start) >> 1
-            self.server_client_latency_ns = 200000000
-            print(self.server_client_latency_ns / 1000000)
+            self.server_client_latency_ns = (last_packet.receive_time - last_packet.client_rtt_start) >> 1
+            # self.server_client_latency_ns = 200000000
+            print("latency ms: " + str(round(self.server_client_latency_ns / 1000000)))
             new_wt = self.curr_time_ns - last_packet.physics_frame * FIXED_DELTA_TIME_NS - self.server_client_latency_ns
             if self.local_player_robot is None:
                 self.world_start_time_ns = new_wt
             else:
                 self.world_start_time_ns = lerp(self.world_start_time_ns, new_wt, TIME_SYNC_LERP_AMOUNT)
+                print("world start time ms:" + str(round(self.world_start_time_ns / 1000000)))
             self.curr_world_time_ns = self.curr_time_ns - self.world_start_time_ns
             self.last_packet_physics_frame = last_packet.physics_frame
-            physics_frames_ahead = int(self.server_client_latency_ns / FIXED_DELTA_TIME_NS)
+            physics_frames_ahead = self.physics_frame_count - self.last_packet_physics_frame
             self.physics_frame_count = self.last_packet_physics_frame
             self.physics_world_time_ns = self.physics_frame_count * FIXED_DELTA_TIME_NS
 

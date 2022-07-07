@@ -75,6 +75,7 @@ class Robot:
         self.extrapolation_body = self.sim_body.copy()
 
         self.effects = []
+        self.effect_data = {}
 
         self.is_player = is_player
         self.has_ai = has_ai
@@ -136,10 +137,16 @@ class Robot:
             self.die()
             if not self.should_respawn:
                 return
+            elif self.health > self.max_health:
+                self.health = self.max_health
+
+        self.revert_effects()
 
         current_tile = self.get_center_tile()
         if current_tile.effect_class is not None:
-            self.effects.append(current_tile.effect_class(FIXED_DELTA_TIME / 2))
+            effect = current_tile.effect_class(FIXED_DELTA_TIME / 2)
+            self.effects.append(effect)
+            effect.world_sim = self.world_sim
 
         self.apply_effects(delta_time)
 
@@ -214,6 +221,10 @@ class Robot:
             self.sim_body.position.y = ARENA_SIZE - self.physics_body.position[1]
 
     def apply_effects(self, delta_time):
+        for effect in self.effects:
+            effect.apply(self, delta_time)
+
+    def revert_effects(self):
         expired_effects = []
         for effect in self.effects:
             effect.revert(self)
@@ -248,12 +259,25 @@ class Robot:
         self.forward_velocity_goal = 0
         self.set_physics_body()
         self.is_dead = False
+        self.effects.clear()
 
     def remove(self):
         self.to_remove = True
         if self.physics_body is not None:
             self.physics_world.world.DestroyBody(self.physics_body)
             self.physics_body = None
+
+    def set_position(self, position, stop_robot=False, stop_robot_rotation=False):
+        self.last_position = position.copy()
+        self.sim_body.position = position.copy()
+        if stop_robot:
+            self.real_velocity = (0, 0)
+            self.sim_body.velocity = (0, 0)
+            self.sim_body.local_velocity = (0, 0)
+        if stop_robot_rotation:
+            self.sim_body.ang_velocity = 0
+        self.extrapolation_body.set(self.sim_body)
+        self.set_physics_body()
 
 
 class PlayerInput:

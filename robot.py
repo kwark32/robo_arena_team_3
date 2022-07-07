@@ -21,6 +21,8 @@ class RobotInfo:
         self.last_shot_frame = robot.weapon.last_shot_frame
         self.player_name = robot.player_name
         self.last_position = robot.last_position
+        self.effects = robot.effects
+        # TODO: self.effect_data = robot.effect_data
 
         self.died = False
 
@@ -33,6 +35,8 @@ class RobotInfo:
         robot.player_name = self.player_name
         robot.sim_body = self.robot_body
         robot.extrapolation_body = self.robot_body.copy()
+        robot.effects = self.effects
+        # TODO: robot.effect_data = self.effect_data
         robot.health = self.health
         if robot.weapon is None or robot.weapon.weapon_type is not self.weapon_class:
             robot.weapon = self.weapon_class()
@@ -48,6 +52,8 @@ class Robot:
     def __init__(self, world_sim, robot_id=-1, is_player=False, has_ai=True,
                  size=Vector(40, 40), position=Vector(0, 0), rotation=0,
                  max_velocity=120, max_ang_velocity=4, max_accel=200, max_ang_accel=12, player_name=""):
+        self.creation_frame = world_sim.physics_frame_count
+
         self.robot_id = robot_id
         if robot_id < 0:
             for robot in world_sim.robots:
@@ -133,7 +139,7 @@ class Robot:
 
         current_tile = self.get_center_tile()
         if current_tile.effect_class is not None:
-            self.effects.append(current_tile.effect_class())
+            self.effects.append(current_tile.effect_class(FIXED_DELTA_TIME / 2))
 
         self.apply_effects(delta_time)
 
@@ -179,8 +185,7 @@ class Robot:
             self.update_ai(delta_time)
 
         self.sim_body.step(delta_time)
-        if not GameInfo.is_headless:
-            self.extrapolation_body.set(self.sim_body)
+        self.extrapolation_body.set(self.sim_body)
 
         self.last_position = Vector(self.physics_body.position[0], ARENA_SIZE - self.physics_body.position[1])
 
@@ -195,8 +200,7 @@ class Robot:
         tile_count = self.world_sim.arena.tile_count
         tile_position = self.sim_body.position.copy()
         tile_position.div(tile_size)
-        tile_position.x = int(tile_position.x)
-        tile_position.y = int(tile_position.y)
+        tile_position.floor()
         tile_position.limit_by_scalar(0, tile_count - 1)
         return self.world_sim.arena.tiles[tile_position.y][tile_position.x]
 
@@ -223,6 +227,7 @@ class Robot:
         for effect in self.effects:
             effect.apply(self, delta_time)
 
+    # TODO: change to general "change health"
     def take_damage(self, damage):
         self.health -= damage
 
@@ -268,6 +273,7 @@ class PlayerInput:
         player_input.right = self.right
         player_input.shoot = self.shoot
         player_input.shoot_pressed = self.shoot_pressed
+        return player_input
 
     def to_string(self):
         return ("PlayerInput {\n  Up: " + str(self.up) + "\n  Down: " + str(self.down) + "\n  Left: "

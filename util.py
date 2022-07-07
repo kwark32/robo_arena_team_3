@@ -24,6 +24,10 @@ class Vector:
         self.x = round(self.x)
         self.y = round(self.y)
 
+    def floor(self):
+        self.x = int(self.x)
+        self.y = int(self.y)
+
     def add(self, other):
         self.x += other.x
         self.y += other.y

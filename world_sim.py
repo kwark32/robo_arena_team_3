@@ -118,12 +118,12 @@ class WorldSim:
             last_fixed_timestep_delta_time_ns = self.curr_world_time_ns - self.physics_world_time_ns
             if last_fixed_timestep_delta_time_ns < FIXED_DELTA_TIME_NS:
                 break
-            print("last fixed delta ms: " + str(round(last_fixed_timestep_delta_time_ns / 1000000)))
+            # print("last fixed delta ms: " + str(round(last_fixed_timestep_delta_time_ns / 1000000)))
             iterations += 1
             self.fixed_update(FIXED_DELTA_TIME)
             self.extrapolation_delta_time = get_delta_time_s(self.curr_world_time_ns,
                                                              self.physics_frame_count * FIXED_DELTA_TIME_NS)
-        print("iterations: " + str(iterations))
+        # print("iterations: " + str(iterations))
 
         self.calc_fps()
 

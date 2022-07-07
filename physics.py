@@ -20,7 +20,6 @@ class ContactListener(b2ContactListener):
 
     def PreSolve(self, contact, oldManifold):
         pass
-        # contact.SetEnabled(False)
 
     def PostSolve(self, contact, impulse):
         pass

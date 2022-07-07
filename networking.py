@@ -124,7 +124,7 @@ class UDPServer(UDPSocket):
         while self.get_packet_available():
             address, packet = self.get_packet()
             packet.receive_time = self.curr_time_ns
-            print("received client packet:\n" + packet.to_string() + "\n")
+            # print("received client packet:\n" + packet.to_string() + "\n")
 
             popped = False
             if SIMULATE_PING:
@@ -148,10 +148,10 @@ class UDPServer(UDPSocket):
             self.packets_out.append((client.address, state_packet))
             # print(int(SIMULATED_PING_NS / 2))
             while (len(self.packets_out) > 0
-                   and self.packets_out[0][1].receive_time + int(SIMULATED_PING_NS / 2) < self.curr_time_ns):
+                   and self.packets_out[0][1].creation_time + int(SIMULATED_PING_NS / 2) < self.curr_time_ns):
                 pkt = self.packets_out.pop(0)
                 super().send_packet(pkt[0], pkt[1])
-                print("sending delayed packet to " + str(pkt[0]) + ":\n" + pkt[1].to_string() + "\n")
+                # print("sending delayed packet to " + str(pkt[0]) + ":\n" + pkt[1].to_string() + "\n")
         else:
             super().send_packet(client.address, state_packet)
 

@@ -7,12 +7,12 @@ def pos_change_from_velocity_accel(delta_time, velocity, accel, max_velocity, ma
 
     accel.limit_magnitude(max_accel)
 
-    velocity_change = accel.copy()
-    velocity_change.mult(delta_time)
-    velocity.add(velocity_change)
-
     if dont_modify:
         velocity = velocity.copy()
+
+    velocity_change = accel
+    velocity_change.mult(delta_time)
+    velocity.add(velocity_change)
 
     velocity.limit_magnitude(max_velocity)
 
@@ -67,6 +67,7 @@ class SimpleBody:
         movement = self.local_velocity.copy()
         movement.rotate(self.rotation)
         movement.mult(delta_time)
+        print(self.position.to_string() + ", " + str(delta_time))
         self.position.add(movement)
 
     def reset(self, position=Vector(0, 0), rotation=0):
@@ -148,9 +149,7 @@ class SimBody:
         rot_change = rot_change_from_velocity_accel(delta_time, self.ang_velocity, self.ang_accel,
                                                     self.max_ang_velocity, self.max_ang_accel, body=self)
 
-        new_rot = self.rotation + rot_change
-        new_rot = limit_rot(new_rot)
-        self.rotation = new_rot
+        self.rotation = limit_rot(self.rotation + rot_change)
 
     def reset(self, position=Vector(0, 0), rotation=0):
         self.ang_accel = 0  # in rad/s^2

@@ -1,6 +1,3 @@
-from constants import FIXED_DELTA_TIME
-
-
 class RobotEffect:
     def __init__(self, duration):
         self.effect_class = type(self)
@@ -14,9 +11,6 @@ class RobotEffect:
 
 
 class SpeedEffect(RobotEffect):
-    def __init__(self, duration=(FIXED_DELTA_TIME / 2)):  # duration: half physics frame (gets applied 1 frame)
-        super().__init__(duration)
-
     def apply(self, robot, delta_time=0):
         super().apply(robot, delta_time=delta_time)
 

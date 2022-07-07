@@ -122,7 +122,7 @@ class TextField(UIElement):
         if self.caret:
             draw_text += "|"
 
-        qp.setFont(QFont("OCR", 60))
+        qp.setFont(QFont("Courier", 60))
 
         if len(self.text) > 0 or self.is_selected:
             qp.setPen(QPen(QColor(189, 38, 7, 255), 6))

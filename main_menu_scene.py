@@ -43,7 +43,6 @@ class MainMenu(Menu):
     class Logo(Button):
         name = "logo"
 
-
     def __init__(self, main_widget, size, main_menu_scene):
         super().__init__(main_widget, size, main_menu_scene, "black_bg")
 

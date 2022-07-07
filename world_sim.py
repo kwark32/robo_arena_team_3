@@ -1,9 +1,9 @@
 import time
 
 from robot import Robot, PlayerInput
-from arena_converter import load_map_png  # , load_map_json
+from arena_converter import load_map
 from physics import PhysicsWorld
-from util import Vector, get_main_path, get_delta_time_s
+from util import Vector, get_delta_time_s
 from globals import GameInfo
 from constants import ARENA_SIZE, FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_FIXED_TIMESTEPS
 
@@ -38,10 +38,7 @@ class WorldSim:
         pass
 
     def init_arena(self, size):
-        # map_path = get_main_path() + "/test_map.json"
-        map_path = get_main_path() + "/arena_images/Robo_Arena_1.png"
-        # self.arena = load_map_json(map_path, size, physics_world=self.physics_world)
-        self.arena = load_map_png(map_path, size, physics_world=self.physics_world)
+        self.arena = load_map(GameInfo.active_arena, size, physics_world=self.physics_world)
 
     def create_player(self, robot_id=-1, position=Vector(ARENA_SIZE / 2, ARENA_SIZE / 2),
                       player_name=None):

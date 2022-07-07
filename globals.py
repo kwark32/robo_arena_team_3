@@ -17,6 +17,8 @@ class Menus(IntEnum):
 class GameInfo:
     is_headless = False
 
+    active_arena = "empty_test_map.json"
+
     placeholder_name = "Player"
     local_player_name = placeholder_name
 

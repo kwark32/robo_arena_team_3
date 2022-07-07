@@ -4,9 +4,22 @@ except ImportError:
     import json
 
 from arena import Arena, tile_type_dict
-from util import Vector  # , get_main_path
+from util import Vector, get_main_path
 from constants import ARENA_SIZE, MAP_FORMAT_VERSION
 from PIL import Image
+
+
+json_map_path = get_main_path() + "/arenas/json/"
+png_map_path = get_main_path() + "/arenas/png/"
+
+
+def load_map(file, size, physics_world=None):
+    if file.endswith("json"):
+        return load_map_json(json_map_path + file, size, physics_world=physics_world)
+    elif file.endswith("png"):
+        return load_map_png(png_map_path + file, size, physics_world=physics_world)
+    else:
+        return None
 
 
 def load_map_json(file, size, physics_world=None):

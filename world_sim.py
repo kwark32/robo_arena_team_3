@@ -1,7 +1,7 @@
 import time
 
 from robot import Robot, PlayerInput
-from arena_converter import load_map_json, load_map_png
+from arena_converter import load_map_png  # , load_map_json
 from physics import PhysicsWorld
 from util import Vector, get_main_path, get_delta_time_s
 from globals import GameInfo

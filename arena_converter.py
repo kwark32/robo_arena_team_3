@@ -4,7 +4,7 @@ except ImportError:
     import json
 
 from arena import Arena, tile_type_dict
-from util import Vector, get_main_path
+from util import Vector  # , get_main_path
 from constants import ARENA_SIZE, MAP_FORMAT_VERSION
 from PIL import Image
 

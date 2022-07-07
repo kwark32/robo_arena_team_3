@@ -235,9 +235,6 @@ class Robot:
             self.effects.remove(expired)
         expired_effects.clear()
 
-        for effect in self.effects:
-            effect.apply(self, delta_time)
-
     # TODO: change to general "change health"
     def take_damage(self, damage):
         self.health -= damage
@@ -259,6 +256,7 @@ class Robot:
         self.forward_velocity_goal = 0
         self.set_physics_body()
         self.is_dead = False
+        self.revert_effects()
         self.effects.clear()
 
     def remove(self):

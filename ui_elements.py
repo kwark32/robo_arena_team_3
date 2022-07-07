@@ -1,11 +1,11 @@
 from PyQt5.QtCore import QPoint, Qt
-from PyQt5.QtGui import QPixmap, QColor, QFontMetricsF
+from PyQt5.QtGui import QPixmap, QColor, QFontMetricsF, QFont, QPen
 from util import Vector, get_main_path, is_point_inside_rect
 from globals import Fonts
 from constants import CARET_BLINK_RATE_NS
 
 
-ui_element_texture_path = get_main_path() + "/textures/ui/main_menu/"
+ui_element_texture_path = get_main_path() + "/textures/ui/graphic_main_menu_buttons/"
 
 
 # absolute base class
@@ -76,7 +76,7 @@ class UIElement:
     def draw(self, qp):
         if self.is_selected:
             qp.fillRect(self.top_left_corner.x, self.top_left_corner.y,
-                        self.texture_size.x, self.texture_size.y, QColor(80, 80, 80))
+                        self.texture_size.x, self.texture_size.y, QColor(0, 0, 0))
 
         qp.drawPixmap(self.top_left_corner.x, self.top_left_corner.y, self.texture)
 
@@ -122,14 +122,14 @@ class TextField(UIElement):
         if self.caret:
             draw_text += "|"
 
-        qp.setFont(Fonts.text_field_font)
+        qp.setFont(QFont("Courier", 60))
 
         if len(self.text) > 0 or self.is_selected:
-            qp.setPen(Fonts.text_field_color)
+            qp.setPen(QPen(QColor(189, 38, 7, 255), 6))
             qp.drawText(QPoint(self.top_left_corner.x + self.text_offset.x,
                                self.top_left_corner.y + self.text_offset.y), draw_text)
         else:
-            qp.setPen(Fonts.text_field_default_color)
+            qp.setPen(QPen(QColor(189, 38, 7, 255), 6))
             qp.drawText(QPoint(self.top_left_corner.x + self.text_offset.x,
                                self.top_left_corner.y + self.text_offset.y), self.placeholder_text)
 

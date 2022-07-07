@@ -92,6 +92,7 @@ class HoleTileEffect(StunEffect):
             robot.take_damage(1000)
 
     def revert(self, robot):
+        super().revert(robot)
         if self.start_rotation is not None:
             robot.sim_body.rotation = self.start_rotation
 

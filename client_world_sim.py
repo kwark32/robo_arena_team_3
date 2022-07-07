@@ -4,6 +4,7 @@ from util import limit, lerp
 from networking import UDPClient, ClientPacket
 from globals import GameInfo
 from constants import FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_EXTRAPOLATION_STEPS, TIME_SYNC_LERP_AMOUNT
+# from constants import DEL_OVERTIME_FRAMES
 
 
 class OnlineWorldSim(WorldSim):
@@ -86,7 +87,7 @@ class OnlineWorldSim(WorldSim):
                         # else:
                         contained = True  # indent
                         break
-                if not contained:
+                if not contained:  # and bullet.creation_frame + DEL_OVERTIME_FRAMES < self.last_packet_physics_frame:
                     dead_bullets.append(bullet)
             for dead in dead_bullets:
                 dead.physics_world.world.DestroyBody(dead.physics_body)

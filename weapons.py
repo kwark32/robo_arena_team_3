@@ -40,6 +40,7 @@ class Bullet:
         self.bullet_id = bullet_id
 
         self.size = self.bullet_type.size.copy()
+        self.collider_size = self.size.copy()
 
         rotation = limit_rot(rotation)
         pos = Vector(0, round(self.size.y / 2))
@@ -58,7 +59,10 @@ class Bullet:
         self.world_sim = world_sim
         self.physics_world = world_sim.physics_world
 
-        self.physics_body = self.get_collider()
+        self.physics_body = self.physics_world.add_rect(Vector(pos.x, ARENA_SIZE - pos.y),
+                                                        self.collider_size.x, self.collider_size.y,
+                                                        rotation=-self.sim_body.rotation,
+                                                        static=False, sensor=True, user_data=self)
 
         self.world_sim.bullets.append(self)
 
@@ -70,18 +74,19 @@ class Bullet:
                 print("WARN: Bullet texture size is not equal to bullet (collider) size!")
         return self.bullet_type.texture
 
-    def get_collider(self):
+    def set_collider(self):
         frame_dist = self.bullet_type.speed * FIXED_DELTA_TIME
-        print(frame_dist)
-        size = self.size.copy()
+        if frame_dist > self.size.y:
+            self.collider_size.y = frame_dist
+        self.physics_body.fixtures[0].shape.box = (round(self.collider_size.x / 2), round(self.collider_size.y / 2))
+
+    def get_collider_pos(self):
         pos = self.sim_body.position.copy()
-        if frame_dist > size.y:
-            size.y = frame_dist
-            offset = Vector(0, -(frame_dist / 2))
+        if self.collider_size.y > self.size.y:
+            offset = Vector(0, (self.size.y - self.collider_size.y) / 2)
             offset.rotate(self.sim_body.rotation)
             pos.add(offset)
-        return self.physics_world.add_rect(Vector(pos.x, ARENA_SIZE - pos.y), size.x, size.y,
-                                           rotation=-self.sim_body.rotation, static=False, sensor=True, user_data=self)
+        return pos
 
     def destroy(self):
         self.to_destroy = True
@@ -94,10 +99,12 @@ class Bullet:
         self.apply_effect(robot)
 
     def update(self, delta_time):
+        if self.world_sim.physics_frame_count > self.creation_frame:
+            self.set_collider()
         self.sim_body.step(delta_time)
         self.extrapolation_body.set(self.sim_body)
-        self.physics_body.transform = ((self.sim_body.position.x, ARENA_SIZE - self.sim_body.position.y),
-                                       -self.sim_body.rotation)
+        collider_pos = self.get_collider_pos()
+        self.physics_body.transform = ((collider_pos.x, ARENA_SIZE - collider_pos.y), -self.sim_body.rotation)
 
     def draw(self, qp, delta_time):
         self.extrapolation_body.step(delta_time)
@@ -133,7 +140,7 @@ class Weapon:
 
 
 class CannonShell(Bullet):
-    speed = 1000  # 1000
+    speed = 200
     damage = 250
     size = Vector(12, 36)
     texture = None

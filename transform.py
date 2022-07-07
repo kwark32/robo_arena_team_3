@@ -54,10 +54,10 @@ class SimpleBody:
         return body
 
     def set(self, other):
-        self.position = other.position
+        self.position = other.position.copy()
         self.rotation = other.rotation
 
-        self.local_velocity = other.local_velocity
+        self.local_velocity = other.local_velocity.copy()
 
     def step(self, delta_time):
         if self._was_reset:
@@ -67,7 +67,6 @@ class SimpleBody:
         movement = self.local_velocity.copy()
         movement.rotate(self.rotation)
         movement.mult(delta_time)
-        print(self.position.to_string() + ", " + str(delta_time))
         self.position.add(movement)
 
     def reset(self, position=Vector(0, 0), rotation=0):
@@ -108,7 +107,7 @@ class SimBody:
         return body
 
     def set(self, other):
-        self.position = other.position
+        self.position = other.position.copy()
         self.rotation = other.rotation
         self.max_velocity = other.max_velocity
         self.max_ang_velocity = other.max_ang_velocity
@@ -117,10 +116,10 @@ class SimBody:
 
         self.ang_accel = other.ang_accel
         self.ang_velocity = other.ang_velocity
-        self.accel = other.accel
-        self.local_accel = other.local_accel
-        self.velocity = other.velocity
-        self.local_velocity = other.local_velocity
+        self.accel = other.accel.copy()
+        self.local_accel = other.local_accel.copy()
+        self.velocity = other.velocity.copy()
+        self.local_velocity = other.local_velocity.copy()
 
     def step(self, delta_time):
         if self._was_reset:

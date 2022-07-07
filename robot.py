@@ -21,7 +21,7 @@ class RobotInfo:
         self.last_shot_frame = robot.weapon.last_shot_frame
         self.player_name = robot.player_name
         self.last_position = robot.last_position
-        self.effects = robot.effects
+        # TODO: self.effects = robot.effects
         # TODO: self.effect_data = robot.effect_data
 
         self.died = False
@@ -35,7 +35,7 @@ class RobotInfo:
         robot.player_name = self.player_name
         robot.sim_body = self.robot_body
         robot.extrapolation_body = self.robot_body.copy()
-        robot.effects = self.effects
+        # TODO: robot.effects = self.effects
         # TODO: robot.effect_data = self.effect_data
         robot.health = self.health
         if robot.weapon is None or robot.weapon.weapon_type is not self.weapon_class:

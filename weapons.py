@@ -140,7 +140,7 @@ class Weapon:
 
 
 class CannonShell(Bullet):
-    speed = 200
+    speed = 2000
     damage = 250
     size = Vector(12, 36)
     texture = None

@@ -227,6 +227,8 @@ class Robot:
         self.forward_velocity_goal = 0
         self.set_physics_body()
         self.is_dead = False
+        for effect in self.effects:
+            effect.revert(self)
         self.effects.clear()
 
     def remove(self):

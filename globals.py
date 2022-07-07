@@ -20,6 +20,9 @@ class GameInfo:
     placeholder_name = "Player"
     local_player_name = placeholder_name
 
+    local_player_id = 0
+    next_player_id = local_player_id + 1
+
     default_ip = "127.0.0.1"  # "202.61.239.116"
     server_ip = default_ip
     port = 54345

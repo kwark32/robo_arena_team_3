@@ -11,33 +11,57 @@ if not GameInfo.is_headless:
 robot_texture_path = get_main_path() + "/textures/moving/"
 
 
-def set_robot_values(robot, robot_info):
-    robot.robot_id = robot_info.player_id
-    robot.player_name = robot_info.player_name
-    robot.sim_body = robot_info.robot_body
-    robot.extrapolation_body = robot_info.robot_body.copy()
-    robot.health = robot_info.health
-    if robot.weapon is None or robot.weapon.weapon_type is not robot_info.weapon_class:
-        robot.weapon = robot_info.weapon_class()
-    robot.weapon.last_shot_frame = robot_info.last_shot_frame
-    robot.last_position = robot_info.last_position
-    robot.forward_velocity_goal = 0
-    robot.set_physics_body()
-    if robot_info.died:
-        robot.die()
+class RobotInfo:
+    def __init__(self, robot, physics_frame=0):
+        self.robot_body = robot.sim_body
+        self.player_id = robot.robot_id
+        self.next_bullet_id = robot.next_bullet_id
+        self.health = robot.health
+        self.weapon_class = robot.weapon.weapon_type
+        self.last_shot_frame = robot.weapon.last_shot_frame
+        self.player_name = robot.player_name
+        self.last_position = robot.last_position
+        self.effects = robot.effects
+        # TODO: self.effect_data = robot.effect_data
+
+        self.died = False
+
+        if robot.last_death_frame == physics_frame > 0:
+            self.died = True
+
+    def set_robot_values(self, robot):
+        robot.robot_id = self.player_id
+        robot.next_bullet_id = self.next_bullet_id
+        robot.player_name = self.player_name
+        robot.sim_body = self.robot_body
+        robot.extrapolation_body = self.robot_body.copy()
+        robot.effects = self.effects
+        # TODO: robot.effect_data = self.effect_data
+        robot.health = self.health
+        if robot.weapon is None or robot.weapon.weapon_type is not self.weapon_class:
+            robot.weapon = self.weapon_class()
+        robot.weapon.last_shot_frame = self.last_shot_frame
+        robot.last_position = self.last_position
+        robot.forward_velocity_goal = 0
+        robot.set_physics_body()
+        if self.died:
+            robot.die()
 
 
 class Robot:
-    next_id = 0
-
     def __init__(self, world_sim, robot_id=-1, is_player=False, has_ai=True,
                  size=Vector(40, 40), position=Vector(0, 0), rotation=0,
                  max_velocity=120, max_ang_velocity=4, max_accel=200, max_ang_accel=12, player_name=""):
+        self.creation_frame = world_sim.physics_frame_count
 
         self.robot_id = robot_id
-        if robot_id == -1:
-            self.robot_id = Robot.next_id
-            Robot.next_id += 1
+        if robot_id < 0:
+            for robot in world_sim.robots:
+                if robot.robot_id >= GameInfo.next_player_id:
+                    GameInfo.next_player_id = robot.robot_id + 1
+            self.robot_id = GameInfo.next_player_id
+            GameInfo.next_player_id += 1
+        self.next_bullet_id = 0
 
         self.player_name = player_name
 
@@ -88,6 +112,11 @@ class Robot:
         self.last_death_frame = 0
 
     @property
+    def get_next_bullet_id(self):
+        self.next_bullet_id += 1
+        return self.next_bullet_id
+
+    @property
     def body_texture(self):
         if self._body_texture is None:
             self._body_texture = QPixmap(robot_texture_path + "tank_red_40.png")
@@ -115,7 +144,7 @@ class Robot:
 
         current_tile = self.get_center_tile()
         if current_tile.effect_class is not None:
-            effect = current_tile.effect_class()
+            effect = current_tile.effect_class(FIXED_DELTA_TIME / 2)
             self.effects.append(effect)
             effect.world_sim = self.world_sim
 
@@ -146,7 +175,8 @@ class Robot:
                 if self.input.shoot or self.input.shoot_pressed:
                     self.input.shoot_pressed = False
                     if self.weapon is not None:
-                        self.weapon.shoot(self.robot_id, self.sim_body.position, self.sim_body.rotation)
+                        self.weapon.shoot(self.robot_id, self.get_next_bullet_id,
+                                          self.sim_body.position, self.sim_body.rotation)
 
                 # if ((self.forward_velocity_goal == 0 and last_forward_velocity_goal != 0)
                 #         or (self.forward_velocity_goal == 1 and self.sim_body.local_velocity.y < 0)
@@ -162,8 +192,7 @@ class Robot:
             self.update_ai(delta_time)
 
         self.sim_body.step(delta_time)
-        if not GameInfo.is_headless:
-            self.extrapolation_body.set(self.sim_body)
+        self.extrapolation_body.set(self.sim_body)
 
         self.last_position = Vector(self.physics_body.position[0], ARENA_SIZE - self.physics_body.position[1])
 
@@ -178,8 +207,7 @@ class Robot:
         tile_count = self.world_sim.arena.tile_count
         tile_position = self.sim_body.position.copy()
         tile_position.div(tile_size)
-        tile_position.x = int(tile_position.x)
-        tile_position.y = int(tile_position.y)
+        tile_position.floor()
         tile_position.limit_by_scalar(0, tile_count - 1)
         return self.world_sim.arena.tiles[tile_position.y][tile_position.x]
 
@@ -207,6 +235,7 @@ class Robot:
             self.effects.remove(expired)
         expired_effects.clear()
 
+    # TODO: change to general "change health"
     def take_damage(self, damage):
         self.health -= damage
 
@@ -227,8 +256,7 @@ class Robot:
         self.forward_velocity_goal = 0
         self.set_physics_body()
         self.is_dead = False
-        for effect in self.effects:
-            effect.revert(self)
+        self.revert_effects()
         self.effects.clear()
 
     def remove(self):
@@ -267,7 +295,9 @@ class PlayerInput:
         player_input.right = self.right
         player_input.shoot = self.shoot
         player_input.shoot_pressed = self.shoot_pressed
+        return player_input
 
     def to_string(self):
-        return ("PlayerInput {\n  Up: " + self.up + "\n  Down: " + self.down + "\n  Left: " + self.left + "\n  Right: "
-                + self.right + "\n  Shoot: " + self.shoot + "\n  Shoot Pressed: " + self.shoot_pressed + "\n}")
+        return ("PlayerInput {\n  Up: " + str(self.up) + "\n  Down: " + str(self.down) + "\n  Left: "
+                + str(self.left) + "\n  Right: " + str(self.right) + "\n  Shoot: " + str(self.shoot)
+                + "\n  Shoot Pressed: " + str(self.shoot_pressed) + "\n}")

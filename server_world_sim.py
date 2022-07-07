@@ -1,6 +1,8 @@
 from world_sim import WorldSim
-from networking import UDPServer, RobotInfo, BulletInfo, StatePacket
+from networking import UDPServer, StatePacket
 from constants import CLIENT_DISCONNECT_TIMEOUT_NS
+from robot import RobotInfo
+from weapons import BulletInfo
 
 
 class ServerWorldSim(WorldSim):
@@ -9,7 +11,12 @@ class ServerWorldSim(WorldSim):
 
         self.udp_socket = UDPServer()
 
+    def clean_mem(self):
+        self.udp_socket.close()
+
     def fixed_update(self, delta_time):
+        self.udp_socket.curr_time_ns = self.curr_time_ns
+
         self.udp_socket.get_client_packets()
 
         disconnected_clients = []
@@ -17,7 +24,7 @@ class ServerWorldSim(WorldSim):
             client = self.udp_socket.clients[key]
             if client.last_rx_packet is None:
                 continue
-            if (client.last_rx_packet.creation_time + CLIENT_DISCONNECT_TIMEOUT_NS < self.curr_time_ns
+            if (client.last_rx_packet.receive_time + CLIENT_DISCONNECT_TIMEOUT_NS < self.curr_time_ns
                     or client.last_rx_packet.disconnect):
                 disconnected_clients.append(client)
             else:
@@ -50,11 +57,13 @@ class ServerWorldSim(WorldSim):
         for bullet in self.bullets:
             bullet_info_list.append(BulletInfo(bullet))
 
-        state_packet = StatePacket(creation_time=self.curr_time_ns, world_start_time=self.world_start_time_ns,
+        state_packet = StatePacket(creation_time=self.curr_time_ns,
                                    physics_frame=self.physics_frame_count, robots=robot_info_list,
                                    bullets=bullet_info_list)
 
         for key in self.udp_socket.clients:
-            client = self.udp_socket.clients[key]
-            state_packet.player_id = client.player_id
-            self.udp_socket.send_packet(client, state_packet)
+            if client.last_rx_packet is not None:
+                client = self.udp_socket.clients[key]
+                state_packet.player_id = client.player_id
+                state_packet.client_rtt_start = client.last_rx_packet.creation_time
+                self.udp_socket.send_packet(client, state_packet)

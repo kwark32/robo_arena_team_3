@@ -20,7 +20,6 @@ class ContactListener(b2ContactListener):
 
     def PreSolve(self, contact, oldManifold):
         pass
-        # contact.SetEnabled(False)
 
     def PostSolve(self, contact, impulse):
         pass
@@ -36,7 +35,7 @@ class PhysicsWorld:
         if static:
             return self.world.CreateStaticBody(
                 position=(position.x, position.y),
-                shapes=b2PolygonShape(box=(int(width / 2), int(height / 2))),
+                shapes=b2PolygonShape(box=(round(width / 2), round(height / 2))),
                 angle=rotation,
                 userData=user_data
             )
@@ -47,7 +46,7 @@ class PhysicsWorld:
             userData=user_data
         )
 
-        dynamic.CreatePolygonFixture(box=(int(width / 2), int(height / 2)),
+        dynamic.CreatePolygonFixture(box=(round(width / 2), round(height / 2)),
                                      density=1000000, friction=1000000, isSensor=sensor)
 
         return dynamic

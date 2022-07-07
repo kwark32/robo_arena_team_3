@@ -1,7 +1,7 @@
 from transform import SimpleBody
 from util import Vector, get_main_path, draw_img_with_rot, limit_rot
 from globals import GameInfo
-from constants import ARENA_SIZE, FIXED_FPS
+from constants import ARENA_SIZE, FIXED_FPS, FIXED_DELTA_TIME
 
 if not GameInfo.is_headless:
     from PyQt5.QtGui import QPixmap
@@ -10,32 +10,37 @@ if not GameInfo.is_headless:
 bullet_texture_path = get_main_path() + "/textures/moving/bullets/"
 
 
-def set_bullet_values(bullet, bullet_info):
-    bullet.bullet_id = bullet_info.bullet_id
-    bullet.sim_body = bullet_info.bullet_body
-    bullet.extrapolation_body = bullet_info.bullet_body.copy()
-    bullet.bullet_type = bullet_info.bullet_class
-    bullet.source_id = bullet_info.from_player_id
+class BulletInfo:
+    def __init__(self, bullet):
+        self.bullet_id = bullet.bullet_id
+        self.bullet_body = bullet.sim_body
+        self.bullet_class = bullet.bullet_type
+        self.source_id = bullet.source_id
+        self.creation_frame = bullet.creation_frame
+
+    def set_bullet_values(self, bullet):
+        bullet.bullet_id = self.bullet_id
+        bullet.sim_body = self.bullet_body
+        bullet.extrapolation_body = self.bullet_body.copy()
+        bullet.bullet_type = self.bullet_class
+        bullet.source_id = self.source_id
+        bullet.creation_frame = self.creation_frame
 
 
-# TODO: Multiplayer bullets have problems... maybe combine robot and bullet id range or something
 # base class
 class Bullet:
-    next_id = 0
-
-    def __init__(self, world_sim, source_id=-1, position=Vector(0, 0), rotation=0, bullet_id=-1):
+    def __init__(self, world_sim, source_id=-1, bullet_id=-1, position=Vector(0, 0), rotation=0):
         self.bullet_type = type(self)
         if self.bullet_type is Bullet:
             print("ERROR: Bullet base class should not be instantiated!")
 
-        self.bullet_id = bullet_id
-        if bullet_id == -1:
-            self.bullet_id = Bullet.next_id
-            Bullet.next_id += 1
+        self.creation_frame = world_sim.physics_frame_count
 
         self.source_id = source_id
+        self.bullet_id = bullet_id
 
-        self.size = self.bullet_type.size
+        self.size = self.bullet_type.size.copy()
+        self.collider_size = self.size.copy()
 
         rotation = limit_rot(rotation)
         pos = Vector(0, round(self.size.y / 2))
@@ -54,9 +59,10 @@ class Bullet:
         self.world_sim = world_sim
         self.physics_world = world_sim.physics_world
 
-        # TODO: Bullets should sweep collision with other dynamic bodies too, or similar
-        self.physics_body = self.physics_world.add_rect(Vector(pos.x, ARENA_SIZE - pos.y), self.size.x, self.size.y,
-                                                        rotation=-rotation, static=False, sensor=True, user_data=self)
+        self.physics_body = self.physics_world.add_rect(Vector(pos.x, ARENA_SIZE - pos.y),
+                                                        self.collider_size.x, self.collider_size.y,
+                                                        rotation=-self.sim_body.rotation,
+                                                        static=False, sensor=True, user_data=self)
 
         self.world_sim.bullets.append(self)
 
@@ -67,6 +73,20 @@ class Bullet:
             if self.bullet_type.texture.width() != self.size.x or self.bullet_type.texture.height() != self.size.y:
                 print("WARN: Bullet texture size is not equal to bullet (collider) size!")
         return self.bullet_type.texture
+
+    def set_collider(self):
+        frame_dist = self.bullet_type.speed * FIXED_DELTA_TIME
+        if frame_dist > self.size.y:
+            self.collider_size.y = frame_dist
+        self.physics_body.fixtures[0].shape.box = (round(self.collider_size.x / 2), round(self.collider_size.y / 2))
+
+    def get_collider_pos(self):
+        pos = self.sim_body.position.copy()
+        if self.collider_size.y > self.size.y:
+            offset = Vector(0, (self.size.y - self.collider_size.y) / 2)
+            offset.rotate(self.sim_body.rotation)
+            pos.add(offset)
+        return pos
 
     def destroy(self):
         self.to_destroy = True
@@ -79,11 +99,12 @@ class Bullet:
         self.apply_effect(robot)
 
     def update(self, delta_time):
+        if self.world_sim.physics_frame_count > self.creation_frame:
+            self.set_collider()
         self.sim_body.step(delta_time)
-        if not GameInfo.is_headless:
-            self.extrapolation_body.set(self.sim_body)
-        self.physics_body.transform = ((self.sim_body.position.x, ARENA_SIZE - self.sim_body.position.y),
-                                       -self.sim_body.rotation)
+        self.extrapolation_body.set(self.sim_body)
+        collider_pos = self.get_collider_pos()
+        self.physics_body.transform = ((collider_pos.x, ARENA_SIZE - collider_pos.y), -self.sim_body.rotation)
 
     def draw(self, qp, delta_time):
         self.extrapolation_body.step(delta_time)
@@ -107,19 +128,19 @@ class Weapon:
         fire_delay = round(FIXED_FPS / self.weapon_type.fire_rate)
         return self.world_sim.physics_frame_count - fire_delay >= self.last_shot_frame
 
-    def shoot(self, source_id, position, rotation):
+    def shoot(self, source_id, bullet_id, position, rotation):
         if self.is_shot_ready():
             self.last_shot_frame = self.world_sim.physics_frame_count
             total_rot = rotation + self.weapon_type.rot_offset
             spawn_pos = self.weapon_type.pos_offset.copy()
             spawn_pos.rotate(total_rot)
             spawn_pos.add(position)
-            self.weapon_type.bullet_type(world_sim=self.world_sim, source_id=source_id,
+            self.weapon_type.bullet_type(self.world_sim, source_id=source_id, bullet_id=bullet_id,
                                          position=spawn_pos, rotation=total_rot)
 
 
 class CannonShell(Bullet):
-    speed = 1000
+    speed = 200
     damage = 250
     size = Vector(12, 36)
     texture = None

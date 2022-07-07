@@ -235,9 +235,8 @@ class Robot:
             self.effects.remove(expired)
         expired_effects.clear()
 
-    # TODO: change to general "change health"
-    def take_damage(self, damage):
-        self.health -= damage
+    def change_health(self, delta_healh):
+        self.health += delta_healh
 
     def die(self):
         print("<cool tank explode animation> or something... (for robot ID " + str(self.robot_id) + ")")

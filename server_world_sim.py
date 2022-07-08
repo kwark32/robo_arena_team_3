@@ -37,6 +37,9 @@ class ServerWorldSim(WorldSim):
                     existing_robot = self.create_enemy_robot(robot_id=client.player_id, has_ai=False,
                                                              player_name=client.player_name)
                     client.robot = existing_robot
+                if client.last_rx_packet.player_input is not None and existing_robot.input is not None:
+                    if not existing_robot.input.up and client.last_rx_packet.player_input.up:
+                        print("Client pressed up on frame " + str(self.physics_frame_count))
                 existing_robot.input = client.last_rx_packet.player_input
         for disconnected in disconnected_clients:
             if disconnected.robot is not None:

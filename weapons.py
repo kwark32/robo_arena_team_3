@@ -13,15 +13,15 @@ bullet_texture_path = get_main_path() + "/textures/moving/bullets/"
 class BulletInfo:
     def __init__(self, bullet):
         self.bullet_id = bullet.bullet_id
-        self.bullet_body = bullet.sim_body
+        self.bullet_body = bullet.sim_body.as_tuples()
         self.bullet_class = bullet.bullet_type
         self.source_id = bullet.source_id
         self.creation_frame = bullet.creation_frame
 
     def set_bullet_values(self, bullet):
         bullet.bullet_id = self.bullet_id
-        bullet.sim_body = self.bullet_body
-        bullet.extrapolation_body = self.bullet_body.copy()
+        bullet.sim_body.set_tuples(self.bullet_body)
+        bullet.extrapolation_body.set(bullet.sim_body)
         bullet.bullet_type = self.bullet_class
         bullet.source_id = self.source_id
         bullet.creation_frame = self.creation_frame

@@ -4,7 +4,6 @@ from util import limit, lerp
 from networking import UDPClient, ClientPacket
 from globals import GameInfo
 from constants import FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_EXTRAPOLATION_STEPS, TIME_SYNC_LERP_AMOUNT
-# from constants import DEL_OVERTIME_FRAMES
 
 
 class OnlineWorldSim(WorldSim):
@@ -15,6 +14,7 @@ class OnlineWorldSim(WorldSim):
 
         self.previous_inputs = []
         self.udp_socket = UDPClient()
+        self.server_world_start_time_ns = 0
         self.last_packet_physics_frame = 0
         self.server_client_latency_ns = 0
 
@@ -40,18 +40,13 @@ class OnlineWorldSim(WorldSim):
 
         if len(self.robots) > len(robots):
             dead_robots = []
-            # robot_ids = []
             for robot in self.robots:
                 contained = False
                 for new_robot_info in robots:
                     if robot.robot_id == new_robot_info.player_id:
-                        # if robot.robot_id in robot_ids:
-                        #     contained = False
-                        # else:
-                        #    robot_ids.append(robot.robot_id)
-                        if new_robot_info.died:  # indent
-                            robot.die()  # indent
-                        contained = True  # indent
+                        if new_robot_info.died:
+                            robot.die()
+                        contained = True
                         break
                 if not contained:
                     dead_robots.append(robot)
@@ -77,19 +72,16 @@ class OnlineWorldSim(WorldSim):
 
         if len(self.bullets) > len(bullets):
             dead_bullets = []
-            # bullet_ids = []
             for bullet in self.bullets:
                 contained = False
                 for new_bullet_info in bullets:
                     if bullet.bullet_id == new_bullet_info.bullet_id:
-                        # if bullet.robot_id in bullet_ids:
-                        #     contained = False
-                        # else:
-                        contained = True  # indent
+                        contained = True
                         break
-                if not contained:  # and bullet.creation_frame + DEL_OVERTIME_FRAMES < self.last_packet_physics_frame:
+                if not contained:
                     dead_bullets.append(bullet)
             for dead in dead_bullets:
+                # print("removing bullet " + str(dead.bullet_id) + " from robot " + str(dead.source_id))
                 dead.physics_world.world.DestroyBody(dead.physics_body)
                 self.bullets.remove(dead)
             dead_bullets.clear()
@@ -112,12 +104,13 @@ class OnlineWorldSim(WorldSim):
                     else:
                         frame_inputs.append(PlayerInput())
 
-                #print("extrapolation count: " + str(extrapolation_count))
+                # print("extrapolation count: " + str(extrapolation_count))
                 for i in range(extrapolation_count):
+                    GameInfo.current_frame_seed = self.server_world_start_time_ns + self.physics_frame_count
                     self.local_player_robot.input = frame_inputs[i]
-                    #super().fixed_update(FIXED_DELTA_TIME)
-                    self.physics_frame_count += 1
-                    self.physics_world_time_ns = FIXED_DELTA_TIME_NS * self.physics_frame_count
+                    super().fixed_update(FIXED_DELTA_TIME)
+                    # self.physics_frame_count += 1
+                    # self.physics_world_time_ns = FIXED_DELTA_TIME_NS * self.physics_frame_count
 
                 self.local_player_robot.input = self.player_input
 
@@ -130,6 +123,8 @@ class OnlineWorldSim(WorldSim):
     def fixed_update(self, delta_time):
         # print(self.curr_time_ns - self.udp_socket.curr_time_ns)
         self.udp_socket.curr_time_ns = self.curr_time_ns
+
+        GameInfo.current_frame_seed = self.server_world_start_time_ns + self.physics_frame_count
 
         if self.local_player_robot is not None:
             input_delay_frames = round(self.server_client_latency_ns / FIXED_DELTA_TIME_NS)
@@ -167,6 +162,8 @@ class OnlineWorldSim(WorldSim):
                 # print("received older packet")
                 super().fixed_update(delta_time)
                 return
+
+            self.server_world_start_time_ns = last_packet.world_start_time
 
             self.server_client_latency_ns = (last_packet.receive_time - last_packet.client_rtt_start) >> 1
             # self.server_client_latency_ns = 200000000

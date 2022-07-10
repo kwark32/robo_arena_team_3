@@ -53,11 +53,23 @@ class SimpleBody:
         body.set(self)
         return body
 
+    def as_tuples(self):
+        body = self.copy()
+        body.position = body.position.as_tuple()
+        body.local_velocity = body.local_velocity.as_tuple()
+        return body
+
     def set(self, other):
         self.position = other.position.copy()
         self.rotation = other.rotation
 
         self.local_velocity = other.local_velocity.copy()
+
+    def set_tuples(self, other):
+        self.position = Vector(other.position[0], other.position[1])
+        self.rotation = other.rotation
+
+        self.local_velocity = Vector(other.local_velocity[0], other.local_velocity[1])
 
     def step(self, delta_time):
         if self._was_reset:
@@ -106,6 +118,15 @@ class SimBody:
         body.set(self)
         return body
 
+    def as_tuples(self):
+        body = self.copy()
+        body.position = body.position.as_tuple()
+        body.accel = body.accel.as_tuple()
+        body.local_accel = body.local_accel.as_tuple()
+        body.velocity = body.velocity.as_tuple()
+        body.local_velocity = body.local_velocity.as_tuple()
+        return body
+
     def set(self, other):
         self.position = other.position.copy()
         self.rotation = other.rotation
@@ -120,6 +141,21 @@ class SimBody:
         self.local_accel = other.local_accel.copy()
         self.velocity = other.velocity.copy()
         self.local_velocity = other.local_velocity.copy()
+
+    def set_tuples(self, other):
+        self.position = Vector(other.position[0], other.position[1])
+        self.rotation = other.rotation
+        self.max_velocity = other.max_velocity
+        self.max_ang_velocity = other.max_ang_velocity
+        self.max_accel = other.max_accel
+        self.max_ang_accel = other.max_ang_accel
+
+        self.ang_accel = other.ang_accel
+        self.ang_velocity = other.ang_velocity
+        self.accel = Vector(other.accel[0], other.accel[1])
+        self.local_accel = Vector(other.local_accel[0], other.local_accel[1])
+        self.velocity = Vector(other.velocity[0], other.velocity[1])
+        self.local_velocity = Vector(other.local_velocity[0], other.local_velocity[1])
 
     def step(self, delta_time):
         if self._was_reset:

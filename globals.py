@@ -20,7 +20,9 @@ class GameInfo:
     # empty_test_map.json
     # test_map.json
     # arena_1.png
-    active_arena = "empty_test_map.json"
+    active_arena = "arena_1.png"
+
+    current_frame_seed = 0
 
     placeholder_name = "Player"
     local_player_name = placeholder_name

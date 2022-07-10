@@ -1,4 +1,3 @@
-from constants import FIXED_DELTA_TIME
 import random
 
 

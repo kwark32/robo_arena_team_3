@@ -1,4 +1,5 @@
 import time
+import random
 
 from robot import Robot, PlayerInput
 from arena_converter import load_map
@@ -77,6 +78,8 @@ class WorldSim:
         dead_robots.clear()
 
     def fixed_update(self, delta_time):
+        random.seed(GameInfo.current_frame_seed)
+
         for bullet in self.bullets:
             bullet.update(delta_time)
 

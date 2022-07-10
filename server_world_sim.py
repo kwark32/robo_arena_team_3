@@ -3,6 +3,7 @@ from networking import UDPServer, StatePacket
 from constants import CLIENT_DISCONNECT_TIMEOUT_NS
 from robot import RobotInfo
 from weapons import BulletInfo
+from globals import GameInfo
 
 
 class ServerWorldSim(WorldSim):
@@ -16,6 +17,8 @@ class ServerWorldSim(WorldSim):
 
     def fixed_update(self, delta_time):
         self.udp_socket.curr_time_ns = self.curr_time_ns
+
+        GameInfo.current_frame_seed = self.world_start_time_ns + self.physics_frame_count
 
         self.udp_socket.get_client_packets()
 
@@ -37,9 +40,9 @@ class ServerWorldSim(WorldSim):
                     existing_robot = self.create_enemy_robot(robot_id=client.player_id, has_ai=False,
                                                              player_name=client.player_name)
                     client.robot = existing_robot
-                if client.last_rx_packet.player_input is not None and existing_robot.input is not None:
-                    if not existing_robot.input.up and client.last_rx_packet.player_input.up:
-                        print("Client pressed up on frame " + str(self.physics_frame_count))
+                # if client.last_rx_packet.player_input is not None and existing_robot.input is not None:
+                #     if not existing_robot.input.up and client.last_rx_packet.player_input.up:
+                #         print("Client pressed up on frame " + str(self.physics_frame_count))
                 existing_robot.input = client.last_rx_packet.player_input
         for disconnected in disconnected_clients:
             if disconnected.robot is not None:
@@ -60,7 +63,7 @@ class ServerWorldSim(WorldSim):
         for bullet in self.bullets:
             bullet_info_list.append(BulletInfo(bullet))
 
-        state_packet = StatePacket(creation_time=self.curr_time_ns,
+        state_packet = StatePacket(creation_time=self.curr_time_ns, world_start_time=self.world_start_time_ns,
                                    physics_frame=self.physics_frame_count, robots=robot_info_list,
                                    bullets=bullet_info_list)
 

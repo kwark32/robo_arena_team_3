@@ -3,6 +3,7 @@ from weapons import TankCannon
 from util import Vector, get_main_path, draw_img_with_rot
 from globals import GameInfo
 from constants import ARENA_SIZE, FIXED_DELTA_TIME, MAX_ROBOT_HEALTH
+from robot_AI import RobotAI
 
 if not GameInfo.is_headless:
     from PyQt5.QtGui import QPixmap
@@ -80,10 +81,6 @@ class Robot:
         self.is_player = is_player
         self.has_ai = has_ai
 
-        self.should_respawn = True
-        if has_ai:
-            self.should_respawn = False
-
         self.input = None
 
         self.size = size
@@ -110,6 +107,11 @@ class Robot:
         self.to_remove = False
         self.is_dead = False
         self.last_death_frame = 0
+
+        self.should_respawn = True
+        if has_ai:
+            self.should_respawn = False
+            self.robot_ai = RobotAI(self)
 
     @property
     def get_next_bullet_id(self):
@@ -189,7 +191,7 @@ class Robot:
                 self.sim_body.local_accel.y = (self.forward_velocity_goal - self.sim_body.local_velocity.y) / delta_time
                 self.sim_body.ang_accel = (ang_velocity_goal - self.sim_body.ang_velocity) / delta_time
         else:
-            self.update_ai(delta_time)
+            self.robot_ai.update(delta_time)
 
         self.sim_body.step(delta_time)
         self.extrapolation_body.set(self.sim_body)
@@ -197,10 +199,6 @@ class Robot:
         self.last_position = Vector(self.physics_body.position[0], ARENA_SIZE - self.physics_body.position[1])
 
         self.set_physics_body()
-
-    def update_ai(self, delta_time):
-        self.sim_body.ang_accel = self.sim_body.max_ang_accel
-        self.sim_body.local_accel.y = self.sim_body.max_accel
 
     def get_center_tile(self):
         tile_size = self.world_sim.arena.tile_size

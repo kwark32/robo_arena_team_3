@@ -20,9 +20,6 @@ class OnlineWorldSim(WorldSim):
 
         self.received_first_packet = False
 
-        self.last_i = PlayerInput()
-        self.last_u_i = PlayerInput()
-
     def set_robots(self, robots):
         for new_robot_info in robots:
             existing_robot = None
@@ -115,14 +112,12 @@ class OnlineWorldSim(WorldSim):
                     else:
                         frame_inputs.append(PlayerInput())
 
-                print("extrapolation count: " + str(extrapolation_count))
+                #print("extrapolation count: " + str(extrapolation_count))
                 for i in range(extrapolation_count):
                     self.local_player_robot.input = frame_inputs[i]
-                    if self.local_player_robot.input.up:
-                        print("Extrapolating up on frame " + str(self.physics_frame_count))
-                    super().fixed_update(FIXED_DELTA_TIME)
-                    # self.physics_frame_count += 1
-                    # self.physics_world_time_ns = FIXED_DELTA_TIME_NS * self.physics_frame_count
+                    #super().fixed_update(FIXED_DELTA_TIME)
+                    self.physics_frame_count += 1
+                    self.physics_world_time_ns = FIXED_DELTA_TIME_NS * self.physics_frame_count
 
                 self.local_player_robot.input = self.player_input
 
@@ -147,14 +142,6 @@ class OnlineWorldSim(WorldSim):
                     input_to_use = player_input[0]
                     break
             self.local_player_robot.input = input_to_use
-
-            if not self.last_i.up and self.player_input.up:
-                print("Pressed up on frame " + str(self.physics_frame_count))
-            self.last_i = self.player_input.copy()
-
-            if not self.last_u_i.up and input_to_use.up:
-                print("Using up-press on frame " + str(self.physics_frame_count))
-            self.last_u_i = input_to_use.copy()
 
         if self.local_player_robot is None or self.player_input is None:
             packet = ClientPacket(creation_time=self.curr_time_ns, player_name=GameInfo.local_player_name)

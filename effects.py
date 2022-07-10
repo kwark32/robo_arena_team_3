@@ -14,13 +14,18 @@ class RobotEffect:
     def revert(self, robot):
         pass
 
+    def get_effect_info(self):
+        copy = self.copy()
+        copy.world_sim = None
+        return copy
+
+    def copy(self):
+        return self.effect_class(self.duration)
+
 
 class SpeedEffect(RobotEffect):
     speed_gain = 0
     ang_speed_gain = 0
-
-    def __init__(self, duration):
-        super().__init__(duration)
 
     def apply(self, robot, delta_time=0):
         super().apply(robot, delta_time=delta_time)
@@ -48,9 +53,6 @@ class WaterTileEffect(SpeedEffect):
     ang_speed_gain = -2
     damage_per_second = 200
 
-    def __init__(self, duration):  # duration: half physics frame (gets applied 1 frame)
-        super().__init__(duration)
-
     def apply(self, robot, delta_time=0):
         super().apply(robot, delta_time=delta_time)
 
@@ -62,9 +64,6 @@ class FireTileEffect(SpeedEffect):
     speed_gain = 60
     ang_speed_gain = 2
     damage_per_second = 100
-
-    def __init__(self, duration):  # duration: half physics frame (gets applied 1 frame)
-        super().__init__(duration)
 
     def apply(self, robot, delta_time=0):
         super().apply(robot, delta_time=delta_time)
@@ -96,14 +95,17 @@ class HoleTileEffect(StunEffect):
         if self.start_rotation is not None:
             robot.sim_body.rotation = self.start_rotation
 
+    def copy(self):
+        copy = super().copy()
+
+        copy.start_rotation = self.start_rotation
+        return copy
+
 
 class LavaTileEffect(SpeedEffect):
     speed_gain = -90
     ang_speed_gain = -3
     damage_per_second = 400
-
-    def __init__(self, duration=(FIXED_DELTA_TIME / 2)):  # duration: half physics frame (gets applied 1 frame)
-        super().__init__(duration=duration)
 
     def apply(self, robot, delta_time=0):
         super().apply(robot, delta_time=delta_time)
@@ -112,9 +114,6 @@ class LavaTileEffect(SpeedEffect):
 
 
 class Portal1TileEffect(RobotEffect):
-    def __init__(self, duration=(FIXED_DELTA_TIME / 2)):  # duration: half physics frame (gets applied 1 frame)
-        super().__init__(duration)
-
     def apply(self, robot, delta_time=0):
         super().apply(robot, delta_time=delta_time)
 
@@ -122,9 +121,6 @@ class Portal1TileEffect(RobotEffect):
 
 
 class Portal2TileEffect(RobotEffect):
-    def __init__(self, duration=(FIXED_DELTA_TIME / 2)):  # duration: half physics frame (gets applied 1 frame)
-        super().__init__(duration)
-
     def apply(self, robot, delta_time=0):
         super().apply(robot, delta_time=delta_time)
 

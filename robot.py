@@ -21,8 +21,10 @@ class RobotInfo:
         self.last_shot_frame = robot.weapon.last_shot_frame
         self.player_name = robot.player_name
         self.last_position = robot.last_position
-        # TODO: self.effects = robot.effects
-        # TODO: self.effect_data = robot.effect_data
+        self.effects = []
+        for effect in robot.effects:
+            self.effects.append(effect.copy())
+        self.effect_data = robot.effect_data
 
         self.died = False
 
@@ -35,8 +37,9 @@ class RobotInfo:
         robot.player_name = self.player_name
         robot.sim_body = self.robot_body
         robot.extrapolation_body = self.robot_body.copy()
-        # TODO: robot.effects = self.effects
-        # TODO: robot.effect_data = self.effect_data
+        robot.revert_effects()
+        robot.effects = self.effects
+        robot.effect_data = self.effect_data
         robot.health = self.health
         if robot.weapon is None or robot.weapon.weapon_type is not self.weapon_class:
             robot.weapon = self.weapon_class()
@@ -127,7 +130,7 @@ class Robot:
         return self._body_texture
 
     def draw(self, qp, delta_time):
-        self.extrapolation_body.step(delta_time)
+        #self.extrapolation_body.step(delta_time)
         draw_img_with_rot(qp, self.body_texture, self.size.x, self.size.y,
                           self.extrapolation_body.position, self.extrapolation_body.rotation)
 

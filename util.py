@@ -85,6 +85,9 @@ class Vector:
         self.x = limit(self.x, lower.x, upper.x)
         self.y = limit(self.y, lower.y, upper.y)
 
+    def as_tuple(self):
+        return self.x, self.y
+
 
 def ns_to_s(ns):
     return (round(ns) >> 10) / 976562.5  # shift to ~us, then float division

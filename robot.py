@@ -13,16 +13,19 @@ robot_texture_path = get_main_path() + "/textures/moving/"
 
 class RobotInfo:
     def __init__(self, robot, physics_frame=0):
-        self.robot_body = robot.sim_body
+        self.robot_body = robot.sim_body.as_tuples()
         self.player_id = robot.robot_id
         self.next_bullet_id = robot.next_bullet_id
         self.health = robot.health
         self.weapon_class = robot.weapon.weapon_type
         self.last_shot_frame = robot.weapon.last_shot_frame
         self.player_name = robot.player_name
-        self.last_position = robot.last_position
-        # TODO: self.effects = robot.effects
-        # TODO: self.effect_data = robot.effect_data
+        self.last_position = robot.last_position.as_tuple()
+        self.effects = []
+        for effect in robot.effects:
+            self.effects.append(effect.copy())
+        self.effect_data = robot.effect_data
+        self.input = robot.input
 
         self.died = False
 
@@ -33,17 +36,20 @@ class RobotInfo:
         robot.robot_id = self.player_id
         robot.next_bullet_id = self.next_bullet_id
         robot.player_name = self.player_name
-        robot.sim_body = self.robot_body
-        robot.extrapolation_body = self.robot_body.copy()
-        # TODO: robot.effects = self.effects
-        # TODO: robot.effect_data = self.effect_data
+        robot.sim_body.set_tuples(self.robot_body)
+        robot.extrapolation_body.set(robot.sim_body)
+        robot.revert_effects()
+        robot.effects = self.effects
+        robot.effect_data = self.effect_data
         robot.health = self.health
         if robot.weapon is None or robot.weapon.weapon_type is not self.weapon_class:
             robot.weapon = self.weapon_class()
         robot.weapon.last_shot_frame = self.last_shot_frame
-        robot.last_position = self.last_position
+        robot.last_position = Vector(self.last_position[0], self.last_position[1])
         robot.forward_velocity_goal = 0
         robot.set_physics_body()
+        if not robot.has_ai:
+            robot.input = self.input
         if self.died:
             robot.die()
 

@@ -119,7 +119,7 @@ class OnlineWorldScene(WorldScene):
 
         for i in range(2):
             self.world_sim.udp_socket.send_packet(None, ClientPacket(
-                creation_time=(self.world_sim.curr_time_ns + 1000), disconnect=True))
+                creation_time=(self.world_sim.curr_time_ns + 10000000), disconnect=True))
 
 
 class ServerWorldScene(WorldScene):

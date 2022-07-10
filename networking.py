@@ -5,7 +5,7 @@ import select
 import pickle
 
 from globals import GameInfo
-from constants import SIMULATE_PING, SIMULATED_PING_NS
+from constants import SIMULATED_PING_NS
 
 
 i = 0
@@ -26,8 +26,9 @@ class Packet:
 
 
 class StatePacket(Packet):
-    def __init__(self, creation_time=0, physics_frame=0, player_id=0, robots=None, bullets=None):
+    def __init__(self, creation_time=0, world_start_time=0, physics_frame=0, player_id=0, robots=None, bullets=None):
         super().__init__(creation_time=creation_time)
+        self.world_start_time = world_start_time
         self.client_rtt_start = 0
         self.physics_frame = physics_frame
         self.player_id = player_id
@@ -99,9 +100,7 @@ class UDPSocket:
         message = bytes_address_tuple[0]
         address = bytes_address_tuple[1]
 
-        packet = pickle.loads(message)
-
-        return address, packet
+        return address, message
 
     def send_packet(self, address, packet):
         self.udp_socket.sendto(pickle.dumps(packet), address)
@@ -113,28 +112,28 @@ class UDPSocket:
 class UDPServer(UDPSocket):
     def __init__(self):
         super().__init__()
-        if SIMULATE_PING:
-            self.packets_in = []
-            self.packets_out = []
+        self.packets_in = []
+        self.packets_out = []
 
         self.udp_socket.bind(("", GameInfo.port))
         self.clients = {}  # client dict: address (str) -> client
 
     def get_client_packets(self):
         while self.get_packet_available():
-            address, packet = self.get_packet()
+            address, message = self.get_packet()
+            packet = pickle.loads(message)
             packet.receive_time = self.curr_time_ns
             # print("received client packet:\n" + packet.to_string() + "\n")
 
             popped = False
-            if SIMULATE_PING:
-                self.packets_in.append((address, packet))
-                while (len(self.packets_in) > 0
-                       and self.packets_in[0][1].receive_time + int(SIMULATED_PING_NS / 2) < self.curr_time_ns):
-                    address, packet = self.packets_in.pop(0)
-                    popped = True
+            self.packets_in.append((address, packet))
+            while (len(self.packets_in) > 0
+                   and self.packets_in[0][1].receive_time + int(SIMULATED_PING_NS / 2) < self.curr_time_ns):
+                address, packet = self.packets_in.pop(0)
+                popped = True
+            packet.receive_time = self.curr_time_ns
 
-            if not SIMULATE_PING or popped:
+            if popped:
                 client = self.clients.get(address)
                 if client is None and not packet.disconnect:
                     client = Client(address, player_name=packet.player_name)
@@ -144,16 +143,13 @@ class UDPServer(UDPSocket):
                         client.last_rx_packet = packet
 
     def send_packet(self, client, state_packet):
-        if SIMULATE_PING:
-            self.packets_out.append((client.address, state_packet))
-            # print(int(SIMULATED_PING_NS / 2))
-            while (len(self.packets_out) > 0
-                   and self.packets_out[0][1].creation_time + int(SIMULATED_PING_NS / 2) < self.curr_time_ns):
-                pkt = self.packets_out.pop(0)
-                super().send_packet(pkt[0], pkt[1])
-                # print("sending delayed packet to " + str(pkt[0]) + ":\n" + pkt[1].to_string() + "\n")
-        else:
-            super().send_packet(client.address, state_packet)
+        self.packets_out.append((client.address, state_packet))
+        # print(int(SIMULATED_PING_NS / 2))
+        while (len(self.packets_out) > 0
+               and self.packets_out[0][1].creation_time + (SIMULATED_PING_NS >> 1) < self.curr_time_ns):
+            pkt = self.packets_out.pop(0)
+            super().send_packet(pkt[0], pkt[1])
+            # print("sending delayed packet to " + str(pkt[0]) + ":\n" + pkt[1].to_string() + "\n")
 
 
 class UDPClient(UDPSocket):
@@ -161,7 +157,12 @@ class UDPClient(UDPSocket):
         super().__init__()
 
     def get_packet(self):
-        server_address, state_packet = super().get_packet()
+        server_address, message = super().get_packet()
+        recv_data = [message]
+        while self.get_packet_available():
+            server_address, message = super().get_packet()
+            recv_data.append(message)
+        state_packet = pickle.loads(b"".join(recv_data))
         state_packet.receive_time = self.curr_time_ns
         return state_packet
 

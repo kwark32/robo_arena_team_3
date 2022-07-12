@@ -20,6 +20,11 @@ class OnlineWorldSim(WorldSim):
 
         self.received_first_packet = False
 
+    def clean_mem(self):
+        for i in range(2):
+            self.udp_socket.send_packet(None, ClientPacket(
+                creation_time=(self.curr_time_ns + 1000000000), disconnect=True))
+
     def set_robots(self, robots):
         for new_robot_info in robots:
             existing_robot = None
@@ -123,7 +128,6 @@ class OnlineWorldSim(WorldSim):
     def fixed_update(self, delta_time):
         # print(self.curr_time_ns - self.udp_socket.curr_time_ns)
         self.udp_socket.curr_time_ns = self.curr_time_ns
-
         GameInfo.current_frame_seed = self.server_world_start_time_ns + self.physics_frame_count
 
         if self.local_player_robot is not None:

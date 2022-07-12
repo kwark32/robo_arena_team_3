@@ -118,6 +118,31 @@ class UDPServer(UDPSocket):
         self.udp_socket.bind(("", GameInfo.port))
         self.clients = {}  # client dict: address (str) -> client
 
+    def update_socket(self):
+        # Check get list
+        address, packet = None, None
+        # TODO: < should be <=, but that causes stuttering
+        while (len(self.packets_in) > 0
+               and self.packets_in[0][1].receive_time + int(SIMULATED_PING_NS >> 1) < self.curr_time_ns):
+            address, packet = self.packets_in.pop(0)
+
+        if address and packet:
+            packet.receive_time = self.curr_time_ns
+            client = self.clients.get(address)
+            if client is None and not packet.disconnect:
+                client = Client(address, player_name=packet.player_name)
+                self.clients[address] = client
+            if client is not None:
+                if client.last_rx_packet is None or packet.creation_time >= client.last_rx_packet.creation_time:
+                    client.last_rx_packet = packet
+
+        # Check send list
+        # TODO: < should be <=, but that causes stuttering
+        while (len(self.packets_out) > 0
+               and self.packets_out[0][1].creation_time + int(SIMULATED_PING_NS >> 1) < self.curr_time_ns):
+            pkt = self.packets_out.pop(0)
+            super().send_packet(pkt[0], pkt[1])
+
     def get_client_packets(self):
         while self.get_packet_available():
             address, message = self.get_packet()
@@ -125,31 +150,12 @@ class UDPServer(UDPSocket):
             packet.receive_time = self.curr_time_ns
             # print("received client packet:\n" + packet.to_string() + "\n")
 
-            popped = False
             self.packets_in.append((address, packet))
-            while (len(self.packets_in) > 0
-                   and self.packets_in[0][1].receive_time + int(SIMULATED_PING_NS / 2) < self.curr_time_ns):
-                address, packet = self.packets_in.pop(0)
-                popped = True
-            packet.receive_time = self.curr_time_ns
-
-            if popped:
-                client = self.clients.get(address)
-                if client is None and not packet.disconnect:
-                    client = Client(address, player_name=packet.player_name)
-                    self.clients[address] = client
-                if client is not None:
-                    if client.last_rx_packet is None or packet.creation_time >= client.last_rx_packet.creation_time:
-                        client.last_rx_packet = packet
+            self.update_socket()
 
     def send_packet(self, client, state_packet):
         self.packets_out.append((client.address, state_packet))
-        # print(int(SIMULATED_PING_NS / 2))
-        while (len(self.packets_out) > 0
-               and self.packets_out[0][1].creation_time + (SIMULATED_PING_NS >> 1) < self.curr_time_ns):
-            pkt = self.packets_out.pop(0)
-            super().send_packet(pkt[0], pkt[1])
-            # print("sending delayed packet to " + str(pkt[0]) + ":\n" + pkt[1].to_string() + "\n")
+        self.update_socket()
 
 
 class UDPClient(UDPSocket):

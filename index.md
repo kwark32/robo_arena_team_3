@@ -1,3 +1,25 @@
+## Soundtrack and Textures Tutorial
+
+In this little excursion the creation of the soundtrack, sound effects and textures will be explained. For the sounds the software Ableton Live 11 was used. For the sound effects, the sample library Titanomachy was used, which is a cinematic sound effects library. To fit it better to our game, the built-in Ableton effect Redux was used, which degrades the sound and gives it that 8-Bit feel with the right settings. 
+
+![Tutorial](/TutorialPictures/redux.png)
+
+The tank driving sound also uses the spectral resonator effect, which gives it a cold metallic sound.
+
+![Tutorial](/TutorialPictures/spectral.png)
+
+For the soundtrack, the songs use basic drums, synths, basses and arpeggios. 
+
+![Tutorial](/TutorialPictures/soundtrack_1.png)
+
+![Tutorial](/TutorialPictures/soundtrack_2.png)
+
+On most of the sound channels, the redux effect was utilized again to better fit it to the atmosphere of the game.
+
+For the textures, the website pixilart.com was used. It is a website specifically for making pixel art, which is the art direction we wanted to go in. For some of the textures, a simple real life or similar reference was used to visualize the texture and to give a starting point. 
+
+![Tutorial](/TutorialPictures/pixilart.png)
+
 ## Weeks 7, 8, 9 & 10
 
 We added basic effects to the tiles of the arena such as increased/decreased movement speed and inflicted damage as well as a provisional falling animatien for the hole tile.

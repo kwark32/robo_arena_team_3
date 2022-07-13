@@ -1,16 +1,16 @@
-# imports
+import math
+
+from util import Vector
 
 
 class RobotAI:
     def __init__(self, robot):
         self.robot = robot
         self.world_sim = robot.world_sim
-        self.first = True
+        self.shortest_path = None
+        self.walkable_check = DrivableTileCheck(self.world_sim.arena)
 
     def update(self, delta_time):
-        if not self.first:
-            return
-        self.first = False
         # find the closest player
         shortest_distance = 1000000
         closest_player = None
@@ -30,15 +30,50 @@ class RobotAI:
             end.div(self.robot.world_sim.arena.tile_size)
             end.floor()
             # TODO: replace with vector.as_tuple
-            shortest_path = astar(self.world_sim.arena.tiles, arena_size, (start.x, start.y), (end.x, end.y))
-            for node in shortest_path:
-                print(node)
+            self.shortest_path = astar(self.world_sim.arena.tiles, arena_size,
+                                       (start.x, start.y), (end.x, end.y), self.walkable_check)
         # take the shortest path to the closest player
+        bearing = 0
+        if self.shortest_path is not None:
+            target = closest_player.sim_body.position.copy()
+            if len(self.shortest_path) >= 2:
+                target = Vector(self.shortest_path[1][0], self.shortest_path[1][1])
+                target.mult(self.world_sim.arena.tile_size)
+                target.add_scalar(self.world_sim.arena.tile_size / 2)
+            diff = self.robot.sim_body.position.diff(target)
+            bearing = diff.signed_angle() - self.robot.sim_body.rotation
+            if bearing <= -math.pi:
+                bearing += 2 * math.pi
+            robot_stop_dist = ((self.robot.sim_body.ang_velocity ** 2) / self.robot.sim_body.max_ang_accel) / 2
+            should_rotate_right = bearing > 0
+            if robot_stop_dist >= abs(bearing):
+                self.robot.input.right = not should_rotate_right
+                self.robot.input.left = should_rotate_right
+            else:
+                self.robot.input.right = should_rotate_right
+                self.robot.input.left = not should_rotate_right
+        if bearing < 0.2:
+            self.robot.input.up = True
+        else:
+            self.robot.input.up = False
+
+
+class WalkableTerrainCheck:
+    def is_walkable(self, x, y):
+        return False
+
+
+class DrivableTileCheck(WalkableTerrainCheck):
+    def __init__(self, arena):
+        self.arena = arena
+
+    def is_walkable(self, x, y):
+        tile = self.arena.tiles[y][x]
+        blocked = tile.has_collision or tile.name == "lava"
+        return not blocked
 
 
 class Node:
-    """A node class for A* Pathfinding"""
-
     def __init__(self, parent=None, position=None):
         self.parent = parent
         self.position = position
@@ -51,10 +86,7 @@ class Node:
         return self.position == other.position
 
 
-def astar(tiles, arena_size, start, end):
-    """Returns a list of tuples as a path from the given start to the given end in the given maze"""
-
-    print((arena_size, start, end))
+def astar(tiles, arena_size, start, end, walkable_check):
 
     # Create start and end node
     start_node = Node(None, start)
@@ -62,17 +94,21 @@ def astar(tiles, arena_size, start, end):
     end_node = Node(None, end)
     end_node.g = end_node.h = end_node.f = 0
 
-    # Initialize both open and closed list
+    # Initialize open and closed list
     open_list = []
     closed_list = []
 
-    # Add the start node
+    # Add start node
     open_list.append(start_node)
 
-    # Loop until you find the end
-    while len(open_list) > 0:
+    # check for progress possibility
+    progress_possible = True
+    last_node = Node()
 
-        # Get the current node
+    # Loop until end found
+    while len(open_list) > 0 and progress_possible:
+
+        # Get current node
         current_node = open_list[0]
         current_index = 0
         for index, item in enumerate(open_list):
@@ -80,11 +116,17 @@ def astar(tiles, arena_size, start, end):
                 current_node = item
                 current_index = index
 
+        # save current node to track progress
+        last_node = Node(current_node.parent, last_node.position)
+        last_node.g = current_node.g
+        last_node.h = current_node.h
+        last_node.f = current_node.f
+
         # Pop current off open list, add to closed list
         open_list.pop(current_index)
         closed_list.append(current_node)
 
-        # Found the goal
+        # Found destination
         if current_node == end_node:
             path = []
             current = current_node
@@ -95,8 +137,7 @@ def astar(tiles, arena_size, start, end):
 
         # Generate children
         children = []
-        for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0), (-1, -1), (-1, 1), (1, -1),
-                             (1, 1)]:  # Adjacent squares
+        for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0)]:  # Adjacent squares
 
             # Get node position
             node_position = (
@@ -108,8 +149,7 @@ def astar(tiles, arena_size, start, end):
                 continue
 
             # Make sure walkable terrain
-            print(tiles[node_position[1]][node_position[0]].name)
-            if tiles[node_position[1]][node_position[0]].has_collision:
+            if not walkable_check.is_walkable(node_position[0], node_position[1]):
                 continue
 
             # Create new node
@@ -126,7 +166,7 @@ def astar(tiles, arena_size, start, end):
                 if child == closed_child:
                     continue
 
-            # Create the f, g, and h values
+            # Create f, g, and h values
             child.g = current_node.g + 1
             child.h = ((child.position[0] - end_node.position[0]) ** 2) + (
                     (child.position[1] - end_node.position[1]) ** 2)
@@ -139,3 +179,7 @@ def astar(tiles, arena_size, start, end):
 
             # Add the child to the open list
             open_list.append(child)
+
+            # check progress
+            if current_node == last_node:
+                progress_possible = False

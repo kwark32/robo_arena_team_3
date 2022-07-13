@@ -136,8 +136,7 @@ class SPWorldSim(WorldSim):
 
         self.local_player_robot = self.create_player(player_name="")
         self.local_player_robot.input = self.player_input
-        # self.create_enemy_robot(position=Vector(250, 250))
+        self.create_enemy_robot(position=Vector(250, 250))
         # self.create_enemy_robot(position=Vector(250, 750))
         # self.create_enemy_robot(position=Vector(750, 250))
         # self.create_enemy_robot(position=Vector(750, 750))
-        self.create_enemy_robot(position=Vector(500, 900))

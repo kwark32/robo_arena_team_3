@@ -2,7 +2,7 @@ import math
 import clipboard
 
 from PyQt5.QtCore import QPoint, Qt
-from PyQt5.QtGui import QPixmap, QColor, QFontMetricsF, QPen
+from PyQt5.QtGui import QPixmap, QFontMetricsF, QPen
 from util import Vector, get_main_path, is_point_inside_rect, draw_img_with_rot
 from globals import Fonts
 from constants import CARET_BLINK_RATE_NS

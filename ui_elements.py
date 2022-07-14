@@ -122,14 +122,14 @@ class TextField(UIElement):
         if self.caret:
             draw_text += "|"
 
-        qp.setFont(QFont("Courier", 60))
+        qp.setFont(Fonts.text_field_font)
 
         if len(self.text) > 0 or self.is_selected:
-            qp.setPen(QPen(QColor(189, 38, 7, 255), 6))
+            qp.setPen(QPen(Fonts.text_field_color, 6))
             qp.drawText(QPoint(self.top_left_corner.x + self.text_offset.x,
                                self.top_left_corner.y + self.text_offset.y), draw_text)
         else:
-            qp.setPen(QPen(QColor(189, 38, 7, 255), 6))
+            qp.setPen(QPen(Fonts.text_field_default_color, 6))
             qp.drawText(QPoint(self.top_left_corner.x + self.text_offset.x,
                                self.top_left_corner.y + self.text_offset.y), self.placeholder_text)
 

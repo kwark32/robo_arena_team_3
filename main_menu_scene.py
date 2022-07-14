@@ -73,8 +73,9 @@ class OnlineOptions(Menu):
     class PlayerNameField(TextField):
         name = "player_name"
 
-        def __init__(self, main_widget, position, menu, text_offset=Vector(0, 0), max_text_length=-1):
-            super().__init__(main_widget, position, menu, text_offset=text_offset, max_text_length=max_text_length)
+        def __init__(self, main_widget, position, menu, max_text_length=-1):
+            super().__init__(main_widget, position, menu,
+                             text_offset=Vector(30, 96), max_text_length=MAX_PLAYER_NAME_LENGTH)
 
             self.placeholder_text = GameInfo.placeholder_name
             if GameInfo.local_player_name != GameInfo.placeholder_name:
@@ -83,8 +84,9 @@ class OnlineOptions(Menu):
     class ServerIPField(TextField):
         name = "server_ip"
 
-        def __init__(self, main_widget, position, menu, text_offset=Vector(0, 0), max_text_length=-1):
-            super().__init__(main_widget, position, menu, text_offset=text_offset, max_text_length=max_text_length)
+        def __init__(self, main_widget, position, menu, max_text_length=-1):
+            super().__init__(main_widget, position, menu,
+                             text_offset=Vector(30, 96), max_text_length=MAX_PLAYER_NAME_LENGTH)
 
             self.placeholder_text = GameInfo.default_ip
             if GameInfo.server_ip != GameInfo.default_ip:
@@ -170,13 +172,9 @@ class OnlineOptions(Menu):
         self.elements.append(OnlineOptions.BackButton(main_widget, Vector(self.size / 2, 900), self))
         self.elements.append(OnlineOptions.ServerIpHeader(main_widget, Vector(self.size / 2, 425), self))
         self.elements.append(OnlineOptions.PlayerNameHeader(main_widget, Vector(self.size / 2, 100), self))
-        player_name_field = OnlineOptions.PlayerNameField(main_widget, Vector(self.size / 2, 250),
-                                                          self, text_offset=Vector(60, 83),
-                                                          max_text_length=MAX_PLAYER_NAME_LENGTH)
+        player_name_field = OnlineOptions.PlayerNameField(main_widget, Vector(self.size / 2, 250), self)
         self.elements.append(player_name_field)
-        server_ip_field = OnlineOptions.ServerIPField(main_widget, Vector(self.size / 2, 575),
-                                                      self, text_offset=Vector(60, 83),
-                                                      max_text_length=MAX_SERVER_IP_LENGTH)
+        server_ip_field = OnlineOptions.ServerIPField(main_widget, Vector(self.size / 2, 575), self)
         self.elements.append(server_ip_field)
         join_button = OnlineOptions.JoinButton(main_widget, Vector(self.size / 2 - 220, 735), self)
         join_button.player_name_field = player_name_field

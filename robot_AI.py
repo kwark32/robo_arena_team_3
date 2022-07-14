@@ -13,6 +13,8 @@ class RobotAI:
         self.walkable_check = DrivableTileCheck(self.world_sim.arena)
 
     def update(self, delta_time):
+        # keep shooting
+        self.robot.input.shoot = True
         # find the closest player
         shortest_distance = 1000000
         closest_player = None

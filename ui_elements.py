@@ -1,4 +1,5 @@
 import math
+import clipboard
 
 from PyQt5.QtCore import QPoint, Qt
 from PyQt5.QtGui import QPixmap, QColor, QFontMetricsF, QPen
@@ -160,25 +161,48 @@ class TextField(UIElement):
                                self.top_left_corner.y + self.text_offset.y), self.placeholder_text)
 
     def key_press(self, key):
-        keycode = int(key)
+        character = chr(0)
+        if int(key) < 256:
+            character = chr(int(key))
+        elif key == Qt.Key_Backspace:
+            character = chr(8)
 
-        if (keycode == ord(' ') or keycode == ord('-') or keycode == ord('.') or ord('0') <= keycode <= ord('9')
-                or ord('A') <= keycode <= ord('Z') or keycode == ord('_')):
+        pasted_text = None
+        if character == 'V' and self.menu.ctrl_key_pressed:
+            pasted_text = clipboard.paste()
 
-            new_char = chr(keycode)
-            if not self.menu.shift_key_pressed:
-                new_char = new_char.lower()
+        if pasted_text is not None:
+            for c in pasted_text:
+                if not self.add_character(c, use_shift=False):
+                    break
+        else:
+            self.add_character(character)
 
-            if self.get_text_width(add_str=str(new_char)) <= self.max_text_length:
-                self.text += new_char
+        return True
+
+    def add_character(self, character, use_shift=True):
+        char = None
+        if (character == ' ' or character == '-' or character == '.' or '0' <= character <= '9'
+                or 'a' <= character.lower() <= 'z' or character == '_'):
+            char = character
+            if not self.menu.shift_key_pressed and use_shift:
+                char = char.lower()
+
+        backspace = (character == chr(8))
+
+        if char is not None:
+            if self.get_text_width(add_str=str(char)) <= self.max_text_length:
+                self.text += char
             else:
                 print("WARN: Max text width for this TextField is " + str(self.max_text_length)
-                      + "px (would be " + str(self.get_text_width(add_str=str(new_char))) + ")!")
+                      + "px (would be " + str(self.get_text_width(add_str=str(char))) + ")!")
+                return False
 
             self.set_caret(True)
 
-        elif key == Qt.Key_Backspace:
-            self.text = self.text[:-1]
+        if backspace:
+            if len(self.text) > 0:
+                self.text = self.text[:-1]
             self.set_caret(True)
 
         return True
@@ -232,6 +256,7 @@ class Menu:
         self.bg_pixmap = QPixmap(ui_element_texture_path + bg_texture_name + ".png")
 
         self.shift_key_pressed = False
+        self.ctrl_key_pressed = False
 
     def click_element(self):
         if self.selected_element is not None:
@@ -243,6 +268,8 @@ class Menu:
             event.accept()
         elif event.key() == Qt.Key_Shift:
             self.shift_key_pressed = True
+        elif event.key() == Qt.Key_Control:
+            self.ctrl_key_pressed = True
         elif self.selected_element is not None:
             if not self.selected_element.key_press(event.key()):
                 return
@@ -253,6 +280,8 @@ class Menu:
     def key_release_event(self, event):
         if event.key() == Qt.Key_Shift:
             self.shift_key_pressed = False
+        elif event.key() == Qt.Key_Control:
+            self.ctrl_key_pressed = False
         else:
             return
         event.accept()

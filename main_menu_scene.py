@@ -1,4 +1,5 @@
 import time
+import clipboard
 
 from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import QWidget
@@ -75,7 +76,7 @@ class OnlineOptions(Menu):
 
         def __init__(self, main_widget, position, menu, max_text_length=-1):
             super().__init__(main_widget, position, menu,
-                             text_offset=Vector(30, 96), max_text_length=MAX_PLAYER_NAME_LENGTH)
+                             text_offset=Vector(30, 92), max_text_length=MAX_PLAYER_NAME_LENGTH)
 
             self.placeholder_text = GameInfo.placeholder_name
             if GameInfo.local_player_name != GameInfo.placeholder_name:
@@ -86,7 +87,7 @@ class OnlineOptions(Menu):
 
         def __init__(self, main_widget, position, menu, max_text_length=-1):
             super().__init__(main_widget, position, menu,
-                             text_offset=Vector(30, 96), max_text_length=MAX_SERVER_IP_LENGTH)
+                             text_offset=Vector(30, 92), max_text_length=MAX_SERVER_IP_LENGTH)
 
             self.placeholder_text = GameInfo.default_ip
             if GameInfo.server_ip != GameInfo.default_ip:
@@ -96,10 +97,26 @@ class OnlineOptions(Menu):
             self.number_counts = [0, 0, 0, 0]
 
         def key_press(self, key):
-            keycode = int(key)
-            valid_input = True
+            character = chr(0)
+            if int(key) < 256:
+                character = chr(int(key))
+            elif key == Qt.Key_Backspace:
+                character = chr(8)
 
-            if key == Qt.Key_Backspace:
+            pasted_text = None
+            if character == 'V' and self.menu.ctrl_key_pressed:
+                pasted_text = clipboard.paste()
+
+            if pasted_text is not None:
+                for c in pasted_text:
+                    if not self.add_character(c):
+                        break
+            else:
+                self.add_character(character)
+
+        def add_character(self, character, use_shift=False):
+            valid_input = True
+            if character == chr(8):
                 if len(self.text) > 0:
                     last = self.text[-1]
                     if last == '.':
@@ -107,20 +124,23 @@ class OnlineOptions(Menu):
                     elif ord('0') <= ord(last) <= ord('9'):
                         self.number_counts[self.dot_count] -= 1
 
-            elif keycode == ord('.') and self.dot_count < 3 and self.number_counts[self.dot_count] > 0:
+            elif character == '.' and self.dot_count < 3 and self.number_counts[self.dot_count] > 0:
                 self.dot_count += 1
 
-            elif (ord('0') <= keycode <= ord('9')
+            elif ('0' <= character <= '9'
                   and self.number_counts[self.dot_count] < 3
                   and (self.number_counts[self.dot_count] == 0
-                       or int(self.text[-self.number_counts[self.dot_count]:]) * 10 + keycode - ord('0') <= 255)):
+                       or int(self.text[-self.number_counts[self.dot_count]:]) * 10
+                       + ord(character) - ord('0') <= 255)):
                 self.number_counts[self.dot_count] += 1
 
             else:
                 valid_input = False
 
             if valid_input:
-                super().key_press(key)
+                return super().add_character(character, use_shift=False)
+
+            return False
 
     class JoinButton(Button):
         name = "join"

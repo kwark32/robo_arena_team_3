@@ -68,10 +68,6 @@ class RobotAI:
             else:
                 self.robot.input.right = not should_rotate_right
                 self.robot.input.left = should_rotate_right
-            if self.robot.input.right:
-                print("right")
-            else:
-                print("left")
         if bearing < 0.25:
             self.robot.input.up = True
         else:
@@ -121,12 +117,9 @@ def astar(tiles, arena_size, start, end, walkable_check):
     # Add start node
     open_list.append(start_node)
 
-    # check for progress possibility
-    progress_possible = True
-    last_node = Node()
-
     # Loop until end found
-    while len(open_list) > 0 and progress_possible:
+    while len(open_list) > 0:
+        progress_possible = False
 
         # Get current node
         current_node = open_list[0]
@@ -135,12 +128,6 @@ def astar(tiles, arena_size, start, end, walkable_check):
             if item.f < current_node.f:
                 current_node = item
                 current_index = index
-
-        # save current node to track progress
-        last_node = Node(current_node.parent, last_node.position)
-        last_node.g = current_node.g
-        last_node.h = current_node.h
-        last_node.f = current_node.f
 
         # Pop current off open list, add to closed list
         open_list.pop(current_index)
@@ -160,8 +147,7 @@ def astar(tiles, arena_size, start, end, walkable_check):
         for new_position in [(0, -1), (0, 1), (-1, 0), (1, 0)]:  # Adjacent squares
 
             # Get node position
-            node_position = (
-                current_node.position[0] + new_position[0], current_node.position[1] + new_position[1])
+            node_position = (current_node.position[0] + new_position[0], current_node.position[1] + new_position[1])
 
             # Make sure within range
             if node_position[0] > (arena_size[1] - 1) or node_position[0] < 0 or node_position[1] > (
@@ -199,7 +185,3 @@ def astar(tiles, arena_size, start, end, walkable_check):
 
             # Add the child to the open list
             open_list.append(child)
-
-            # check progress
-            if current_node == last_node:
-                progress_possible = False

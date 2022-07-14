@@ -3,7 +3,7 @@ import time
 from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtCore import Qt, QPoint
-from ui_elements import Button, Menu, TextField
+from ui_elements import Button, Menu, TextField, UIImage
 from util import Vector, ns_to_s
 from globals import GameInfo, Scene, Menus, Fonts
 from constants import DEBUG_MODE, MAX_PLAYER_NAME_LENGTH, MAX_SERVER_IP_LENGTH
@@ -64,10 +64,10 @@ class OnlineOptions(Menu):
         def click(self):
             self.menu.main_menu_scene.switch_menu(Menus.MAIN_MENU)
 
-    class PlayerNameHeader(Button):
+    class PlayerNameHeader(UIImage):
         name = "player_name_header"
 
-    class ServerIpHeader(Button):
+    class ServerIpHeader(UIImage):
         name = "server_ip_header"
 
     class PlayerNameField(TextField):
@@ -86,7 +86,7 @@ class OnlineOptions(Menu):
 
         def __init__(self, main_widget, position, menu, max_text_length=-1):
             super().__init__(main_widget, position, menu,
-                             text_offset=Vector(30, 96), max_text_length=MAX_PLAYER_NAME_LENGTH)
+                             text_offset=Vector(30, 96), max_text_length=MAX_SERVER_IP_LENGTH)
 
             self.placeholder_text = GameInfo.default_ip
             if GameInfo.server_ip != GameInfo.default_ip:

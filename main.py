@@ -94,7 +94,6 @@ def main():
         press_start_font_id = QFontDatabase.addApplicationFont(get_main_path()
                                                                + "/fonts/press_start_2p/PressStart2P-Regular.ttf")
         press_start_font_str = QFontDatabase.applicationFontFamilies(press_start_font_id)[0]
-        print(press_start_font_str)
 
         Fonts.fps_font = QFont(press_start_font_str, 8)
         Fonts.fps_color = Qt.red

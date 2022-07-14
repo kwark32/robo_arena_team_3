@@ -18,12 +18,15 @@ class UIElement:
             self.element_type = Button
         if isinstance(self, TextField):
             self.element_type = TextField
+        if isinstance(self, UIImage):
+            self.element_type = UIImage
 
         self.main_widget = main_widget
         self.position = position.copy()
         self.menu = menu
 
         self.is_selected = False
+        self.is_selectable = True
 
         self.update_time_ns = 0
 
@@ -74,7 +77,7 @@ class UIElement:
                   + " has 0 size or is missing at " + filename + "!")
 
     def draw(self, qp):
-        if self.is_selected:
+        if self.is_selected and self.is_selectable:
             qp.fillRect(self.top_left_corner.x, self.top_left_corner.y,
                         self.texture_size.x, self.texture_size.y, QColor(0, 0, 0))
 
@@ -184,6 +187,12 @@ class Button(UIElement):
         self.button_type = type(self)
         if self.button_type is Button:
             print("ERROR: Button base class should not be instantiated!")
+
+
+# base class
+class UIImage(UIElement):
+    def __init__(self, main_widget, position, menu):
+        super().__init__(main_widget, position, menu)
 
 
 class Menu:

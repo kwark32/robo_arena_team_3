@@ -88,22 +88,58 @@ class UDPSocket:
         self.udp_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         self._udp_socket_list = [self.udp_socket]
 
+        self._buffered_message_address = None
+
         self.curr_time_ns = 0
 
     def get_packet_available(self):
         read_sockets, write_sockets, error_sockets = select.select(self._udp_socket_list, [], [], 0)
-        return len(read_sockets) > 0
+        return len(read_sockets) > 0 or self._buffered_message_address is not None
 
     def get_packet(self):
-        bytes_address_tuple = self.udp_socket.recvfrom(GameInfo.buffer_size)
+        buffer_count = 0
+        if self._buffered_message_address is not None:
+            bytes_address_tuple = self._buffered_message_address
+            self._buffered_message_address = None
+            buffer_count = bytes_address_tuple[0][1] - 1
+        else:
+            bytes_address_tuple = self.udp_socket.recvfrom(GameInfo.buffer_size)
+            buffer_count = bytes_address_tuple[0][1] - 1
 
-        message = bytes_address_tuple[0]
+        packet_id = bytes_address_tuple[0][0]
+        message = bytes_address_tuple[0][2:]
         address = bytes_address_tuple[1]
+
+        while buffer_count > 0 and self.get_packet_available():
+            bytes_address_tuple = self.udp_socket.recvfrom(GameInfo.buffer_size)
+            new_packet_id = bytes_address_tuple[0][0]
+            if new_packet_id == packet_id and address == bytes_address_tuple[1]:
+                message += bytes_address_tuple[0][2:]
+                buffer_count -= 1
+            else:
+                self._buffered_message_address = bytes_address_tuple
+                break
 
         return address, message
 
     def send_packet(self, address, packet):
-        self.udp_socket.sendto(pickle.dumps(packet), address)
+        dump = pickle.dumps(packet)
+        size = len(dump)
+        header_size = 2
+        buffer_count = int(size / (GameInfo.buffer_size - header_size))
+        if size % (GameInfo.buffer_size - header_size) > 0:
+            buffer_count += 1
+        packet_header = bytes([(packet.creation_time >> 20) % 256, buffer_count])
+        while size > 0:
+            to_send = packet_header
+            if size > GameInfo.buffer_size - header_size:
+                to_send += dump[:(GameInfo.buffer_size - header_size)]
+                dump = dump[(GameInfo.buffer_size - header_size):]
+                size -= GameInfo.buffer_size - header_size
+            else:
+                to_send += dump
+                size = 0
+            self.udp_socket.sendto(to_send, address)
 
     def close(self):
         self.udp_socket.close()
@@ -164,11 +200,7 @@ class UDPClient(UDPSocket):
 
     def get_packet(self):
         server_address, message = super().get_packet()
-        recv_data = [message]
-        while self.get_packet_available():
-            server_address, message = super().get_packet()
-            recv_data.append(message)
-        state_packet = pickle.loads(b"".join(recv_data))
+        state_packet = pickle.loads(message)
         state_packet.receive_time = self.curr_time_ns
         return state_packet
 

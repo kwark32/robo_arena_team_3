@@ -99,8 +99,8 @@ def main():
         Fonts.name_tag_color = QColor(200, 200, 200)  # QColor(225, 50, 225)
 
         while window.running:  # main loop
-            window.update()
             app.processEvents()
+            window.update()
 
         sys.exit(0)
 

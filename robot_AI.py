@@ -32,6 +32,21 @@ class RobotAI:
             # TODO: replace with vector.as_tuple
             self.shortest_path = astar(self.world_sim.arena.tiles, arena_size,
                                        (start.x, start.y), (end.x, end.y), self.walkable_check)
+            index = 0
+            while index + 2 < len(self.shortest_path):
+                tuple_vecs = self.shortest_path[index:index + 3]
+                start = Vector(tuple_vecs[0][0], tuple_vecs[0][1])
+                corner = Vector(tuple_vecs[1][0], tuple_vecs[1][1])
+                end = Vector(tuple_vecs[2][0], tuple_vecs[2][1])
+                direct = start.diff(end)
+                if direct.magnitude() > 1.5:
+                    index += 1
+                    continue
+                inner = start.copy()
+                inner.add(corner.diff(end))
+                if self.walkable_check.is_walkable(inner.x, inner.y):
+                    self.shortest_path.pop(index + 1)
+                index += 1
         # take the shortest path to the closest player
         bearing = 0
         if self.shortest_path is not None:
@@ -45,14 +60,19 @@ class RobotAI:
             if bearing <= -math.pi:
                 bearing += 2 * math.pi
             robot_stop_dist = ((self.robot.sim_body.ang_velocity ** 2) / self.robot.sim_body.max_ang_accel) / 2
-            should_rotate_right = bearing > 0
-            if robot_stop_dist >= abs(bearing):
-                self.robot.input.right = not should_rotate_right
-                self.robot.input.left = should_rotate_right
-            else:
+            should_rotate_right = bearing >= 0
+            rotating_correctly = should_rotate_right == (self.robot.sim_body.ang_velocity >= 0)
+            if not rotating_correctly or robot_stop_dist < abs(bearing):
                 self.robot.input.right = should_rotate_right
                 self.robot.input.left = not should_rotate_right
-        if bearing < 0.2:
+            else:
+                self.robot.input.right = not should_rotate_right
+                self.robot.input.left = should_rotate_right
+            if self.robot.input.right:
+                print("right")
+            else:
+                print("left")
+        if bearing < 0.25:
             self.robot.input.up = True
         else:
             self.robot.input.up = False
@@ -69,7 +89,7 @@ class DrivableTileCheck(WalkableTerrainCheck):
 
     def is_walkable(self, x, y):
         tile = self.arena.tiles[y][x]
-        blocked = tile.has_collision or tile.name == "lava"
+        blocked = tile.has_collision or tile.name == "lava" or tile.name == "hole"
         return not blocked
 
 

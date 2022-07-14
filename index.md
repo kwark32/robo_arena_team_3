@@ -6,9 +6,13 @@ The robots do now have pathfinding to their target (closest player) using an A*-
 
 The pathfinding avoids different types of tiles based on their priority and looks for alternate paths.
 
+The robots do also shoot now.
+
 ![Main menu](/Pathfinding.png)
 
+We also added new fire and portal textures.
 
+![Main menu](/new_tile_textures.png)
 
 ## Soundtrack and Textures Tutorial
 

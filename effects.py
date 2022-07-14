@@ -89,7 +89,7 @@ class HoleTileEffect(StunEffect):
         robot.sim_body.rotation += self.effect_class.rotation * delta_time * delta_time
 
         if self.duration <= 0:
-            robot.change_health(1000)
+            robot.change_health(-1000)
 
     def revert(self, robot):
         super().revert(robot)

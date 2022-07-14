@@ -1,4 +1,5 @@
 import math
+import time
 
 from util import Vector
 from constants import MAX_ASTART_ITER
@@ -45,7 +46,7 @@ class RobotAI:
                     continue
                 inner = start.copy()
                 inner.add(corner.diff(end))
-                if self.walkable_check.is_walkable(inner.x, inner.y):
+                if 0 <= self.walkable_check.get_walkable(inner.x, inner.y) <= 4:  # 4 = cut corner cost threshold
                     self.shortest_path.pop(index + 1)
                 index += 1
         # take the shortest path to the closest player
@@ -76,18 +77,31 @@ class RobotAI:
 
 
 class WalkableTerrainCheck:
-    def is_walkable(self, x, y):
-        return False
+    def get_walkable(self, x, y):
+        return -1
 
 
 class DrivableTileCheck(WalkableTerrainCheck):
     def __init__(self, arena):
         self.arena = arena
 
-    def is_walkable(self, x, y):
+    def get_walkable(self, x, y):
         tile = self.arena.tiles[y][x]
-        blocked = tile.has_collision or tile.name == "lava" or tile.name == "hole"
-        return not blocked
+        blocked = tile.has_collision or tile.name == "hole"
+        if blocked:
+            return -1
+        cost = 1
+        if tile.name == "lava":
+            cost = 20
+        elif tile.name == "water":
+            cost = 4
+        elif tile.name == "earth":
+            cost = 2
+        elif tile.name == "fire":
+            cost = 2
+        elif tile.name.startswith("portal_"):
+            cost = 15
+        return cost
 
 
 class Node:
@@ -157,7 +171,7 @@ def astar(tiles, arena_size, start, end, walkable_check):
                 continue
 
             # Make sure walkable terrain
-            if not walkable_check.is_walkable(node_position[0], node_position[1]):
+            if walkable_check.get_walkable(node_position[0], node_position[1]) < 0:
                 continue
 
             # Create new node
@@ -170,20 +184,28 @@ def astar(tiles, arena_size, start, end, walkable_check):
         for child in children:
 
             # Child is on the closed list
+            to_continue = False
             for closed_child in closed_list:
                 if child == closed_child:
-                    continue
+                    to_continue = True
+                    break
+            if to_continue:
+                continue
 
             # Create f, g, and h values
-            child.g = current_node.g + 1
+            child.g = current_node.g + walkable_check.get_walkable(child.position[0], child.position[1])
             child.h = ((child.position[0] - end_node.position[0]) ** 2) + (
                     (child.position[1] - end_node.position[1]) ** 2)
             child.f = child.g + child.h
 
             # Child is already in the open list
+            to_continue = False
             for open_node in open_list:
                 if child == open_node and child.g > open_node.g:
-                    continue
+                    to_continue = True
+                    break
+            if to_continue:
+                continue
 
             # Add the child to the open list
             open_list.append(child)

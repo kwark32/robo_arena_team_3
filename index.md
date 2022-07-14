@@ -1,3 +1,11 @@
+## Weeks 11 & 12
+
+We created a better robot-AI.
+
+The robots do now have pathfinding to their target (closest player) using an A*-Algorithm.
+
+The pathfinding avoids different types of tiles based on their priority and looks for alternate paths.
+
 ## Soundtrack and Textures Tutorial
 
 In this little excursion the creation of the soundtrack, sound effects and textures will be explained. For the sounds the software Ableton Live 11 was used. For the sound effects, the sample library Titanomachy was used, which is a cinematic sound effects library. To fit it better to our game, the built-in Ableton effect Redux was used, which degrades the sound and gives it that 8-Bit feel with the right settings. 

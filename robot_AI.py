@@ -1,6 +1,7 @@
 import math
 
 from util import Vector
+from constants import MAX_ASTART_ITER
 
 
 class RobotAI:
@@ -118,8 +119,9 @@ def astar(tiles, arena_size, start, end, walkable_check):
     open_list.append(start_node)
 
     # Loop until end found
-    while len(open_list) > 0:
-        progress_possible = False
+    max_loop_count = MAX_ASTART_ITER
+    while len(open_list) > 0 and max_loop_count > 0:
+        max_loop_count -= 1
 
         # Get current node
         current_node = open_list[0]
@@ -185,3 +187,10 @@ def astar(tiles, arena_size, start, end, walkable_check):
 
             # Add the child to the open list
             open_list.append(child)
+
+    path = []
+    current = current_node
+    while current is not None:
+        path.append(current.position)
+        current = current.parent
+    return path[::-1]  # Return reversed path

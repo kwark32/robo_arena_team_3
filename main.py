@@ -1,6 +1,7 @@
 import sys
 
 from globals import GameInfo
+from util import get_main_path
 
 headless_args = []
 for arg in sys.argv:
@@ -16,7 +17,7 @@ if not GameInfo.is_headless:
     from constants import WINDOW_SIZE
     from main_menu_scene import MainMenuScene
     from world_scene import SPWorldScene, OnlineWorldScene, ServerWorldScene
-    from PyQt5.QtGui import QFont, QColor
+    from PyQt5.QtGui import QFont, QColor, QFontDatabase
     from PyQt5.QtWidgets import QWidget, QApplication, QDesktopWidget
     from PyQt5.QtCore import Qt
 
@@ -90,12 +91,16 @@ def main():
         window.setWindowTitle("Robo Arena")
         window.show()
 
-        Fonts.fps_font = QFont("Noto Sans", 10)
+        press_start_font_id = QFontDatabase.addApplicationFont(get_main_path()
+                                                               + "/fonts/press_start_2p/PressStart2P-Regular.ttf")
+        press_start_font_str = QFontDatabase.applicationFontFamilies(press_start_font_id)[0]
+
+        Fonts.fps_font = QFont(press_start_font_str, 8)
         Fonts.fps_color = Qt.red
-        Fonts.text_field_font = QFont("Noto Sans", 16)
-        Fonts.text_field_color = Qt.darkCyan
-        Fonts.text_field_default_color = Qt.gray
-        Fonts.name_tag_font = QFont("Noto Sans", 11)
+        Fonts.text_field_font = QFont(press_start_font_str, 24)
+        Fonts.text_field_color = QColor(189, 38, 7)
+        Fonts.text_field_default_color = QColor(75, 10, 10)
+        Fonts.name_tag_font = QFont(press_start_font_str, 7)
         Fonts.name_tag_color = QColor(200, 200, 200)  # QColor(225, 50, 225)
 
         while window.running:  # main loop

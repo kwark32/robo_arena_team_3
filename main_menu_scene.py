@@ -1,9 +1,10 @@
 import time
+import clipboard
 
 from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtCore import Qt, QPoint
-from ui_elements import Button, Menu, TextField
+from ui_elements import Button, Menu, TextField, UIImage
 from util import Vector, ns_to_s
 from globals import GameInfo, Scene, Menus, Fonts
 from constants import DEBUG_MODE, MAX_PLAYER_NAME_LENGTH, MAX_SERVER_IP_LENGTH
@@ -40,7 +41,7 @@ class MainMenu(Menu):
         def click(self):
             self.menu.main_menu_scene.switch_menu(Menus.SETTINGS)
 
-    class Logo(Button):
+    class Logo(UIImage):
         name = "logo"
 
     def __init__(self, main_widget, size, main_menu_scene):
@@ -64,17 +65,18 @@ class OnlineOptions(Menu):
         def click(self):
             self.menu.main_menu_scene.switch_menu(Menus.MAIN_MENU)
 
-    class PlayerNameHeader(Button):
+    class PlayerNameHeader(UIImage):
         name = "player_name_header"
 
-    class ServerIpHeader(Button):
+    class ServerIpHeader(UIImage):
         name = "server_ip_header"
 
     class PlayerNameField(TextField):
         name = "player_name"
 
-        def __init__(self, main_widget, position, menu, text_offset=Vector(0, 0), max_text_length=-1):
-            super().__init__(main_widget, position, menu, text_offset=text_offset, max_text_length=max_text_length)
+        def __init__(self, main_widget, position, menu, max_text_length=-1):
+            super().__init__(main_widget, position, menu,
+                             text_offset=Vector(30, 92), max_text_length=MAX_PLAYER_NAME_LENGTH)
 
             self.placeholder_text = GameInfo.placeholder_name
             if GameInfo.local_player_name != GameInfo.placeholder_name:
@@ -83,8 +85,9 @@ class OnlineOptions(Menu):
     class ServerIPField(TextField):
         name = "server_ip"
 
-        def __init__(self, main_widget, position, menu, text_offset=Vector(0, 0), max_text_length=-1):
-            super().__init__(main_widget, position, menu, text_offset=text_offset, max_text_length=max_text_length)
+        def __init__(self, main_widget, position, menu, max_text_length=-1):
+            super().__init__(main_widget, position, menu,
+                             text_offset=Vector(30, 92), max_text_length=MAX_SERVER_IP_LENGTH)
 
             self.placeholder_text = GameInfo.default_ip
             if GameInfo.server_ip != GameInfo.default_ip:
@@ -94,10 +97,26 @@ class OnlineOptions(Menu):
             self.number_counts = [0, 0, 0, 0]
 
         def key_press(self, key):
-            keycode = int(key)
-            valid_input = True
+            character = chr(0)
+            if int(key) < 256:
+                character = chr(int(key))
+            elif key == Qt.Key_Backspace:
+                character = chr(8)
 
-            if key == Qt.Key_Backspace:
+            pasted_text = None
+            if character == 'V' and self.menu.ctrl_key_pressed:
+                pasted_text = clipboard.paste()
+
+            if pasted_text is not None:
+                for c in pasted_text:
+                    if not self.add_character(c):
+                        break
+            else:
+                self.add_character(character)
+
+        def add_character(self, character, use_shift=False):
+            valid_input = True
+            if character == chr(8):
                 if len(self.text) > 0:
                     last = self.text[-1]
                     if last == '.':
@@ -105,20 +124,23 @@ class OnlineOptions(Menu):
                     elif ord('0') <= ord(last) <= ord('9'):
                         self.number_counts[self.dot_count] -= 1
 
-            elif keycode == ord('.') and self.dot_count < 3 and self.number_counts[self.dot_count] > 0:
+            elif character == '.' and self.dot_count < 3 and self.number_counts[self.dot_count] > 0:
                 self.dot_count += 1
 
-            elif (ord('0') <= keycode <= ord('9')
+            elif ('0' <= character <= '9'
                   and self.number_counts[self.dot_count] < 3
                   and (self.number_counts[self.dot_count] == 0
-                       or int(self.text[-self.number_counts[self.dot_count]:]) * 10 + keycode - ord('0') <= 255)):
+                       or int(self.text[-self.number_counts[self.dot_count]:]) * 10
+                       + ord(character) - ord('0') <= 255)):
                 self.number_counts[self.dot_count] += 1
 
             else:
                 valid_input = False
 
             if valid_input:
-                super().key_press(key)
+                return super().add_character(character, use_shift=False)
+
+            return False
 
     class JoinButton(Button):
         name = "join"
@@ -170,13 +192,9 @@ class OnlineOptions(Menu):
         self.elements.append(OnlineOptions.BackButton(main_widget, Vector(self.size / 2, 900), self))
         self.elements.append(OnlineOptions.ServerIpHeader(main_widget, Vector(self.size / 2, 425), self))
         self.elements.append(OnlineOptions.PlayerNameHeader(main_widget, Vector(self.size / 2, 100), self))
-        player_name_field = OnlineOptions.PlayerNameField(main_widget, Vector(self.size / 2, 250),
-                                                          self, text_offset=Vector(60, 83),
-                                                          max_text_length=MAX_PLAYER_NAME_LENGTH)
+        player_name_field = OnlineOptions.PlayerNameField(main_widget, Vector(self.size / 2, 250), self)
         self.elements.append(player_name_field)
-        server_ip_field = OnlineOptions.ServerIPField(main_widget, Vector(self.size / 2, 575),
-                                                      self, text_offset=Vector(60, 83),
-                                                      max_text_length=MAX_SERVER_IP_LENGTH)
+        server_ip_field = OnlineOptions.ServerIPField(main_widget, Vector(self.size / 2, 575), self)
         self.elements.append(server_ip_field)
         join_button = OnlineOptions.JoinButton(main_widget, Vector(self.size / 2 - 220, 735), self)
         join_button.player_name_field = player_name_field

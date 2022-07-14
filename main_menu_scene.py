@@ -40,7 +40,7 @@ class MainMenu(Menu):
         def click(self):
             self.menu.main_menu_scene.switch_menu(Menus.SETTINGS)
 
-    class Logo(Button):
+    class Logo(UIImage):
         name = "logo"
 
     def __init__(self, main_widget, size, main_menu_scene):

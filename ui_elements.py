@@ -1,15 +1,20 @@
+import math
+
 from PyQt5.QtCore import QPoint, Qt
-from PyQt5.QtGui import QPixmap, QColor, QFontMetricsF, QFont, QPen
-from util import Vector, get_main_path, is_point_inside_rect
+from PyQt5.QtGui import QPixmap, QColor, QFontMetricsF, QPen
+from util import Vector, get_main_path, is_point_inside_rect, draw_img_with_rot
 from globals import Fonts
 from constants import CARET_BLINK_RATE_NS
 
 
-ui_element_texture_path = get_main_path() + "/textures/ui/graphic_main_menu_buttons/"
+ui_element_texture_path = get_main_path() + "/textures/ui/main_menu/"
 
 
 # absolute base class
 class UIElement:
+    selected_edge_top_right = None
+    selected_edge_size = None
+
     def __init__(self, main_widget, position, menu):
         self.element_class = type(self)
 
@@ -21,12 +26,15 @@ class UIElement:
         if isinstance(self, UIImage):
             self.element_type = UIImage
 
+        if UIElement.selected_edge_top_right is None:
+            UIElement.selected_edge_top_right, UIElement.selected_edge_size = self.load_image("selected_edge_top_right")
+
         self.main_widget = main_widget
         self.position = position.copy()
         self.menu = menu
 
         self.is_selected = False
-        self.is_selectable = True
+        self.draw_selected = True
 
         self.update_time_ns = 0
 
@@ -68,18 +76,33 @@ class UIElement:
             self._bottom_right_corner.round()
         return self._bottom_right_corner
 
-    def load_image(self):
-        filename = ui_element_texture_path + self.element_class.name + ".png"
-        self._texture = QPixmap(filename)
-        self._texture_size = Vector(self._texture.width(), self._texture.height())
-        if self._texture_size.x == 0 or self._texture_size.y == 0:
+    def load_image(self, name=None):
+        if name is None:
+            filename = ui_element_texture_path + self.element_class.name + ".png"
+        else:
+            filename = ui_element_texture_path + name + ".png"
+        texture = QPixmap(filename)
+        size = Vector(texture.width(), texture.height())
+        if size.x == 0 or size.y == 0:
             print("ERROR: texture for " + self.element_class.name
                   + " has 0 size or is missing at " + filename + "!")
+        if name is None:
+            self._texture = texture
+            self._texture_size = size
+        return texture, size
 
     def draw(self, qp):
-        if self.is_selected and self.is_selectable:
-            qp.fillRect(self.top_left_corner.x, self.top_left_corner.y,
-                        self.texture_size.x, self.texture_size.y, QColor(0, 0, 0))
+        if self.is_selected and self.draw_selected:
+            edge_size = UIElement.selected_edge_size
+            edge_offset = Vector(-15, 15)
+            pos_rots = [(Vector(self.bottom_right_corner.x, self.top_left_corner.y), 0),
+                        (Vector(self.bottom_right_corner.x, self.bottom_right_corner.y), math.pi / 2),
+                        (Vector(self.top_left_corner.x, self.bottom_right_corner.y), math.pi),
+                        (Vector(self.top_left_corner.x, self.top_left_corner.y), -math.pi / 2)]
+            for pos, rot in pos_rots:
+                pos.add(edge_offset)
+                draw_img_with_rot(qp, UIElement.selected_edge_top_right, edge_size.x, edge_size.y, pos, rot)
+                edge_offset.rotate(math.pi / 2)
 
         qp.drawPixmap(self.top_left_corner.x, self.top_left_corner.y, self.texture)
 
@@ -193,6 +216,8 @@ class Button(UIElement):
 class UIImage(UIElement):
     def __init__(self, main_widget, position, menu):
         super().__init__(main_widget, position, menu)
+
+        self.draw_selected = False
 
 
 class Menu:

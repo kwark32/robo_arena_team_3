@@ -1,9 +1,7 @@
 from util import s_to_ns, Vector
 
 
-# Window/Arena
-WINDOW_SIZE = 1000
-ARENA_SIZE = 1000
+# Arena
 MAP_FORMAT_VERSION = 1
 
 # Time

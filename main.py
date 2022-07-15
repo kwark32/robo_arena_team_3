@@ -1,7 +1,7 @@
 import sys
 
-from globals import GameInfo
-from util import get_main_path
+from globals import GameInfo, CameraState
+from util import get_main_path, Vector
 
 headless_args = []
 for arg in sys.argv:
@@ -14,7 +14,6 @@ headless_args.clear()
 
 if not GameInfo.is_headless:
     from globals import Scene, Fonts
-    from constants import WINDOW_SIZE
     from main_menu_scene import MainMenuScene
     from world_scene import SPWorldScene, OnlineWorldScene, ServerWorldScene
     from PyQt5.QtGui import QFont, QColor, QFontDatabase
@@ -34,12 +33,22 @@ if not GameInfo.is_headless:
             self.switch_scene(Scene.MAIN_MENU)
 
         def init_window(self):
-            self.setFixedSize(WINDOW_SIZE, WINDOW_SIZE)
-
+            geometry = QDesktopWidget().availableGeometry()
+            main_window_size = Vector(geometry.size().width(), geometry.size().height())
+            #main_window_size = GameInfo.window_reference_size
+            GameInfo.window_size = main_window_size
+            # GameInfo.window_size_factor = (main_window_size.x / GameInfo.window_reference_size.x
+            #                                + main_window_size.y / GameInfo.window_reference_size.y) / 2
+            CameraState.scale_factor = main_window_size.y / GameInfo.window_reference_size.y  # adjust to height
+            CameraState.scale = Vector(main_window_size.x / GameInfo.window_reference_size.x,
+                                       main_window_size.y / GameInfo.window_reference_size.y)
+            self.setFixedSize(main_window_size.x, main_window_size.y)
+            self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
             geometry_rect = self.frameGeometry()
-            center_point = QDesktopWidget().availableGeometry().center()
-            geometry_rect.moveCenter(center_point)
+            geometry_rect.moveCenter(geometry.center())
             self.move(geometry_rect.topLeft())
+            self.setWindowTitle("Robo Arena")
+            self.show()
 
         def closeEvent(self, event):
             self.running = False
@@ -72,13 +81,13 @@ if not GameInfo.is_headless:
                 self.active_scene.deleteLater()
                 self.active_scene = None
             if scene == Scene.MAIN_MENU:
-                self.active_scene = MainMenuScene(self, WINDOW_SIZE)
+                self.active_scene = MainMenuScene(self, GameInfo.window_size)
             elif scene == Scene.SP_WORLD:
-                self.active_scene = SPWorldScene(self, WINDOW_SIZE)
+                self.active_scene = SPWorldScene(self, GameInfo.window_size)
             elif scene == Scene.ONLINE_WORLD:
-                self.active_scene = OnlineWorldScene(self, WINDOW_SIZE)
+                self.active_scene = OnlineWorldScene(self, GameInfo.window_size)
             elif scene == Scene.SERVER_WORLD:
-                self.active_scene = ServerWorldScene(self, WINDOW_SIZE)
+                self.active_scene = ServerWorldScene(self, GameInfo.window_size)
 
 else:
     from server_world_sim import ServerWorldSim
@@ -88,8 +97,6 @@ def main():
     if not GameInfo.is_headless:
         app = QApplication(sys.argv)
         window = ArenaWindow()
-        window.setWindowTitle("Robo Arena")
-        window.show()
 
         press_start_font_id = QFontDatabase.addApplicationFont(get_main_path()
                                                                + "/fonts/press_start_2p/PressStart2P-Regular.ttf")

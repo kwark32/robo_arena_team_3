@@ -247,7 +247,7 @@ class UIImage(UIElement):
 class Menu:
     def __init__(self, main_widget, size, main_menu_scene, bg_texture_name):
         self.main_widget = main_widget
-        self.size = size
+        self.size = size.copy()
         self.main_menu_scene = main_menu_scene
 
         self.elements = []

@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QWidget
 from PyQt5.QtCore import Qt, QPoint
 from ui_elements import Button, Menu, TextField, UIImage
 from util import Vector, ns_to_s
-from globals import GameInfo, Scene, Menus, Fonts
+from globals import GameInfo, Scene, Menus, Fonts, CameraState
 from constants import DEBUG_MODE, MAX_PLAYER_NAME_LENGTH, MAX_SERVER_IP_LENGTH
 
 
@@ -47,12 +47,33 @@ class MainMenu(Menu):
     def __init__(self, main_widget, size, main_menu_scene):
         super().__init__(main_widget, size, main_menu_scene, "black_bg")
 
-        self.elements.append(MainMenu.ExitButton(main_widget, Vector(self.size / 2, 900), self))
-        self.elements.append(MainMenu.SingleplayerButton(main_widget, Vector(self.size / 2, 300), self))
-        self.elements.append(MainMenu.OnlineMultiplayerButton(main_widget, Vector(self.size / 2, 450), self))
-        self.elements.append(MainMenu.LocalMultiplayerButton(main_widget, Vector(self.size / 2, 600), self))
-        self.elements.append(MainMenu.SettingsButton(main_widget, Vector(self.size / 2, 750), self))
-        self.elements.append(MainMenu.Logo(main_widget, Vector(self.size / 2, 120), self))
+        self.elements.append(MainMenu.Logo(main_widget,
+                                           Vector(GameInfo.window_size.x / 2 / CameraState.scale.x,
+                                                  GameInfo.window_size.y / 2
+                                                  / CameraState.scale.y - 430), self))
+
+        self.elements.append(MainMenu.SingleplayerButton(main_widget,
+                                                         Vector(GameInfo.window_size.x / 2 / CameraState.scale.x,
+                                                                GameInfo.window_size.y / 2
+                                                                / CameraState.scale.y - 235), self))
+        self.elements.append(MainMenu.OnlineMultiplayerButton(main_widget,
+                                                              Vector(GameInfo.window_size.x / 2 / CameraState.scale.x,
+                                                                     GameInfo.window_size.y / 2
+                                                                     / CameraState.scale.y - 70), self))
+        self.elements.append(MainMenu.LocalMultiplayerButton(main_widget,
+                                                             Vector(GameInfo.window_size.x / 2 / CameraState.scale.x,
+                                                                    GameInfo.window_size.y / 2
+                                                                    / CameraState.scale.y + 95), self))
+
+        self.elements.append(MainMenu.SettingsButton(main_widget,
+                                                     Vector(GameInfo.window_size.x / 2 / CameraState.scale.x,
+                                                            GameInfo.window_size.y / 2
+                                                            / CameraState.scale.y + 260), self))
+
+        self.elements.append(MainMenu.ExitButton(main_widget,
+                                                 Vector(GameInfo.window_size.x / 2 / CameraState.scale.x,
+                                                        GameInfo.window_size.y / 2
+                                                        / CameraState.scale.y + 425), self))
 
     def escape_pressed(self):
         self.main_widget.running = False
@@ -189,21 +210,45 @@ class OnlineOptions(Menu):
     def __init__(self, main_widget, size, main_menu_scene):
         super().__init__(main_widget, size, main_menu_scene, "black_bg")
 
-        self.elements.append(OnlineOptions.BackButton(main_widget, Vector(self.size / 2, 900), self))
-        self.elements.append(OnlineOptions.ServerIpHeader(main_widget, Vector(self.size / 2, 425), self))
-        self.elements.append(OnlineOptions.PlayerNameHeader(main_widget, Vector(self.size / 2, 100), self))
-        player_name_field = OnlineOptions.PlayerNameField(main_widget, Vector(self.size / 2, 250), self)
+        self.elements.append(OnlineOptions.PlayerNameHeader(main_widget,
+                                                            Vector(GameInfo.window_size.x / 2 / CameraState.scale.x,
+                                                                   GameInfo.window_size.y / 2
+                                                                   / CameraState.scale.y - 385), self))
+        player_name_field = OnlineOptions.PlayerNameField(main_widget,
+                                                          Vector(GameInfo.window_size.x / 2 / CameraState.scale.x,
+                                                                 GameInfo.window_size.y / 2
+                                                                 / CameraState.scale.y - 235), self)
         self.elements.append(player_name_field)
-        server_ip_field = OnlineOptions.ServerIPField(main_widget, Vector(self.size / 2, 575), self)
+        self.elements.append(OnlineOptions.ServerIpHeader(main_widget,
+                                                          Vector(GameInfo.window_size.x / 2 / CameraState.scale.x,
+                                                                 GameInfo.window_size.y / 2
+                                                                 / CameraState.scale.y - 55), self))
+        server_ip_field = OnlineOptions.ServerIPField(main_widget,
+                                                      Vector(GameInfo.window_size.x / 2 / CameraState.scale.x,
+                                                             GameInfo.window_size.y / 2
+                                                             / CameraState.scale.y + 95), self)
         self.elements.append(server_ip_field)
-        join_button = OnlineOptions.JoinButton(main_widget, Vector(self.size / 2 - 220, 735), self)
+
+        join_button = OnlineOptions.JoinButton(main_widget,
+                                               Vector(GameInfo.window_size.x / 2 / CameraState.scale.x - 220,
+                                                      GameInfo.window_size.y / 2
+                                                      / CameraState.scale.y + 260), self)
         join_button.player_name_field = player_name_field
         join_button.server_ip_field = server_ip_field
         self.elements.append(join_button)
-        host_button = OnlineOptions.HostButton(main_widget, Vector(self.size / 2 + 220, 735), self)
+
+        host_button = OnlineOptions.HostButton(main_widget,
+                                               Vector(GameInfo.window_size.x / 2 / CameraState.scale.x + 220,
+                                                      GameInfo.window_size.y / 2
+                                                      / CameraState.scale.y + 260), self)
         host_button.player_name_field = player_name_field
         host_button.server_ip_field = server_ip_field
         self.elements.append(host_button)
+
+        self.elements.append(OnlineOptions.BackButton(main_widget,
+                                                      Vector(GameInfo.window_size.x / 2 / CameraState.scale.x,
+                                                             GameInfo.window_size.y / 2
+                                                             / CameraState.scale.y + 425), self))
 
     def escape_pressed(self):
         self.main_menu_scene.switch_menu(Menus.MAIN_MENU)
@@ -219,7 +264,9 @@ class Settings(Menu):
     def __init__(self, main_widget, size, main_menu_scene):
         super().__init__(main_widget, size, main_menu_scene, "black_bg")
 
-        self.elements.append(Settings.BackButton(main_widget, Vector(self.size / 2, 900), self))
+        self.elements.append(Settings.BackButton(main_widget,
+                                                 Vector(GameInfo.window_size.x / 2 / CameraState.scale.x,
+                                                        GameInfo.window_size.y / 2 + 425), self))
 
     def escape_pressed(self):
         self.main_menu_scene.switch_menu(Menus.MAIN_MENU)
@@ -247,18 +294,18 @@ class MainMenuScene(QWidget):
         self.fps = 0
 
     def init_ui(self):
-        self.setGeometry(0, 0, self.size, self.size)
+        self.setGeometry(0, 0, self.size.x, self.size.y)
         self.setMouseTracking(True)
         self.show()
 
     def switch_menu(self, menu):
         self.active_menu = None
         if menu == Menus.MAIN_MENU:
-            self.active_menu = MainMenu(self.main_widget, self.size, self)
+            self.active_menu = MainMenu(self.main_widget, GameInfo.window_size, self)
         elif menu == Menus.ONLINE_OPTIONS:
-            self.active_menu = OnlineOptions(self.main_widget, self.size, self)
+            self.active_menu = OnlineOptions(self.main_widget, GameInfo.window_size, self)
         elif menu == Menus.SETTINGS:
-            self.active_menu = Settings(self.main_widget, self.size, self)
+            self.active_menu = Settings(self.main_widget, GameInfo.window_size, self)
 
     def clean_mem(self):
         pass
@@ -272,13 +319,13 @@ class MainMenuScene(QWidget):
             self.active_menu.key_release_event(event)
 
     def mouseMoveEvent(self, event):
-        self.mouse_position.x = event.x()
-        self.mouse_position.y = event.y()
+        self.mouse_position.x = event.x() / CameraState.scale.x
+        self.mouse_position.y = event.y() / CameraState.scale.y
         event.accept()
 
     def mousePressEvent(self, event):
-        self.mouse_position.x = event.x()
-        self.mouse_position.y = event.y()
+        self.mouse_position.x = event.x() / CameraState.scale.x
+        self.mouse_position.y = event.y() / CameraState.scale.y
         if event.button() == Qt.LeftButton:
             self.is_clicking = True
 
@@ -302,6 +349,8 @@ class MainMenuScene(QWidget):
                 self._last_fps_show_time = curr_time_ns
 
         qp = QPainter(self)
+        qp.scale(CameraState.scale_factor, CameraState.scale_factor)
+        qp.setRenderHint(QPainter.Antialiasing)
 
         self.active_menu.draw(qp)
 

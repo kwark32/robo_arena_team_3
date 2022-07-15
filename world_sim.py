@@ -6,7 +6,7 @@ from arena_converter import load_map
 from physics import PhysicsWorld
 from util import Vector, get_delta_time_s
 from globals import GameInfo
-from constants import ARENA_SIZE, FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_FIXED_TIMESTEPS
+from constants import FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_FIXED_TIMESTEPS
 
 
 class WorldSim:
@@ -20,7 +20,7 @@ class WorldSim:
         self.bullets = []
         self.player_input = PlayerInput()
 
-        self.init_arena(ARENA_SIZE)
+        self.init_arena()
 
         self.physics_frame_count = 0
 
@@ -38,20 +38,24 @@ class WorldSim:
     def clean_mem(self):
         pass
 
-    def init_arena(self, size):
-        self.arena = load_map(GameInfo.active_arena, size, physics_world=self.physics_world)
+    def init_arena(self):
+        self.arena = load_map(GameInfo.active_arena, physics_world=self.physics_world)
 
-    def create_player(self, robot_id=-1, position=Vector(ARENA_SIZE / 2, ARENA_SIZE / 2),
+    def create_player(self, robot_id=-1, position=None,
                       player_name=None):
         if player_name is None:
             player_name = GameInfo.local_player_name
+        if position is None:
+            position = Vector(self.arena.size.x / 2, self.arena.size.y / 2)
         player = Robot(self, robot_id=robot_id, is_player=True, has_ai=False,
                        position=position, player_name=player_name)
         self.robots.append(player)
         return player
 
-    def create_enemy_robot(self, robot_id=-1, position=Vector(ARENA_SIZE / 2, ARENA_SIZE / 2),
+    def create_enemy_robot(self, robot_id=-1, position=None,
                            has_ai=True, player_name=""):
+        if position is None:
+            position = Vector(self.arena.size.x / 2, self.arena.size.y / 2)
         enemy = Robot(self, robot_id=robot_id, has_ai=has_ai, position=position, player_name=player_name)
         self.robots.append(enemy)
         return enemy

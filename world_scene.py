@@ -4,8 +4,8 @@ from PyQt5.QtCore import Qt, QPoint
 from world_sim import SPWorldSim
 from client_world_sim import OnlineWorldSim
 from server_world_sim import ServerWorldSim
-from globals import Scene, Fonts, GameInfo
-from constants import ARENA_SIZE, DEBUG_MODE
+from globals import Scene, Fonts, GameInfo, CameraState
+from constants import DEBUG_MODE
 from ui_overlay import UIOverlay
 
 
@@ -15,7 +15,7 @@ class WorldScene(QWidget):
 
         self.main_widget = parent
 
-        self.size = size
+        self.size = size.copy()
 
         self.world_sim = sim_class()
 
@@ -24,7 +24,7 @@ class WorldScene(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        self.setGeometry(0, 0, self.size, self.size)
+        self.setGeometry(0, 0, self.size.x, self.size.y)
         self.show()
 
     def clean_mem(self):
@@ -71,6 +71,8 @@ class WorldScene(QWidget):
         self.world_sim.update_world()
 
         qp = QPainter(self)
+        qp.scale(CameraState.scale_factor, CameraState.scale_factor)
+        qp.setRenderHint(QPainter.Antialiasing)
 
         self.world_sim.arena.draw(qp)
 
@@ -91,7 +93,7 @@ class WorldScene(QWidget):
                 for fixture in body.fixtures:
                     shape = fixture.shape
                     vertices = [(body.transform * v) for v in shape.vertices]
-                    vertices = [(v[0], ARENA_SIZE - v[1]) for v in vertices]
+                    vertices = [(v[0], self.world_sim.arena.size - v[1]) for v in vertices]
                     poly = QPolygon()
                     for vert in vertices:
                         poly.append(QPoint(round(vert[0]), round(vert[1])))

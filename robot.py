@@ -2,7 +2,7 @@ from transform import SimBody
 from weapons import TankCannon
 from util import Vector, get_main_path, draw_img_with_rot
 from globals import GameInfo
-from constants import ARENA_SIZE, FIXED_DELTA_TIME, MAX_ROBOT_HEALTH
+from constants import FIXED_DELTA_TIME, MAX_ROBOT_HEALTH
 
 if not GameInfo.is_headless:
     from PyQt5.QtGui import QPixmap
@@ -105,9 +105,8 @@ class Robot:
         self.world_sim = world_sim
         self.physics_world = world_sim.physics_world
 
-        self.physics_body = self.physics_world.add_rect(Vector(position.x, ARENA_SIZE - position.y),
-                                                        self.size.x, self.size.y,
-                                                        rotation=-rotation, static=False, user_data=self)
+        self.physics_body = self.physics_world.add_rect(Vector(position.x, position.y), self.size.x, self.size.y,
+                                                        rotation=rotation, static=False, user_data=self)
 
         self.weapon = TankCannon(self.world_sim)
 
@@ -200,7 +199,7 @@ class Robot:
         self.sim_body.step(delta_time)
         self.extrapolation_body.set(self.sim_body)
 
-        self.last_position = Vector(self.physics_body.position[0], ARENA_SIZE - self.physics_body.position[1])
+        self.last_position = Vector(self.physics_body.position[0], self.physics_body.position[1])
 
         self.set_physics_body()
 
@@ -209,22 +208,21 @@ class Robot:
         self.sim_body.local_accel.y = self.sim_body.max_accel
 
     def get_center_tile(self):
-        tile_size = self.world_sim.arena.tile_size
+        tile_size = GameInfo.arena_tile_size
         tile_count = self.world_sim.arena.tile_count
         tile_position = self.sim_body.position.copy()
         tile_position.div(tile_size)
         tile_position.floor()
-        tile_position.limit_by_scalar(0, tile_count - 1)
+        tile_position.limit_range(Vector(0, 0), tile_count)
         return self.world_sim.arena.tiles[tile_position.y][tile_position.x]
 
     def set_physics_body(self):
-        self.physics_body.transform = ((self.sim_body.position.x, ARENA_SIZE - self.sim_body.position.y),
-                                       -self.sim_body.rotation)
+        self.physics_body.transform = ((self.sim_body.position.x, self.sim_body.position.y), self.sim_body.rotation)
 
     def refresh_from_physics(self):
         if self.physics_body is not None:
             self.sim_body.position.x = self.physics_body.position[0]
-            self.sim_body.position.y = ARENA_SIZE - self.physics_body.position[1]
+            self.sim_body.position.y = self.physics_body.position[1]
 
     def apply_effects(self, delta_time):
         for effect in self.effects:
@@ -255,15 +253,16 @@ class Robot:
             self.remove()
 
     def respawn(self):
+        self.revert_effects()
+        self.effects.clear()
         self.health = self.max_health
-        self.sim_body.reset(position=Vector(ARENA_SIZE / 2, ARENA_SIZE / 2), rotation=0)
+        self.sim_body.reset(position=Vector(self.world_sim.arena.size.x / 2, self.world_sim.arena.size.y / 2),
+                            rotation=0)
         self.extrapolation_body.set(self.sim_body)
         self.last_position = self.sim_body.position.copy()
         self.forward_velocity_goal = 0
         self.set_physics_body()
         self.is_dead = False
-        self.revert_effects()
-        self.effects.clear()
 
     def remove(self):
         self.to_remove = True

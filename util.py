@@ -85,6 +85,10 @@ class Vector:
         self.x = limit(self.x, lower.x, upper.x)
         self.y = limit(self.y, lower.y, upper.y)
 
+    def limit_range(self, lower, upper):
+        self.x = limit(self.x, lower.x, upper.x - 1)
+        self.y = limit(self.y, lower.y, upper.y - 1)
+
     def as_tuple(self):
         return self.x, self.y
 
@@ -122,10 +126,11 @@ def deg_to_rad(value):
 
 
 def draw_img_with_rot(qp, img, width, height, position, rotation):
+    qp.save()
     qp.translate(round(position.x), round(position.y))
     qp.rotate(rad_to_deg(rotation))
     qp.drawPixmap(-round(width / 2), -round(height / 2), img)
-    qp.resetTransform()
+    qp.restore()
 
 
 def limit_rot(value):

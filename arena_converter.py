@@ -3,26 +3,27 @@ try:
 except ImportError:
     import json
 
+from PIL import Image
 from arena import Arena, tile_type_dict
 from util import Vector, get_main_path
-from constants import ARENA_SIZE, MAP_FORMAT_VERSION
-from PIL import Image
+from constants import MAP_FORMAT_VERSION
+from globals import GameInfo
 
 
 json_map_path = get_main_path() + "/arenas/json/"
 png_map_path = get_main_path() + "/arenas/png/"
 
 
-def load_map(file, size, physics_world=None):
+def load_map(file, physics_world=None):
     if file.endswith("json"):
-        return load_map_json(json_map_path + file, size, physics_world=physics_world)
+        return load_map_json(json_map_path + file, physics_world=physics_world)
     elif file.endswith("png"):
-        return load_map_png(png_map_path + file, size, physics_world=physics_world)
+        return load_map_png(png_map_path + file, physics_world=physics_world)
     else:
         return None
 
 
-def load_map_json(file, size, physics_world=None):
+def load_map_json(file, physics_world=None):
     map_text = open(file, "r").read()
     map_json = json.loads(map_text)
     if map_json["version"] != MAP_FORMAT_VERSION:
@@ -30,7 +31,7 @@ def load_map_json(file, size, physics_world=None):
         return
 
     map_tile_count = map_json["size"]
-    arena = Arena(size, map_tile_count)
+    arena = Arena(Vector(map_tile_count, map_tile_count))
     tiles = arena.get_empty_tiles()
     row_index = 0
     y = 0
@@ -60,11 +61,11 @@ def load_map_json(file, size, physics_world=None):
             for tile in row["row"]:
                 tile_type = tile_type_dict[tile["tile"]]
                 if tile_type.has_collision:
-                    width = tile["count"] * arena.tile_size
-                    height = row["count"] * arena.tile_size
-                    x = t * arena.tile_size + int(width / 2)
-                    y = r * arena.tile_size + int(height / 2)
-                    physics_world.add_rect(Vector(x, ARENA_SIZE - y), width, height, user_data=tile_type)
+                    width = tile["count"] * GameInfo.arena_tile_size
+                    height = row["count"] * GameInfo.arena_tile_size
+                    x = t * GameInfo.arena_tile_size + int(width / 2)
+                    y = r * GameInfo.arena_tile_size + int(height / 2)
+                    physics_world.add_rect(Vector(x, y), width, height, user_data=tile_type)
                 t += tile["count"]
             r += row["count"]
 
@@ -85,15 +86,10 @@ tile_type_colors = {
 }
 
 
-def load_map_png(file, size, physics_world=None):
+def load_map_png(file, physics_world=None):
     im = Image.open(file)
     pix = im.load()
-
-    if im.size[0] != im.size[1]:
-        print("ERROR: Image not square!")
-        return None
-
-    arena = Arena(size, im.size[0])
+    arena = Arena(Vector(im.size[0], im.size[1]))
     tiles = arena.get_empty_tiles()
 
     for y in range(im.size[1]):
@@ -104,11 +100,11 @@ def load_map_png(file, size, physics_world=None):
             tiles[y][x] = tile_type_dict[tile_type]
             if physics_world is not None:
                 if tiles[y][x].has_collision:
-                    width = arena.tile_size
-                    height = arena.tile_size
-                    x_pos = x * arena.tile_size + int(width / 2)
-                    y_pos = y * arena.tile_size + int(height / 2)
-                    physics_world.add_rect(Vector(x_pos, ARENA_SIZE - y_pos), width, height, user_data=tile_type)
+                    width = GameInfo.arena_tile_size
+                    height = GameInfo.arena_tile_size
+                    x_pos = x * GameInfo.arena_tile_size + int(width / 2)
+                    y_pos = y * GameInfo.arena_tile_size + int(height / 2)
+                    physics_world.add_rect(Vector(x_pos, y_pos), width, height, user_data=tile_type)
 
     arena.tiles = tiles
 

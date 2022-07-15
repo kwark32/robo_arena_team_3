@@ -6,7 +6,8 @@ from PyQt5.QtWidgets import QWidget
 from PyQt5.QtCore import Qt, QPoint
 from ui_elements import Button, Menu, TextField, UIImage
 from util import Vector, ns_to_s
-from globals import GameInfo, Scene, Menus, Fonts, CameraState
+from globals import GameInfo, Scene, Menus, Fonts
+from camera import CameraState
 from constants import DEBUG_MODE, MAX_PLAYER_NAME_LENGTH, MAX_SERVER_IP_LENGTH
 
 

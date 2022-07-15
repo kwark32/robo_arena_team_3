@@ -4,7 +4,8 @@ from PyQt5.QtCore import Qt, QPoint
 from world_sim import SPWorldSim
 from client_world_sim import OnlineWorldSim
 from server_world_sim import ServerWorldSim
-from globals import Scene, Fonts, GameInfo, CameraState
+from globals import Scene, Fonts, GameInfo
+from camera import CameraState
 from constants import DEBUG_MODE
 from ui_overlay import UIOverlay
 
@@ -73,6 +74,8 @@ class WorldScene(QWidget):
         qp = QPainter(self)
         qp.scale(CameraState.scale_factor, CameraState.scale_factor)
         qp.setRenderHint(QPainter.Antialiasing)
+
+        qp.fillRect(0, 0, GameInfo.window_reference_size.x, GameInfo.window_reference_size.y, Qt.black)
 
         self.world_sim.arena.draw(qp)
 

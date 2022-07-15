@@ -1,5 +1,4 @@
 from enum import IntEnum
-from util import Vector
 
 
 class Scene(IntEnum):
@@ -18,14 +17,15 @@ class Menus(IntEnum):
 class GameInfo:
     is_headless = False
 
-    window_reference_size = Vector(1920, 1080)
-    window_size = window_reference_size.copy()
+    window_reference_size = None
+    window_size = None
     arena_tile_size = 40
 
     # empty_test_map.json
     # test_map.json
     # arena_1.png
-    active_arena = "arena_1.png"
+    # arena_1_big-100.png
+    active_arena = "arena_1_big-100.png"
 
     current_frame_seed = 0
 
@@ -39,12 +39,6 @@ class GameInfo:
     server_ip = default_ip
     port = 54345
     buffer_size = 4096
-
-
-class CameraState:
-    position = Vector(0, 0)
-    scale_factor = 1
-    scale = Vector(1, 1)
 
 
 class Settings:

@@ -1,6 +1,7 @@
 import sys
 
-from globals import GameInfo, CameraState
+from globals import GameInfo
+from camera import CameraState
 from util import get_main_path, Vector
 
 headless_args = []
@@ -34,14 +35,18 @@ if not GameInfo.is_headless:
 
         def init_window(self):
             geometry = QDesktopWidget().availableGeometry()
+
+            # Use main monitor size:
             main_window_size = Vector(geometry.size().width(), geometry.size().height())
-            #main_window_size = GameInfo.window_reference_size
+            # Always use exact reference size:
+            #  main_window_size = GameInfo.window_reference_size
+
             GameInfo.window_size = main_window_size
-            # GameInfo.window_size_factor = (main_window_size.x / GameInfo.window_reference_size.x
-            #                                + main_window_size.y / GameInfo.window_reference_size.y) / 2
-            CameraState.scale_factor = main_window_size.y / GameInfo.window_reference_size.y  # adjust to height
             CameraState.scale = Vector(main_window_size.x / GameInfo.window_reference_size.x,
                                        main_window_size.y / GameInfo.window_reference_size.y)
+            # Adjust scaling to height:
+            CameraState.scale_factor = CameraState.scale.y
+
             self.setFixedSize(main_window_size.x, main_window_size.y)
             self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
             geometry_rect = self.frameGeometry()
@@ -95,6 +100,9 @@ else:
 
 def main():
     if not GameInfo.is_headless:
+        GameInfo.window_reference_size = Vector(1920, 1080)
+        GameInfo.window_size = GameInfo.window_reference_size.copy()
+
         app = QApplication(sys.argv)
         window = ArenaWindow()
 

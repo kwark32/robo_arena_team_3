@@ -2,10 +2,10 @@ import numpy as np
 import effects
 
 from globals import GameInfo
-from util import Vector, get_main_path
+from camera import CameraState
+from util import Vector, get_main_path, painter_transform_with_rot
 
 if not GameInfo.is_headless:
-    from PyQt5.QtCore import QPoint
     from PyQt5.QtGui import QPixmap, QPainter
 
 
@@ -124,4 +124,14 @@ class Arena:
 
             painter.end()
 
-        qp.drawPixmap(QPoint(), self.background_pixmap)
+        painter_transform_with_rot(qp, Vector(self.background_pixmap.width() / 2,
+                                              self.background_pixmap.height() / 2), 0)
+        paint_start = Vector(-self.size.x / 2, -self.size.y / 2)
+        paint_cutoff = Vector(max(-GameInfo.window_reference_size.x / 2 + CameraState.position.x, 0),
+                              max(-GameInfo.window_reference_size.y / 2 + CameraState.position.y, 0))
+        paint_start.add(paint_cutoff)
+
+        qp.drawPixmap(paint_start.x, paint_start.y, GameInfo.window_reference_size.x, GameInfo.window_reference_size.y,
+                      self.background_pixmap, paint_cutoff.x, paint_cutoff.y,
+                      GameInfo.window_reference_size.x, GameInfo.window_reference_size.y)
+        qp.restore()

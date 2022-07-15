@@ -94,7 +94,10 @@ def load_map_png(file, physics_world=None):
 
     for y in range(im.size[1]):
         for x in range(im.size[0]):
-            tile_type = tile_type_colors.get(pix[x, y])
+            color = pix[x, y]
+            if len(color) > 3:
+                color = color[:3]
+            tile_type = tile_type_colors.get(color)
             if tile_type is None:
                 continue
             tiles[y][x] = tile_type_dict[tile_type]

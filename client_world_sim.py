@@ -21,6 +21,7 @@ class OnlineWorldSim(WorldSim):
         self.received_first_packet = False
 
     def clean_mem(self):
+        super().clean_mem()
         for i in range(2):
             self.udp_socket.send_packet(None, ClientPacket(
                 creation_time=(self.curr_time_ns + 1000000000), disconnect=True))

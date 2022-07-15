@@ -7,6 +7,7 @@ from physics import PhysicsWorld
 from util import Vector, get_delta_time_s
 from globals import GameInfo
 from constants import FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_FIXED_TIMESTEPS
+from camera import CameraState
 
 
 class WorldSim:
@@ -36,7 +37,7 @@ class WorldSim:
         self.fps = 0
 
     def clean_mem(self):
-        pass
+        CameraState.position = None
 
     def init_arena(self):
         self.arena = load_map(GameInfo.active_arena, physics_world=self.physics_world)
@@ -131,6 +132,15 @@ class WorldSim:
                                                              self.physics_frame_count * FIXED_DELTA_TIME_NS)
         # print("iterations: " + str(iterations))
 
+        if self.local_player_robot is not None:
+            if CameraState.position is None:
+                CameraState.position = self.local_player_robot.extrapolation_body.position.copy()
+            else:
+                CameraState.position.lerp_to(self.local_player_robot.extrapolation_body.position,
+                                             CameraState.lerp_per_sec * self.delta_time)
+        else:
+            CameraState.position = None
+
         self.calc_fps()
 
 
@@ -144,3 +154,8 @@ class SPWorldSim(WorldSim):
         self.create_enemy_robot(position=Vector(250, 750))
         self.create_enemy_robot(position=Vector(750, 250))
         self.create_enemy_robot(position=Vector(750, 750))
+
+    def fixed_update(self, delta_time):
+        GameInfo.current_frame_seed = self.world_start_time_ns + self.physics_frame_count
+
+        super().fixed_update(delta_time)

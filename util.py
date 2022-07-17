@@ -151,7 +151,9 @@ def painter_transform_with_rot(qp, position, rotation):
         cam_pos.div(2)
         cam_pos.sub(CameraState.position)
         cam_pos.round()
-    qp.translate(round(position.x) + cam_pos.x, round(position.y) + cam_pos.y)
+    position = position.copy()
+    position.x += CameraState.x_offset
+    qp.translate(round(position.x) + round(cam_pos.x), round(position.y) + round(cam_pos.y))
     if rotation != 0:
         qp.rotate(rad_to_deg(rotation))
 
@@ -165,6 +167,10 @@ def draw_img_with_rot(qp, img, width, height, position, rotation):
 
 
 def draw_text_with_rot(qp, text, width, height, position, rotation):
+    if CameraState.scale.x != CameraState.scale.y:
+        offset = (CameraState.scale.x - CameraState.scale.y) * GameInfo.window_reference_size.x * 0.5
+        position = position.copy()
+        position.x += offset
     if not is_object_on_screen(position):
         return
     painter_transform_with_rot(qp, position, rotation)

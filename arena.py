@@ -131,7 +131,13 @@ class Arena:
                               max(-GameInfo.window_reference_size.y / 2 + CameraState.position.y, 0))
         paint_start.add(paint_cutoff)
 
-        qp.drawPixmap(paint_start.x, paint_start.y, GameInfo.window_reference_size.x, GameInfo.window_reference_size.y,
-                      self.background_pixmap, paint_cutoff.x, paint_cutoff.y,
-                      GameInfo.window_reference_size.x, GameInfo.window_reference_size.y)
+        end_cutoff = Vector(min(-GameInfo.window_reference_size.x / 2 - CameraState.position.x + self.size.x, 0),
+                            min(-GameInfo.window_reference_size.y / 2 - CameraState.position.y + self.size.y, 0))
+        size = GameInfo.window_reference_size.copy()
+        size.add(end_cutoff)
+
+        if size.x > 0 and size.y > 0:
+            qp.drawPixmap(round(paint_start.x), round(paint_start.y), round(size.x), round(size.y),
+                          self.background_pixmap, round(paint_cutoff.x), round(paint_cutoff.y),
+                          round(size.x), round(size.y))
         qp.restore()

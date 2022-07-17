@@ -34,18 +34,22 @@ if not GameInfo.is_headless:
             self.switch_scene(Scene.MAIN_MENU)
 
         def init_window(self):
-            geometry = QDesktopWidget().availableGeometry()
+            geometry = QDesktopWidget().screenGeometry()
 
             # Use main monitor size:
             main_window_size = Vector(geometry.size().width(), geometry.size().height())
             # Always use exact reference size:
             #  main_window_size = GameInfo.window_reference_size
+            main_window_size.div(2)
+            main_window_size.round()
 
             GameInfo.window_size = main_window_size
             CameraState.scale = Vector(main_window_size.x / GameInfo.window_reference_size.x,
                                        main_window_size.y / GameInfo.window_reference_size.y)
             # Adjust scaling to height:
             CameraState.scale_factor = CameraState.scale.y
+
+            CameraState.x_offset = (CameraState.scale.x - CameraState.scale.y) * GameInfo.window_reference_size.x * 0.5
 
             self.setFixedSize(main_window_size.x, main_window_size.y)
             self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
@@ -110,12 +114,15 @@ def main():
                                                                + "/fonts/press_start_2p/PressStart2P-Regular.ttf")
         press_start_font_str = QFontDatabase.applicationFontFamilies(press_start_font_id)[0]
 
-        Fonts.fps_font = QFont(press_start_font_str, 8)
-        Fonts.fps_color = Qt.red
-        Fonts.text_field_font = QFont(press_start_font_str, 24)
+        Fonts.fps_font = QFont(press_start_font_str)
+        Fonts.fps_font.setPixelSize(15)
+        Fonts.fps_color = QColor(189, 38, 7)
+        Fonts.text_field_font = QFont(press_start_font_str)
+        Fonts.text_field_font.setPixelSize(46)
         Fonts.text_field_color = QColor(189, 38, 7)
         Fonts.text_field_default_color = QColor(75, 10, 10)
-        Fonts.name_tag_font = QFont(press_start_font_str, 7)
+        Fonts.name_tag_font = QFont(press_start_font_str)
+        Fonts.name_tag_font.setPixelSize(12)
         Fonts.name_tag_color = QColor(200, 200, 200)  # QColor(225, 50, 225)
 
         while window.running:  # main loop

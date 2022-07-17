@@ -28,7 +28,7 @@ class UIOverlay:
                 pos.y = round(robot.extrapolation_body.position.y + PLAYER_NAME_OFFSET.y)
                 if is_object_on_screen(pos, radius=120):
                     painter_transform_with_rot(qp, pos, 0)
-                    qp.drawText(-text_width / 2, 0, robot.player_name)
+                    qp.drawText(round(-text_width / 2), 0, robot.player_name)
                     qp.restore()
 
     def draw_health_bar(self, qp, robot):
@@ -38,8 +38,9 @@ class UIOverlay:
         pos.y = round(robot.extrapolation_body.position.y + HEALTH_BAR_OFFSET.y)
         if is_object_on_screen(pos):
             painter_transform_with_rot(qp, pos, 0)
-            qp.drawPixmap(-self.health_bar_bg_size.x / 2, -self.health_bar_bg_size.y / 2, self.health_bar_bg)
+            qp.drawPixmap(round(-self.health_bar_bg_size.x / 2), round(-self.health_bar_bg_size.y / 2),
+                          self.health_bar_bg)
             if health_fill > 0:
-                qp.drawPixmap(-self.health_bar_bg_size.x / 2, -self.health_bar_bg_size.y / 2,
+                qp.drawPixmap(round(-self.health_bar_bg_size.x / 2), round(-self.health_bar_bg_size.y / 2),
                               self.health_bar, 0, 0, health_fill, 0)
             qp.restore()

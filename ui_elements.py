@@ -6,6 +6,7 @@ from PyQt5.QtGui import QPixmap, QFontMetricsF, QPen
 from util import Vector, get_main_path, is_point_inside_rect, draw_img_with_rot
 from globals import Fonts
 from constants import CARET_BLINK_RATE_NS
+from camera import CameraState
 
 
 ui_element_texture_path = get_main_path() + "/textures/ui/main_menu/"
@@ -105,7 +106,7 @@ class UIElement:
                 draw_img_with_rot(qp, UIElement.selected_edge_top_right, edge_size.x, edge_size.y, pos, rot)
                 edge_offset.rotate(math.pi / 2)
 
-        qp.drawPixmap(self.top_left_corner.x, self.top_left_corner.y, self.texture)
+        qp.drawPixmap(round(self.top_left_corner.x + CameraState.x_offset), round(self.top_left_corner.y), self.texture)
 
     def update_selected(self, curr_time_ns):
         self.is_selected = True
@@ -301,7 +302,14 @@ class Menu:
     def draw(self, qp):
         # draw static menu background
         if self.bg_pixmap is not None:
+            qp.save()
+            qp.resetTransform()
+            scale = CameraState.scale.x
+            if CameraState.scale.x < CameraState.scale.y:
+                scale = CameraState.scale.y
+            qp.scale(scale, scale)
             qp.drawPixmap(QPoint(), self.bg_pixmap)
+            qp.restore()
 
         for element in self.elements:
             element.draw(qp)

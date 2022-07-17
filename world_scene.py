@@ -75,7 +75,14 @@ class WorldScene(QWidget):
         qp.scale(CameraState.scale_factor, CameraState.scale_factor)
         qp.setRenderHint(QPainter.Antialiasing)
 
+        qp.save()
+        qp.resetTransform()
+        scale = CameraState.scale.x
+        if CameraState.scale.x < CameraState.scale.y:
+            scale = CameraState.scale.y
+        qp.scale(scale, scale)
         qp.fillRect(0, 0, GameInfo.window_reference_size.x, GameInfo.window_reference_size.y, Qt.black)
+        qp.restore()
 
         self.world_sim.arena.draw(qp)
 

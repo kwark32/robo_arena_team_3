@@ -97,7 +97,7 @@ def main():
 
         Fonts.fps_font = QFont(press_start_font_str, 8)
         Fonts.fps_color = Qt.red
-        Fonts.text_field_font = QFont(press_start_font_str, 24)
+        Fonts.text_field_font = QFont(press_start_font_str, 40)
         Fonts.text_field_color = QColor(189, 38, 7)
         Fonts.text_field_default_color = QColor(75, 10, 10)
         Fonts.name_tag_font = QFont(press_start_font_str, 7)

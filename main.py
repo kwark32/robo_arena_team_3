@@ -26,6 +26,7 @@ if not GameInfo.is_headless:
             super().__init__()
 
             self.running = True
+            self.focused = True
 
             self.active_scene = None
 
@@ -55,6 +56,7 @@ if not GameInfo.is_headless:
             geometry_rect.moveCenter(geometry.center())
             self.move(geometry_rect.topLeft())
             self.setWindowTitle("Robo Arena")
+            self.setFocusPolicy(Qt.StrongFocus)
             self.show()
 
         def closeEvent(self, event):
@@ -80,6 +82,12 @@ if not GameInfo.is_headless:
         def mouseReleaseEvent(self, event):
             if self.active_scene is not None:
                 self.active_scene.mouseReleaseEvent(event)
+
+        def focusInEvent(self, event):
+            self.focused = True
+
+        def focusOutEvent(self, event):
+            self.focused = False
 
         def switch_scene(self, scene):
             if self.active_scene is not None:
@@ -125,7 +133,11 @@ def main():
 
         while window.running:  # main loop
             app.processEvents()
-            window.update()
+            if window.focused:
+                window.update()
+            else:
+                if window.active_scene.world_sim is not None:
+                    window.active_scene.world_sim.update_world()
 
         sys.exit(0)
 

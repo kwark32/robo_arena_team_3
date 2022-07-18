@@ -289,6 +289,8 @@ class MainMenuScene(QWidget):
 
         self.mouse_position = Vector(0, 0)
 
+        self.world_sim = None
+
         self._last_frame_time_ns = time.time_ns()
         self._frames_since_last_show = 0
         self._last_fps_show_time = time.time_ns()

@@ -40,8 +40,6 @@ if not GameInfo.is_headless:
             main_window_size = Vector(geometry.size().width(), geometry.size().height())
             # Always use exact reference size:
             #  main_window_size = GameInfo.window_reference_size
-            main_window_size.div(2)
-            main_window_size.round()
 
             GameInfo.window_size = main_window_size
             CameraState.scale = Vector(main_window_size.x / GameInfo.window_reference_size.x,

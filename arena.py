@@ -134,8 +134,8 @@ class Arena:
                               max(-GameInfo.window_reference_size.y / 2 + cam_pos.y, 0))
         paint_start.add(paint_cutoff)
 
-        end_cutoff = Vector(min(-GameInfo.window_reference_size.x / 2 - CameraState.position.x + self.size.x, 0),
-                            min(-GameInfo.window_reference_size.y / 2 - CameraState.position.y + self.size.y, 0))
+        end_cutoff = Vector(min(-GameInfo.window_reference_size.x / 2 - cam_pos.x + self.size.x, 0),
+                            min(-GameInfo.window_reference_size.y / 2 - cam_pos.y + self.size.y, 0))
         size = GameInfo.window_reference_size.copy()
         size.add(end_cutoff)
 

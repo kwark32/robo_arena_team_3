@@ -11,6 +11,7 @@ class RobotAI:
         self.world_sim = robot.world_sim
         self.shortest_path = None
         self.walkable_check = DrivableTileCheck(self.world_sim.arena)
+        self.last_target_position = Vector(-1000000, -1000000)
 
     def update(self, delta_time):
         # keep shooting
@@ -34,8 +35,13 @@ class RobotAI:
             end.div(self.robot.world_sim.arena.tile_size)
             end.floor()
             # TODO: replace with vector.as_tuple
-            self.shortest_path = astar(self.world_sim.arena.tiles, arena_size,
-                                       (start.x, start.y), (end.x, end.y), self.walkable_check)
+            if self.shortest_path is None or not end.equal(self.last_target_position):
+                self.last_target_position = end.copy()
+                self.shortest_path = astar(self.world_sim.arena.tiles, arena_size,
+                                           (start.x, start.y), (end.x, end.y), self.walkable_check)
+            elif (len(self.shortest_path) >= 2
+                  and start.equal(Vector(self.shortest_path[1][0], self.shortest_path[1][1]))):
+                self.shortest_path.pop(0)
             index = 0
             while index + 2 < len(self.shortest_path):
                 tuple_vecs = self.shortest_path[index:index + 3]
@@ -94,7 +100,7 @@ class DrivableTileCheck(WalkableTerrainCheck):
             return -1
         cost = 1
         if tile.name == "lava":
-            cost = 20
+            cost = 26
         elif tile.name == "water":
             cost = 4
         elif tile.name == "earth":

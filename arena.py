@@ -127,8 +127,11 @@ class Arena:
         painter_transform_with_rot(qp, Vector(self.background_pixmap.width() / 2,
                                               self.background_pixmap.height() / 2), 0)
         paint_start = Vector(-self.size.x / 2, -self.size.y / 2)
-        paint_cutoff = Vector(max(-GameInfo.window_reference_size.x / 2 + CameraState.position.x, 0),
-                              max(-GameInfo.window_reference_size.y / 2 + CameraState.position.y, 0))
+        cam_pos = Vector(0, 0)
+        if CameraState.position is not None:
+            cam_pos = CameraState.position.copy()
+        paint_cutoff = Vector(max(-GameInfo.window_reference_size.x / 2 + cam_pos.x, 0),
+                              max(-GameInfo.window_reference_size.y / 2 + cam_pos.y, 0))
         paint_start.add(paint_cutoff)
 
         end_cutoff = Vector(min(-GameInfo.window_reference_size.x / 2 - CameraState.position.x + self.size.x, 0),

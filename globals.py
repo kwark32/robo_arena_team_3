@@ -17,10 +17,15 @@ class Menus(IntEnum):
 class GameInfo:
     is_headless = False
 
+    window_reference_size = None
+    window_size = None
+    arena_tile_size = 40
+
     # empty_test_map.json
     # test_map.json
     # arena_1.png
-    active_arena = "arena_1.png"
+    # arena_1_big-100.png
+    active_arena = "arena_1_big-100.png"
 
     current_frame_seed = 0
 

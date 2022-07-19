@@ -6,7 +6,8 @@ from arena_converter import load_map
 from physics import PhysicsWorld
 from util import Vector, get_delta_time_s
 from globals import GameInfo
-from constants import ARENA_SIZE, FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_FIXED_TIMESTEPS
+from constants import FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_FIXED_TIMESTEPS
+from camera import CameraState
 
 
 class WorldSim:
@@ -20,7 +21,7 @@ class WorldSim:
         self.bullets = []
         self.player_input = PlayerInput()
 
-        self.init_arena(ARENA_SIZE)
+        self.init_arena()
 
         self.physics_frame_count = 0
 
@@ -34,24 +35,30 @@ class WorldSim:
         self._frames_since_last_show = 0
         self._last_fps_show_time = self.world_start_time_ns
         self.fps = 0
+        self.frame_times_since_ms = 0
+        self.frame_time_ms = 0
 
     def clean_mem(self):
-        pass
+        CameraState.position = None
 
-    def init_arena(self, size):
-        self.arena = load_map(GameInfo.active_arena, size, physics_world=self.physics_world)
+    def init_arena(self):
+        self.arena = load_map(GameInfo.active_arena, physics_world=self.physics_world)
 
-    def create_player(self, robot_id=-1, position=Vector(ARENA_SIZE / 2, ARENA_SIZE / 2),
+    def create_player(self, robot_id=-1, position=None,
                       player_name=None):
         if player_name is None:
             player_name = GameInfo.local_player_name
+        if position is None:
+            position = Vector(self.arena.size.x / 2, self.arena.size.y / 2)
         player = Robot(self, robot_id=robot_id, is_player=True, has_ai=False,
                        position=position, player_name=player_name)
         self.robots.append(player)
         return player
 
-    def create_enemy_robot(self, robot_id=-1, position=Vector(ARENA_SIZE / 2, ARENA_SIZE / 2),
+    def create_enemy_robot(self, robot_id=-1, position=None,
                            has_ai=True, player_name=""):
+        if position is None:
+            position = Vector(self.arena.size.x / 2, self.arena.size.y / 2)
         enemy = Robot(self, robot_id=robot_id, has_ai=has_ai, position=position, player_name=player_name)
         self.robots.append(enemy)
         return enemy
@@ -108,6 +115,9 @@ class WorldSim:
         self._frames_since_last_show += 1
         last_fps_show_delta = get_delta_time_s(self.curr_time_ns, self._last_fps_show_time)
         if last_fps_show_delta > 0.5:
+            self.frame_time_ms = round(self.frame_times_since_ms / self._frames_since_last_show, 2)
+            self.frame_times_since_ms = 0
+
             self.fps = self._frames_since_last_show / last_fps_show_delta
             self._frames_since_last_show = 0
             self._last_fps_show_time = self.curr_time_ns
@@ -127,6 +137,15 @@ class WorldSim:
                                                              self.physics_frame_count * FIXED_DELTA_TIME_NS)
         # print("iterations: " + str(iterations))
 
+        if self.local_player_robot is not None:
+            if CameraState.position is None:
+                CameraState.position = self.local_player_robot.extrapolation_body.position.copy()
+            else:
+                CameraState.position.lerp_to(self.local_player_robot.extrapolation_body.position,
+                                             CameraState.lerp_per_sec * self.delta_time)
+        else:
+            CameraState.position = None
+
         self.calc_fps()
 
 
@@ -136,7 +155,12 @@ class SPWorldSim(WorldSim):
 
         self.local_player_robot = self.create_player(player_name="")
         self.local_player_robot.input = self.player_input
-        self.create_enemy_robot(position=Vector(250, 250))
-        self.create_enemy_robot(position=Vector(250, 750))
-        self.create_enemy_robot(position=Vector(750, 250))
-        self.create_enemy_robot(position=Vector(750, 750))
+        self.create_enemy_robot(position=Vector(self.arena.size.x / 2 - 400, self.arena.size.y / 2 - 400))
+        self.create_enemy_robot(position=Vector(self.arena.size.x / 2 + 400, self.arena.size.y / 2 - 400))
+        self.create_enemy_robot(position=Vector(self.arena.size.x / 2 - 400, self.arena.size.y / 2 + 400))
+        self.create_enemy_robot(position=Vector(self.arena.size.x / 2 + 400, self.arena.size.y / 2 + 400))
+
+    def fixed_update(self, delta_time):
+        GameInfo.current_frame_seed = self.world_start_time_ns + self.physics_frame_count
+
+        super().fixed_update(delta_time)

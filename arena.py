@@ -2,10 +2,10 @@ import numpy as np
 import effects
 
 from globals import GameInfo
-from util import Vector, get_main_path
+from camera import CameraState
+from util import Vector, get_main_path, painter_transform_with_rot
 
 if not GameInfo.is_headless:
-    from PyQt5.QtCore import QPoint
     from PyQt5.QtGui import QPixmap, QPainter
 
 
@@ -61,10 +61,11 @@ tile_type_dict = {
 
 
 class Arena:
-    def __init__(self, size, tile_count):
-        self.size = round(size)
-        self.tile_count = round(tile_count)
-        self.tile_size = round(self.size / self.tile_count)
+    def __init__(self, tile_count):
+        self.tile_count = tile_count.copy()
+        self.tile_count.round()
+        self.size = Vector(self.tile_count.x, self.tile_count.y)
+        self.size.mult(GameInfo.arena_tile_size)
         self.tiles = self.get_empty_tiles()
 
         self._portal_tiles = None
@@ -85,13 +86,13 @@ class Arena:
 
     def get_empty_tiles(self):
         # get array of empty tiles with correct dimensions
-        return np.empty((self.tile_count, self.tile_count), dtype=TileType)
+        return np.empty((self.tile_count.y, self.tile_count.x), dtype=TileType)
 
     # get different portal tiles for portal tile effects
     def get_portal_tiles(self):
         self._portal_tiles = [[], []]
-        for y in range(self.tile_count):
-            for x in range(self.tile_count):
+        for y in range(self.tile_count.y):
+            for x in range(self.tile_count.x):
                 tile_type = self.tiles[y][x]
                 if tile_type.name == "portal_1":
                     self._portal_tiles[0].append(Vector(x, y))
@@ -101,25 +102,45 @@ class Arena:
 
     def draw(self, qp):
         if self.background_pixmap is None:
-            self.background_pixmap = QPixmap(self.size, self.size)
+            self.background_pixmap = QPixmap(self.size.x, self.size.y)
             painter = QPainter(self.background_pixmap)
-            for y in range(self.tile_count):
-                for x in range(self.tile_count):
-                    x_pos = x * self.tile_size
-                    y_pos = y * self.tile_size
+            for y in range(self.tile_count.y):
+                for x in range(self.tile_count.x):
+                    x_pos = x * GameInfo.arena_tile_size
+                    y_pos = y * GameInfo.arena_tile_size
 
                     curr_tile_type = self.tiles[y][x]
 
                     # calculate correct part of the texture
                     tiles_per_texture = curr_tile_type.texture_size.copy()
-                    tiles_per_texture.div(self.tile_size)
+                    tiles_per_texture.div(GameInfo.arena_tile_size)
                     tile_in_img_offset = Vector(x % round(tiles_per_texture.x), y % round(tiles_per_texture.y))
 
                     # draw tile image
                     painter.drawPixmap(x_pos, y_pos, curr_tile_type.texture,
-                                       tile_in_img_offset.x * self.tile_size, tile_in_img_offset.y * self.tile_size,
-                                       self.tile_size, self.tile_size)
+                                       tile_in_img_offset.x * GameInfo.arena_tile_size,
+                                       tile_in_img_offset.y * GameInfo.arena_tile_size,
+                                       GameInfo.arena_tile_size, GameInfo.arena_tile_size)
 
             painter.end()
 
-        qp.drawPixmap(QPoint(), self.background_pixmap)
+        painter_transform_with_rot(qp, Vector(self.background_pixmap.width() / 2,
+                                              self.background_pixmap.height() / 2), 0)
+        paint_start = Vector(-self.size.x / 2, -self.size.y / 2)
+        cam_pos = Vector(0, 0)
+        if CameraState.position is not None:
+            cam_pos = CameraState.position.copy()
+        paint_cutoff = Vector(max(-GameInfo.window_reference_size.x / 2 + cam_pos.x, 0),
+                              max(-GameInfo.window_reference_size.y / 2 + cam_pos.y, 0))
+        paint_start.add(paint_cutoff)
+
+        end_cutoff = Vector(min(-GameInfo.window_reference_size.x / 2 - cam_pos.x + self.size.x, 0),
+                            min(-GameInfo.window_reference_size.y / 2 - cam_pos.y + self.size.y, 0))
+        size = GameInfo.window_reference_size.copy()
+        size.add(end_cutoff)
+
+        if size.x > 0 and size.y > 0:
+            qp.drawPixmap(round(paint_start.x), round(paint_start.y), round(size.x), round(size.y),
+                          self.background_pixmap, round(paint_cutoff.x), round(paint_cutoff.y),
+                          round(size.x), round(size.y))
+        qp.restore()

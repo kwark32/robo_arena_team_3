@@ -1,11 +1,12 @@
 import math
-import clipboard
 
 from PyQt5.QtCore import QPoint, Qt
 from PyQt5.QtGui import QPixmap, QFontMetricsF, QPen
+from PyQt5.QtWidgets import QApplication
 from util import Vector, get_main_path, is_point_inside_rect, draw_img_with_rot
 from globals import Fonts
 from constants import CARET_BLINK_RATE_NS
+from camera import CameraState
 
 
 ui_element_texture_path = get_main_path() + "/textures/ui/main_menu/"
@@ -105,7 +106,7 @@ class UIElement:
                 draw_img_with_rot(qp, UIElement.selected_edge_top_right, edge_size.x, edge_size.y, pos, rot)
                 edge_offset.rotate(math.pi / 2)
 
-        qp.drawPixmap(self.top_left_corner.x, self.top_left_corner.y, self.texture)
+        qp.drawPixmap(round(self.top_left_corner.x + CameraState.x_offset), round(self.top_left_corner.y), self.texture)
 
     def update_selected(self, curr_time_ns):
         self.is_selected = True
@@ -169,7 +170,7 @@ class TextField(UIElement):
 
         pasted_text = None
         if character == 'V' and self.menu.ctrl_key_pressed:
-            pasted_text = clipboard.paste()
+            pasted_text = QApplication.clipboard().text()
 
         if pasted_text is not None:
             for c in pasted_text:
@@ -247,7 +248,7 @@ class UIImage(UIElement):
 class Menu:
     def __init__(self, main_widget, size, main_menu_scene, bg_texture_name):
         self.main_widget = main_widget
-        self.size = size
+        self.size = size.copy()
         self.main_menu_scene = main_menu_scene
 
         self.elements = []
@@ -301,7 +302,14 @@ class Menu:
     def draw(self, qp):
         # draw static menu background
         if self.bg_pixmap is not None:
+            qp.save()
+            qp.resetTransform()
+            scale = CameraState.scale.x
+            if CameraState.scale.x < CameraState.scale.y:
+                scale = CameraState.scale.y
+            qp.scale(scale, scale)
             qp.drawPixmap(QPoint(), self.bg_pixmap)
+            qp.restore()
 
         for element in self.elements:
             element.draw(qp)

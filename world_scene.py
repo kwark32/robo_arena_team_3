@@ -1,21 +1,25 @@
+import time
+
 from PyQt5.QtGui import QPainter, QPolygon
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QOpenGLWidget
 from PyQt5.QtCore import Qt, QPoint
 from world_sim import SPWorldSim
 from client_world_sim import OnlineWorldSim
 from server_world_sim import ServerWorldSim
 from globals import Scene, Fonts, GameInfo
-from constants import ARENA_SIZE, DEBUG_MODE
+from camera import CameraState
+from constants import DEBUG_MODE
 from ui_overlay import UIOverlay
+from util import painter_transform_with_rot, Vector
 
 
-class WorldScene(QWidget):
+class WorldScene(QOpenGLWidget):
     def __init__(self, parent, size, sim_class):
         super().__init__(parent)
 
         self.main_widget = parent
 
-        self.size = size
+        self.size = size.copy()
 
         self.world_sim = sim_class()
 
@@ -24,7 +28,7 @@ class WorldScene(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        self.setGeometry(0, 0, self.size, self.size)
+        self.setGeometry(0, 0, self.size.x, self.size.y)
         self.show()
 
     def clean_mem(self):
@@ -71,6 +75,13 @@ class WorldScene(QWidget):
         self.world_sim.update_world()
 
         qp = QPainter(self)
+        qp.scale(CameraState.scale_factor, CameraState.scale_factor)
+        qp.setRenderHint(QPainter.Antialiasing)
+
+        qp.save()
+        qp.resetTransform()
+        qp.fillRect(event.rect(), Qt.black)
+        qp.restore()
 
         self.world_sim.arena.draw(qp)
 
@@ -86,22 +97,27 @@ class WorldScene(QWidget):
 
         # debugging physics shapes
         if DEBUG_MODE:
+            painter_transform_with_rot(qp, Vector(0, 0), 0)
             qp.setPen(Fonts.fps_color)
             for body in self.world_sim.physics_world.world.bodies:
                 for fixture in body.fixtures:
                     shape = fixture.shape
                     vertices = [(body.transform * v) for v in shape.vertices]
-                    vertices = [(v[0], ARENA_SIZE - v[1]) for v in vertices]
+                    vertices = [(v[0], v[1]) for v in vertices]
                     poly = QPolygon()
                     for vert in vertices:
                         poly.append(QPoint(round(vert[0]), round(vert[1])))
                     qp.drawPolygon(poly)
+            qp.restore()
 
         qp.setFont(Fonts.fps_font)
         qp.setPen(Fonts.fps_color)
-        qp.drawText(QPoint(5, 20), str(round(self.world_sim.fps)))
+        qp.drawText(QPoint(5, 20), str(round(self.world_sim.fps)) + "fps")
+        qp.drawText(QPoint(95, 20), str(self.world_sim.frame_time_ms) + "ms")
 
         qp.end()
+
+        self.world_sim.frame_times_since_ms += (time.time_ns() - self.world_sim.curr_time_ns) / 1000000
 
 
 class SPWorldScene(WorldScene):

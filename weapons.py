@@ -1,7 +1,7 @@
 from transform import SimpleBody
 from util import Vector, get_main_path, draw_img_with_rot, limit_rot
 from globals import GameInfo
-from constants import ARENA_SIZE, FIXED_FPS, FIXED_DELTA_TIME
+from constants import FIXED_FPS, FIXED_DELTA_TIME
 
 if not GameInfo.is_headless:
     from PyQt5.QtGui import QPixmap
@@ -59,9 +59,9 @@ class Bullet:
         self.world_sim = world_sim
         self.physics_world = world_sim.physics_world
 
-        self.physics_body = self.physics_world.add_rect(Vector(pos.x, ARENA_SIZE - pos.y),
+        self.physics_body = self.physics_world.add_rect(Vector(pos.x, pos.y),
                                                         self.collider_size.x, self.collider_size.y,
-                                                        rotation=-self.sim_body.rotation,
+                                                        rotation=self.sim_body.rotation,
                                                         static=False, sensor=True, user_data=self)
 
         self.world_sim.bullets.append(self)
@@ -104,7 +104,7 @@ class Bullet:
         self.sim_body.step(delta_time)
         self.extrapolation_body.set(self.sim_body)
         collider_pos = self.get_collider_pos()
-        self.physics_body.transform = ((collider_pos.x, ARENA_SIZE - collider_pos.y), -self.sim_body.rotation)
+        self.physics_body.transform = ((collider_pos.x, collider_pos.y), self.sim_body.rotation)
 
     def draw(self, qp, delta_time):
         self.extrapolation_body.step(delta_time)

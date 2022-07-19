@@ -1,5 +1,7 @@
 import random
 
+from globals import GameInfo
+
 
 class RobotEffect:
     def __init__(self, duration):
@@ -145,8 +147,8 @@ def apply_portal_effect(world_sim, robot, portal_type_1=True):
             portals = world_sim.arena.portal_1_tiles
         portal = random.choice(portals)
         pos = portal.copy()
-        pos.mult(world_sim.arena.tile_size)
-        pos.add_scalar(world_sim.arena.tile_size / 2)
+        pos.mult(GameInfo.arena_tile_size)
+        pos.add_scalar(GameInfo.arena_tile_size / 2)
         robot.set_position(pos)
 
         robot.effect_data[("PortalTileEffect", "last_tp_type")] = portal_type

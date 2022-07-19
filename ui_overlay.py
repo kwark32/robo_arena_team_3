@@ -1,6 +1,6 @@
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtGui import QFontMetricsF
-from util import get_main_path, Vector
+from util import get_main_path, Vector, painter_transform_with_rot, is_object_on_screen
 from globals import Fonts
 from constants import PLAYER_NAME_OFFSET, HEALTH_BAR_OFFSET
 
@@ -23,14 +23,24 @@ class UIOverlay:
         for robot in robots:
             if robot.player_name != "":
                 text_width = self.name_tag_font_metrics.width(robot.player_name)
-                pos_x = round(robot.extrapolation_body.position.x + PLAYER_NAME_OFFSET.x - (text_width / 2))
-                pos_y = round(robot.extrapolation_body.position.y + PLAYER_NAME_OFFSET.y)
-                qp.drawText(pos_x, pos_y, robot.player_name)
+                pos = Vector(0, 0)
+                pos.x = round(robot.extrapolation_body.position.x + PLAYER_NAME_OFFSET.x)
+                pos.y = round(robot.extrapolation_body.position.y + PLAYER_NAME_OFFSET.y)
+                if is_object_on_screen(pos, radius=120):
+                    painter_transform_with_rot(qp, pos, 0)
+                    qp.drawText(round(-text_width / 2), 0, robot.player_name)
+                    qp.restore()
 
     def draw_health_bar(self, qp, robot):
         health_fill = round((robot.health / robot.max_health) * self.health_bar_size.x)
-        x_pos = round(robot.extrapolation_body.position.x + HEALTH_BAR_OFFSET.x - (self.health_bar_bg_size.x / 2))
-        y_pos = round(robot.extrapolation_body.position.y + HEALTH_BAR_OFFSET.y - (self.health_bar_bg_size.y / 2))
-        qp.drawPixmap(x_pos, y_pos, self.health_bar_bg)
-        if health_fill > 0:
-            qp.drawPixmap(x_pos, y_pos, self.health_bar, 0, 0, health_fill, 0)
+        pos = Vector(0, 0)
+        pos.x = round(robot.extrapolation_body.position.x + HEALTH_BAR_OFFSET.x)
+        pos.y = round(robot.extrapolation_body.position.y + HEALTH_BAR_OFFSET.y)
+        if is_object_on_screen(pos):
+            painter_transform_with_rot(qp, pos, 0)
+            qp.drawPixmap(round(-self.health_bar_bg_size.x / 2), round(-self.health_bar_bg_size.y / 2),
+                          self.health_bar_bg)
+            if health_fill > 0:
+                qp.drawPixmap(round(-self.health_bar_bg_size.x / 2), round(-self.health_bar_bg_size.y / 2),
+                              self.health_bar, 0, 0, health_fill, 0)
+            qp.restore()

@@ -1,6 +1,8 @@
 import math
 
 from os.path import dirname, abspath
+from camera import CameraState
+from globals import GameInfo
 
 
 class Vector:
@@ -85,6 +87,14 @@ class Vector:
         self.x = limit(self.x, lower.x, upper.x)
         self.y = limit(self.y, lower.y, upper.y)
 
+    def limit_range(self, lower, upper):
+        self.x = limit(self.x, lower.x, upper.x - 1)
+        self.y = limit(self.y, lower.y, upper.y - 1)
+
+    def lerp_to(self, other, amount):
+        self.x = lerp(self.x, other.x, amount)
+        self.y = lerp(self.y, other.y, amount)
+
     def diff(self, other):
         diff = other.copy()
         diff.sub(self)
@@ -145,11 +155,51 @@ def deg_to_rad(value):
     return value / 57.2957795
 
 
+def is_object_on_screen(pos, radius=None):
+    if CameraState.position is None:
+        return True
+    if radius is None:
+        radius = CameraState.max_object_radius
+    half_screen = GameInfo.window_reference_size.copy()
+    half_screen.div(2)
+    half_screen.add_scalar(radius)
+    return (CameraState.position.x - half_screen.x <= pos.x <= CameraState.position.x + half_screen.x
+            and CameraState.position.y - half_screen.y <= pos.y <= CameraState.position.y + half_screen.y)
+
+
+def painter_transform_with_rot(qp, position, rotation):
+    qp.save()
+    cam_pos = Vector(0, 0)
+    if CameraState.position is not None:
+        cam_pos = GameInfo.window_reference_size.copy()
+        cam_pos.div(2)
+        cam_pos.sub(CameraState.position)
+        cam_pos.round()
+    position = position.copy()
+    position.x += CameraState.x_offset
+    qp.translate(round(position.x) + round(cam_pos.x), round(position.y) + round(cam_pos.y))
+    if rotation != 0:
+        qp.rotate(rad_to_deg(rotation))
+
+
 def draw_img_with_rot(qp, img, width, height, position, rotation):
-    qp.translate(round(position.x), round(position.y))
-    qp.rotate(rad_to_deg(rotation))
+    if not is_object_on_screen(position):
+        return
+    painter_transform_with_rot(qp, position, rotation)
     qp.drawPixmap(-round(width / 2), -round(height / 2), img)
-    qp.resetTransform()
+    qp.restore()
+
+
+def draw_text_with_rot(qp, text, width, height, position, rotation):
+    if CameraState.scale.x != CameraState.scale.y:
+        offset = (CameraState.scale.x - CameraState.scale.y) * GameInfo.window_reference_size.x * 0.5
+        position = position.copy()
+        position.x += offset
+    if not is_object_on_screen(position):
+        return
+    painter_transform_with_rot(qp, position, rotation)
+    qp.drawText(-round(width / 2), -round(height / 2), text)
+    qp.restore()
 
 
 def limit_rot(value):

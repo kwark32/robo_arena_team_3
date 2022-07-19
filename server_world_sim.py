@@ -13,6 +13,7 @@ class ServerWorldSim(WorldSim):
         self.udp_socket = UDPServer()
 
     def clean_mem(self):
+        super().clean_mem()
         self.udp_socket.close()
 
     def fixed_update(self, delta_time):

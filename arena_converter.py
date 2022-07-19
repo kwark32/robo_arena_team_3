@@ -14,13 +14,58 @@ json_map_path = get_main_path() + "/arenas/json/"
 png_map_path = get_main_path() + "/arenas/png/"
 
 
+def add_physics(arena, physics_world):
+    colliders = []
+    for y in range(arena.tile_count.y):
+        row = []
+        for x in range(arena.tile_count.x):
+            row.append(arena.tiles[y][x].has_collision)
+        colliders.append(row)
+
+    for y, row in enumerate(colliders):
+        for x, col in enumerate(row):
+            if col:
+                row[x] = False
+                x_count = 1
+                while x + x_count < len(row) and row[x + x_count]:
+                    row[x + x_count] = False
+                    x_count += 1
+
+                y_count = 1
+                while y + y_count < len(colliders):
+                    test_row = colliders[y + y_count]
+                    is_valid_row = True
+                    for tile in range(x_count):
+                        if not test_row[x + tile]:
+                            is_valid_row = False
+                            break
+                    if is_valid_row:
+                        for tile in range(x_count):
+                            test_row[x + tile] = False
+                        y_count += 1
+                    else:
+                        break
+
+                tile_type = arena.tiles[y][x]
+                width = GameInfo.arena_tile_size * x_count
+                height = GameInfo.arena_tile_size * y_count
+                x_pos = x * GameInfo.arena_tile_size + int(width / 2)
+                y_pos = y * GameInfo.arena_tile_size + int(height / 2)
+                physics_world.add_rect(Vector(x_pos, y_pos), width, height, user_data=tile_type)
+
+
 def load_map(file, physics_world=None):
     if file.endswith("json"):
-        return load_map_json(json_map_path + file, physics_world=physics_world)
+        arena = load_map_json(json_map_path + file, physics_world=physics_world)
     elif file.endswith("png"):
-        return load_map_png(png_map_path + file, physics_world=physics_world)
+        arena = load_map_png(png_map_path + file, physics_world=physics_world)
     else:
         return None
+
+    if physics_world is not None:
+        add_physics(arena, physics_world)
+
+    return arena
 
 
 def load_map_json(file, physics_world=None):
@@ -54,21 +99,6 @@ def load_map_json(file, physics_world=None):
 
     arena.tiles = tiles
 
-    if physics_world is not None:
-        r = 0
-        for row in map_json["tiles"]:
-            t = 0
-            for tile in row["row"]:
-                tile_type = tile_type_dict[tile["tile"]]
-                if tile_type.has_collision:
-                    width = tile["count"] * GameInfo.arena_tile_size
-                    height = row["count"] * GameInfo.arena_tile_size
-                    x = t * GameInfo.arena_tile_size + int(width / 2)
-                    y = r * GameInfo.arena_tile_size + int(height / 2)
-                    physics_world.add_rect(Vector(x, y), width, height, user_data=tile_type)
-                t += tile["count"]
-            r += row["count"]
-
     return arena
 
 
@@ -101,13 +131,6 @@ def load_map_png(file, physics_world=None):
             if tile_type is None:
                 continue
             tiles[y][x] = tile_type_dict[tile_type]
-            if physics_world is not None:
-                if tiles[y][x].has_collision:
-                    width = GameInfo.arena_tile_size
-                    height = GameInfo.arena_tile_size
-                    x_pos = x * GameInfo.arena_tile_size + int(width / 2)
-                    y_pos = y * GameInfo.arena_tile_size + int(height / 2)
-                    physics_world.add_rect(Vector(x_pos, y_pos), width, height, user_data=tile_type)
 
     arena.tiles = tiles
 

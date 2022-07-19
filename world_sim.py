@@ -35,6 +35,8 @@ class WorldSim:
         self._frames_since_last_show = 0
         self._last_fps_show_time = self.world_start_time_ns
         self.fps = 0
+        self.frame_times_since_ms = 0
+        self.frame_time_ms = 0
 
     def clean_mem(self):
         CameraState.position = None
@@ -113,6 +115,9 @@ class WorldSim:
         self._frames_since_last_show += 1
         last_fps_show_delta = get_delta_time_s(self.curr_time_ns, self._last_fps_show_time)
         if last_fps_show_delta > 0.5:
+            self.frame_time_ms = round(self.frame_times_since_ms / self._frames_since_last_show, 2)
+            self.frame_times_since_ms = 0
+
             self.fps = self._frames_since_last_show / last_fps_show_delta
             self._frames_since_last_show = 0
             self._last_fps_show_time = self.curr_time_ns

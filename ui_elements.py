@@ -1,8 +1,8 @@
 import math
-import clipboard
 
 from PyQt5.QtCore import QPoint, Qt
 from PyQt5.QtGui import QPixmap, QFontMetricsF, QPen
+from PyQt5.QtWidgets import QApplication
 from util import Vector, get_main_path, is_point_inside_rect, draw_img_with_rot
 from globals import Fonts
 from constants import CARET_BLINK_RATE_NS
@@ -170,7 +170,7 @@ class TextField(UIElement):
 
         pasted_text = None
         if character == 'V' and self.menu.ctrl_key_pressed:
-            pasted_text = clipboard.paste()
+            pasted_text = QApplication.clipboard().text()
 
         if pasted_text is not None:
             for c in pasted_text:

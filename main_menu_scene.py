@@ -1,8 +1,7 @@
 import time
-import clipboard
 
 from PyQt5.QtGui import QPainter
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QOpenGLWidget, QApplication
 from PyQt5.QtCore import Qt, QPoint
 from ui_elements import Button, Menu, TextField, UIImage
 from util import Vector, ns_to_s
@@ -127,7 +126,7 @@ class OnlineOptions(Menu):
 
             pasted_text = None
             if character == 'V' and self.menu.ctrl_key_pressed:
-                pasted_text = clipboard.paste()
+                pasted_text = QApplication.clipboard().text()
 
             if pasted_text is not None:
                 for c in pasted_text:
@@ -273,7 +272,7 @@ class Settings(Menu):
         self.main_menu_scene.switch_menu(Menus.MAIN_MENU)
 
 
-class MainMenuScene(QWidget):
+class MainMenuScene(QOpenGLWidget):
     def __init__(self, parent, size):
         super().__init__(parent)
 
@@ -281,11 +280,6 @@ class MainMenuScene(QWidget):
 
         self.parent = parent
         self.size = size
-
-        self.active_menu = MainMenu(self.main_widget, self.size, self)
-        self.is_clicking = False
-
-        self.init_ui()
 
         self.mouse_position = Vector(0, 0)
 
@@ -295,6 +289,13 @@ class MainMenuScene(QWidget):
         self._frames_since_last_show = 0
         self._last_fps_show_time = time.time_ns()
         self.fps = 0
+
+        self.active_menu = MainMenu(self.main_widget, self.size, self)
+        self.is_clicking = False
+
+        self.init_ui()
+
+        self.first = True
 
     def init_ui(self):
         self.setGeometry(0, 0, self.size.x, self.size.y)
@@ -333,6 +334,11 @@ class MainMenuScene(QWidget):
             self.is_clicking = True
 
     def paintEvent(self, event):
+        # TODO: Look into why this strange fix is needed
+        if not hasattr(self, "first") or self.first or not self.main_widget.running:
+            self.first = False
+            return
+
         curr_time_ns = time.time_ns()
         # delta_time = ns_to_s(curr_time_ns - self._last_frame_time_ns)
         self._last_frame_time_ns = curr_time_ns

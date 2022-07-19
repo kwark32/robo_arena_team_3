@@ -13,15 +13,16 @@ for arg in headless_args:
     sys.argv.remove(arg)
 headless_args.clear()
 
+
 if not GameInfo.is_headless:
     from globals import Scene, Fonts
     from main_menu_scene import MainMenuScene
     from world_scene import SPWorldScene, OnlineWorldScene, ServerWorldScene
     from PyQt5.QtGui import QFont, QColor, QFontDatabase
-    from PyQt5.QtWidgets import QWidget, QApplication, QDesktopWidget
+    from PyQt5.QtWidgets import QOpenGLWidget, QApplication, QDesktopWidget
     from PyQt5.QtCore import Qt
 
-    class ArenaWindow(QWidget):
+    class ArenaWindow(QOpenGLWidget):
         def __init__(self):
             super().__init__()
 
@@ -103,6 +104,10 @@ if not GameInfo.is_headless:
                 self.active_scene = OnlineWorldScene(self, GameInfo.window_size)
             elif scene == Scene.SERVER_WORLD:
                 self.active_scene = ServerWorldScene(self, GameInfo.window_size)
+
+        def paintEvent(self, event):
+            if self.active_scene is not None:
+                self.active_scene.paintEvent(event)
 
 else:
     from server_world_sim import ServerWorldSim

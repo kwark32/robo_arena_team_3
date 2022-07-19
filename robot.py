@@ -167,6 +167,12 @@ class Robot:
 
         self.revert_effects()
 
+        tile_position = self.sim_body.position.copy()
+        tile_position.div(self.world_sim.arena.tile_size)
+        tile_position.round()
+        if self.world_sim.arena.power_ups[tile_position.y][tile_position.x] is not None:
+            self.world_sim.arena.power_ups[tile_position.y][tile_position.x].apply(self)
+
         current_tile = self.get_center_tile()
         if current_tile.effect_class is not None:
             effect = current_tile.effect_class(FIXED_DELTA_TIME / 2)

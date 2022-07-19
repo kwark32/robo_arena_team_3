@@ -3,6 +3,7 @@ import threading
 
 from util import Vector
 from constants import MAX_ASTART_ITER
+from globals import GameInfo
 
 
 class RobotAI:
@@ -10,7 +11,7 @@ class RobotAI:
         self.robot = robot
         self.world_sim = robot.world_sim
         self.shortest_path = None
-        self.walkable_check = DrivableTileCheck(self.world_sim.arena)
+        self.walkable_check = DrivableTileCheck(self.world_sim.arena, self.robot)
         self.last_target_position = Vector(-1000000, -1000000)
         self.calculating_astar = False
 
@@ -34,14 +35,13 @@ class RobotAI:
                     shortest_distance = current_distance
         # get the shortest path to the closest player
         if closest_player is not None:
-            arena_size = self.world_sim.arena.tile_count, self.world_sim.arena.tile_count
+            arena_size = self.world_sim.arena.tile_count.as_tuple()
             start = self.robot.sim_body.position.copy()
-            start.div(self.robot.world_sim.arena.tile_size)
+            start.div(GameInfo.arena_tile_size)
             start.floor()
             end = closest_player.sim_body.position.copy()
-            end.div(self.robot.world_sim.arena.tile_size)
+            end.div(GameInfo.arena_tile_size)
             end.floor()
-            # TODO: replace with vector.as_tuple
             if self.shortest_path is None or not end.equal(self.last_target_position):
                 if not self.calculating_astar:
                     self.last_target_position = end.copy()
@@ -70,8 +70,8 @@ class RobotAI:
             target = closest_player.sim_body.position.copy()
             if len(self.shortest_path) >= 2:
                 target = Vector(self.shortest_path[1][0], self.shortest_path[1][1])
-                target.mult(self.world_sim.arena.tile_size)
-                target.add_scalar(self.world_sim.arena.tile_size / 2)
+                target.mult(GameInfo.arena_tile_size)
+                target.add_scalar(GameInfo.arena_tile_size / 2)
             diff = self.robot.sim_body.position.diff(target)
             bearing = diff.signed_angle() - self.robot.sim_body.rotation
             if bearing <= -math.pi:
@@ -98,8 +98,9 @@ class WalkableTerrainCheck:
 
 
 class DrivableTileCheck(WalkableTerrainCheck):
-    def __init__(self, arena):
+    def __init__(self, arena, robot):
         self.arena = arena
+        self.robot = robot
 
     def get_walkable(self, x, y):
         tile = self.arena.tiles[y][x]
@@ -110,11 +111,14 @@ class DrivableTileCheck(WalkableTerrainCheck):
         if tile.name == "lava":
             cost = 26
         elif tile.name == "water":
-            cost = 4
+            if self.robot.health < self.robot.max_health / 2:
+                cost = 15
+            else:
+                cost = 4
         elif tile.name == "earth":
             cost = 2
         elif tile.name == "fire":
-            cost = 2
+            cost = 4
         elif tile.name.startswith("portal_"):
             cost = 15
         return cost

@@ -115,6 +115,9 @@ class LavaTileEffect(SpeedEffect):
 
 
 class Portal1TileEffect(RobotEffect):
+    travel_damage_min = 50
+    travel_damage_max = 150
+
     def apply(self, robot, delta_time=0):
         super().apply(robot, delta_time=delta_time)
 
@@ -122,6 +125,9 @@ class Portal1TileEffect(RobotEffect):
 
 
 class Portal2TileEffect(RobotEffect):
+    travel_damage_min = 50
+    travel_damage_max = 150
+
     def apply(self, robot, delta_time=0):
         super().apply(robot, delta_time=delta_time)
 
@@ -129,6 +135,11 @@ class Portal2TileEffect(RobotEffect):
 
 
 def apply_portal_effect(world_sim, robot, portal_type_1=True):
+    if portal_type_1:
+        travel_damage = random.randrange(Portal1TileEffect.travel_damage_min, Portal1TileEffect.travel_damage_max, 1)
+    else:
+        travel_damage = random.randrange(Portal2TileEffect.travel_damage_min, Portal2TileEffect.travel_damage_max, 1)
+
     portal_type = 2
     if portal_type_1:
         portal_type = 1
@@ -150,6 +161,8 @@ def apply_portal_effect(world_sim, robot, portal_type_1=True):
         pos.mult(GameInfo.arena_tile_size)
         pos.add_scalar(GameInfo.arena_tile_size / 2)
         robot.set_position(pos)
+
+        robot.change_health(-travel_damage)
 
         robot.effect_data[("PortalTileEffect", "last_tp_type")] = portal_type
 

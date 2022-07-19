@@ -143,7 +143,7 @@ class Robot:
         if DEBUG_MODE and self.robot_ai is not None and self.robot_ai.shortest_path is not None:
             qp.setPen(Fonts.fps_color)
             poly = QPolygon()
-            tile_size = self.world_sim.arena.tile_size
+            tile_size = GameInfo.arena_tile_size
             for p in self.robot_ai.shortest_path:
                 if p == self.robot_ai.shortest_path[0]:
                     poly.append(QPoint(int(self.sim_body.position.x), int(self.sim_body.position.y)))

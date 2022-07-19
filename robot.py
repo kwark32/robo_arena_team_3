@@ -1,11 +1,13 @@
 from transform import SimBody
 from weapons import TankCannon
 from util import Vector, get_main_path, draw_img_with_rot
-from globals import GameInfo
-from constants import ARENA_SIZE, FIXED_DELTA_TIME, MAX_ROBOT_HEALTH
+from globals import GameInfo, Fonts
+from constants import ARENA_SIZE, FIXED_DELTA_TIME, MAX_ROBOT_HEALTH, DEBUG_MODE
+from robot_AI import RobotAI
 
 if not GameInfo.is_headless:
-    from PyQt5.QtGui import QPixmap
+    from PyQt5.QtGui import QPixmap, QPolygon
+    from PyQt5.QtCore import QPoint
 
 
 robot_texture_path = get_main_path() + "/textures/moving/"
@@ -86,10 +88,6 @@ class Robot:
         self.is_player = is_player
         self.has_ai = has_ai
 
-        self.should_respawn = True
-        if has_ai:
-            self.should_respawn = False
-
         self.input = None
 
         self.size = size
@@ -117,6 +115,12 @@ class Robot:
         self.is_dead = False
         self.last_death_frame = 0
 
+        self.should_respawn = True
+        self.robot_ai = None
+        if has_ai:
+            self.should_respawn = False
+            self.robot_ai = RobotAI(self)
+
     @property
     def get_next_bullet_id(self):
         self.next_bullet_id += 1
@@ -136,6 +140,22 @@ class Robot:
         self.extrapolation_body.step(delta_time)
         draw_img_with_rot(qp, self.body_texture, self.size.x, self.size.y,
                           self.extrapolation_body.position, self.extrapolation_body.rotation)
+
+        if DEBUG_MODE and self.robot_ai is not None and self.robot_ai.shortest_path is not None:
+            qp.setPen(Fonts.fps_color)
+            poly = QPolygon()
+            tile_size = self.world_sim.arena.tile_size
+            for p in self.robot_ai.shortest_path:
+                if p == self.robot_ai.shortest_path[0]:
+                    poly.append(QPoint(int(self.sim_body.position.x), int(self.sim_body.position.y)))
+                else:
+                    poly.append(QPoint(int(p[0] * tile_size + tile_size / 2), int(p[1] * tile_size + tile_size / 2)))
+            for p in reversed(self.robot_ai.shortest_path):
+                if p == self.robot_ai.shortest_path[0]:
+                    poly.append(QPoint(int(self.sim_body.position.x), int(self.sim_body.position.y)))
+                else:
+                    poly.append(QPoint(int(p[0] * tile_size + tile_size / 2), int(p[1] * tile_size + tile_size / 2)))
+            qp.drawPolygon(poly)
 
     def update(self, delta_time):
         if int(self.health) <= 0:
@@ -166,36 +186,38 @@ class Robot:
 
         self.sim_body.local_velocity.y = real_local_velocity.y
 
-        if not self.has_ai:
-            if self.input is not None:
-                self.forward_velocity_goal = 0
-                ang_velocity_goal = 0
-                if self.input.up:
-                    self.forward_velocity_goal += 1
-                if self.input.down:
-                    self.forward_velocity_goal -= 1
-                if self.input.left:
-                    ang_velocity_goal -= 1
-                if self.input.right:
-                    ang_velocity_goal += 1
-                if self.input.shoot or self.input.shoot_pressed:
-                    self.input.shoot_pressed = False
-                    if self.weapon is not None:
-                        self.weapon.shoot(self.robot_id, self.get_next_bullet_id,
-                                          self.sim_body.position, self.sim_body.rotation)
+        if self.has_ai:
+            if self.input is None:
+                self.input = PlayerInput()
+            self.robot_ai.update(delta_time)
 
-                # if ((self.forward_velocity_goal == 0 and last_forward_velocity_goal != 0)
-                #         or (self.forward_velocity_goal == 1 and self.sim_body.local_velocity.y < 0)
-                #         or (self.forward_velocity_goal == -1 and self.sim_body.local_velocity.y > 0)):
-                #     self.sim_body.local_velocity.y = real_local_velocity.y
+        if self.input is not None:
+            self.forward_velocity_goal = 0
+            ang_velocity_goal = 0
+            if self.input.up:
+                self.forward_velocity_goal += 1
+            if self.input.down:
+                self.forward_velocity_goal -= 1
+            if self.input.left:
+                ang_velocity_goal -= 1
+            if self.input.right:
+                ang_velocity_goal += 1
+            if self.input.shoot or self.input.shoot_pressed:
+                self.input.shoot_pressed = False
+                if self.weapon is not None:
+                    self.weapon.shoot(self.robot_id, self.get_next_bullet_id,
+                                      self.sim_body.position, self.sim_body.rotation)
 
-                self.forward_velocity_goal *= self.sim_body.max_velocity
-                ang_velocity_goal *= self.sim_body.max_ang_velocity
+            # if ((self.forward_velocity_goal == 0 and last_forward_velocity_goal != 0)
+            #         or (self.forward_velocity_goal == 1 and self.sim_body.local_velocity.y < 0)
+            #         or (self.forward_velocity_goal == -1 and self.sim_body.local_velocity.y > 0)):
+            #     self.sim_body.local_velocity.y = real_local_velocity.y
 
-                self.sim_body.local_accel.y = (self.forward_velocity_goal - self.sim_body.local_velocity.y) / delta_time
-                self.sim_body.ang_accel = (ang_velocity_goal - self.sim_body.ang_velocity) / delta_time
-        else:
-            self.update_ai(delta_time)
+            self.forward_velocity_goal *= self.sim_body.max_velocity
+            ang_velocity_goal *= self.sim_body.max_ang_velocity
+
+            self.sim_body.local_accel.y = (self.forward_velocity_goal - self.sim_body.local_velocity.y) / delta_time
+            self.sim_body.ang_accel = (ang_velocity_goal - self.sim_body.ang_velocity) / delta_time
 
         self.sim_body.step(delta_time)
         self.extrapolation_body.set(self.sim_body)
@@ -203,10 +225,6 @@ class Robot:
         self.last_position = Vector(self.physics_body.position[0], ARENA_SIZE - self.physics_body.position[1])
 
         self.set_physics_body()
-
-    def update_ai(self, delta_time):
-        self.sim_body.ang_accel = self.sim_body.max_ang_accel
-        self.sim_body.local_accel.y = self.sim_body.max_accel
 
     def get_center_tile(self):
         tile_size = self.world_sim.arena.tile_size
@@ -241,9 +259,8 @@ class Robot:
             self.effects.remove(expired)
         expired_effects.clear()
 
-    # TODO: change to general "change health"
-    def take_damage(self, damage):
-        self.health -= damage
+    def change_health(self, delta_healh):
+        self.health += delta_healh
 
     def die(self):
         print("<cool tank explode animation> or something... (for robot ID " + str(self.robot_id) + ")")

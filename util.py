@@ -85,6 +85,30 @@ class Vector:
         self.x = limit(self.x, lower.x, upper.x)
         self.y = limit(self.y, lower.y, upper.y)
 
+    def diff(self, other):
+        diff = other.copy()
+        diff.sub(self)
+        return diff
+
+    def dist(self, other):
+        diff = self.diff(other)
+        return diff.magnitude()
+
+    def dot(self, other):
+        return self.x * other.x + self.y * other.y
+
+    def signed_angle(self, from_vec=None):
+        if from_vec is None:
+            from_vec = Vector(0, 1)
+        dot = from_vec.dot(self)
+        det = from_vec.x * self.y - from_vec.y * self.x
+        return math.atan2(det, dot)
+
+    def angle(self, from_vec=None):
+        if from_vec is None:
+            from_vec = Vector(0, 1)
+        return math.acos((self.x * from_vec.x + self.y * from_vec.y) / (self.magnitude() * from_vec.magnitude()))
+
     def as_tuple(self):
         return self.x, self.y
 

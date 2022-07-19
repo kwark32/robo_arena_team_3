@@ -56,7 +56,7 @@ class WaterTileEffect(SpeedEffect):
         super().apply(robot, delta_time=delta_time)
 
         if robot.health < robot.max_health / 2:
-            robot.take_damage(self.effect_class.damage_per_second * delta_time)
+            robot.change_health(-self.effect_class.damage_per_second * delta_time)
 
 
 class FireTileEffect(SpeedEffect):
@@ -67,7 +67,7 @@ class FireTileEffect(SpeedEffect):
     def apply(self, robot, delta_time=0):
         super().apply(robot, delta_time=delta_time)
 
-        robot.take_damage(self.effect_class.damage_per_second * delta_time)
+        robot.change_health(-self.effect_class.damage_per_second * delta_time)
 
 
 class HoleTileEffect(StunEffect):
@@ -87,7 +87,7 @@ class HoleTileEffect(StunEffect):
         robot.sim_body.rotation += self.effect_class.rotation * delta_time * delta_time
 
         if self.duration <= 0:
-            robot.take_damage(1000)
+            robot.change_health(-1000)
 
     def revert(self, robot):
         super().revert(robot)
@@ -109,7 +109,7 @@ class LavaTileEffect(SpeedEffect):
     def apply(self, robot, delta_time=0):
         super().apply(robot, delta_time=delta_time)
 
-        robot.take_damage(self.effect_class.damage_per_second * delta_time)
+        robot.change_health(-self.effect_class.damage_per_second * delta_time)
 
 
 class Portal1TileEffect(RobotEffect):

@@ -6,6 +6,7 @@ Python 3.9 + PyQt5 project
   - Python3.9 (so far 3.8 & 3.10 work too)
   - PyQt5
   - PyBox2D: `pip3 install box2d box2d-kengz box2d-py`
+  - Clipboard: `pip3 install clipboard`
 
 #### Project agreements:
 

@@ -109,6 +109,9 @@ class Vector:
             from_vec = Vector(0, 1)
         return math.acos((self.x * from_vec.x + self.y * from_vec.y) / (self.magnitude() * from_vec.magnitude()))
 
+    def as_tuple(self):
+        return self.x, self.y
+
 
 def ns_to_s(ns):
     return (round(ns) >> 10) / 976562.5  # shift to ~us, then float division

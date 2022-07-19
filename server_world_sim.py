@@ -3,6 +3,7 @@ from networking import UDPServer, StatePacket
 from constants import CLIENT_DISCONNECT_TIMEOUT_NS
 from robot import RobotInfo
 from weapons import BulletInfo
+from globals import GameInfo
 
 
 class ServerWorldSim(WorldSim):
@@ -16,6 +17,9 @@ class ServerWorldSim(WorldSim):
 
     def fixed_update(self, delta_time):
         self.udp_socket.curr_time_ns = self.curr_time_ns
+        GameInfo.current_frame_seed = self.world_start_time_ns + self.physics_frame_count
+
+        self.udp_socket.update_socket()
 
         self.udp_socket.get_client_packets()
 
@@ -57,7 +61,7 @@ class ServerWorldSim(WorldSim):
         for bullet in self.bullets:
             bullet_info_list.append(BulletInfo(bullet))
 
-        state_packet = StatePacket(creation_time=self.curr_time_ns,
+        state_packet = StatePacket(creation_time=self.curr_time_ns, world_start_time=self.world_start_time_ns,
                                    physics_frame=self.physics_frame_count, robots=robot_info_list,
                                    bullets=bullet_info_list)
 

@@ -9,7 +9,8 @@ if not GameInfo.is_headless:
     from PyQt5.QtGui import QPixmap, QPainter
 
 
-tile_texture_path = get_main_path() + "/textures/tiles/"
+tile_texture_path = get_main_path() + "/textures/static_tiles/"
+animated_tiles_texture_path = get_main_path() + "/textures/animated_tiles/"
 
 
 class TileType:
@@ -34,6 +35,10 @@ class TileType:
 
     def load_image(self):
         filename = tile_texture_path + self.name + ".png"
+        # TODO: remove
+        if self.name == "fire" or self.name.startswith("portal_"):
+            filename = animated_tiles_texture_path + self.name + "/" + self.name + "_0.png"
+
         self._texture = QPixmap(filename)
         self._texture_size = Vector(self._texture.width(), self._texture.height())
         if self._texture_size.x == 0 or self._texture_size.y == 0:

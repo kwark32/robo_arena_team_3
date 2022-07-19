@@ -1,15 +1,21 @@
+import math
+import clipboard
+
 from PyQt5.QtCore import QPoint, Qt
-from PyQt5.QtGui import QPixmap, QColor, QFontMetricsF, QFont, QPen
-from util import Vector, get_main_path, is_point_inside_rect
+from PyQt5.QtGui import QPixmap, QFontMetricsF, QPen
+from util import Vector, get_main_path, is_point_inside_rect, draw_img_with_rot
 from globals import Fonts
 from constants import CARET_BLINK_RATE_NS
 
 
-ui_element_texture_path = get_main_path() + "/textures/ui/graphic_main_menu_buttons/"
+ui_element_texture_path = get_main_path() + "/textures/ui/main_menu/"
 
 
 # absolute base class
 class UIElement:
+    selected_edge_top_right = None
+    selected_edge_size = None
+
     def __init__(self, main_widget, position, menu):
         self.element_class = type(self)
 
@@ -18,12 +24,18 @@ class UIElement:
             self.element_type = Button
         if isinstance(self, TextField):
             self.element_type = TextField
+        if isinstance(self, UIImage):
+            self.element_type = UIImage
+
+        if UIElement.selected_edge_top_right is None:
+            UIElement.selected_edge_top_right, UIElement.selected_edge_size = self.load_image("selected_edge_top_right")
 
         self.main_widget = main_widget
         self.position = position.copy()
         self.menu = menu
 
         self.is_selected = False
+        self.draw_selected = True
 
         self.update_time_ns = 0
 
@@ -65,18 +77,33 @@ class UIElement:
             self._bottom_right_corner.round()
         return self._bottom_right_corner
 
-    def load_image(self):
-        filename = ui_element_texture_path + self.element_class.name + ".png"
-        self._texture = QPixmap(filename)
-        self._texture_size = Vector(self._texture.width(), self._texture.height())
-        if self._texture_size.x == 0 or self._texture_size.y == 0:
+    def load_image(self, name=None):
+        if name is None:
+            filename = ui_element_texture_path + self.element_class.name + ".png"
+        else:
+            filename = ui_element_texture_path + name + ".png"
+        texture = QPixmap(filename)
+        size = Vector(texture.width(), texture.height())
+        if size.x == 0 or size.y == 0:
             print("ERROR: texture for " + self.element_class.name
                   + " has 0 size or is missing at " + filename + "!")
+        if name is None:
+            self._texture = texture
+            self._texture_size = size
+        return texture, size
 
     def draw(self, qp):
-        if self.is_selected:
-            qp.fillRect(self.top_left_corner.x, self.top_left_corner.y,
-                        self.texture_size.x, self.texture_size.y, QColor(0, 0, 0))
+        if self.is_selected and self.draw_selected:
+            edge_size = UIElement.selected_edge_size
+            edge_offset = Vector(-15, 15)
+            pos_rots = [(Vector(self.bottom_right_corner.x, self.top_left_corner.y), 0),
+                        (Vector(self.bottom_right_corner.x, self.bottom_right_corner.y), math.pi / 2),
+                        (Vector(self.top_left_corner.x, self.bottom_right_corner.y), math.pi),
+                        (Vector(self.top_left_corner.x, self.top_left_corner.y), -math.pi / 2)]
+            for pos, rot in pos_rots:
+                pos.add(edge_offset)
+                draw_img_with_rot(qp, UIElement.selected_edge_top_right, edge_size.x, edge_size.y, pos, rot)
+                edge_offset.rotate(math.pi / 2)
 
         qp.drawPixmap(self.top_left_corner.x, self.top_left_corner.y, self.texture)
 
@@ -122,37 +149,60 @@ class TextField(UIElement):
         if self.caret:
             draw_text += "|"
 
-        qp.setFont(QFont("Courier", 60))
+        qp.setFont(Fonts.text_field_font)
 
         if len(self.text) > 0 or self.is_selected:
-            qp.setPen(QPen(QColor(189, 38, 7, 255), 6))
+            qp.setPen(QPen(Fonts.text_field_color, 6))
             qp.drawText(QPoint(self.top_left_corner.x + self.text_offset.x,
                                self.top_left_corner.y + self.text_offset.y), draw_text)
         else:
-            qp.setPen(QPen(QColor(189, 38, 7, 255), 6))
+            qp.setPen(QPen(Fonts.text_field_default_color, 6))
             qp.drawText(QPoint(self.top_left_corner.x + self.text_offset.x,
                                self.top_left_corner.y + self.text_offset.y), self.placeholder_text)
 
     def key_press(self, key):
-        keycode = int(key)
+        character = chr(0)
+        if int(key) < 256:
+            character = chr(int(key))
+        elif key == Qt.Key_Backspace:
+            character = chr(8)
 
-        if (keycode == ord(' ') or keycode == ord('-') or keycode == ord('.') or ord('0') <= keycode <= ord('9')
-                or ord('A') <= keycode <= ord('Z') or keycode == ord('_')):
+        pasted_text = None
+        if character == 'V' and self.menu.ctrl_key_pressed:
+            pasted_text = clipboard.paste()
 
-            new_char = chr(keycode)
-            if not self.menu.shift_key_pressed:
-                new_char = new_char.lower()
+        if pasted_text is not None:
+            for c in pasted_text:
+                if not self.add_character(c, use_shift=False):
+                    break
+        else:
+            self.add_character(character)
 
-            if self.get_text_width(add_str=str(new_char)) <= self.max_text_length:
-                self.text += new_char
+        return True
+
+    def add_character(self, character, use_shift=True):
+        char = None
+        if (character == ' ' or character == '-' or character == '.' or '0' <= character <= '9'
+                or 'a' <= character.lower() <= 'z' or character == '_'):
+            char = character
+            if not self.menu.shift_key_pressed and use_shift:
+                char = char.lower()
+
+        backspace = (character == chr(8))
+
+        if char is not None:
+            if self.get_text_width(add_str=str(char)) <= self.max_text_length:
+                self.text += char
             else:
                 print("WARN: Max text width for this TextField is " + str(self.max_text_length)
-                      + "px (would be " + str(self.get_text_width(add_str=str(new_char))) + ")!")
+                      + "px (would be " + str(self.get_text_width(add_str=str(char))) + ")!")
+                return False
 
             self.set_caret(True)
 
-        elif key == Qt.Key_Backspace:
-            self.text = self.text[:-1]
+        if backspace:
+            if len(self.text) > 0:
+                self.text = self.text[:-1]
             self.set_caret(True)
 
         return True
@@ -186,6 +236,14 @@ class Button(UIElement):
             print("ERROR: Button base class should not be instantiated!")
 
 
+# base class
+class UIImage(UIElement):
+    def __init__(self, main_widget, position, menu):
+        super().__init__(main_widget, position, menu)
+
+        self.draw_selected = False
+
+
 class Menu:
     def __init__(self, main_widget, size, main_menu_scene, bg_texture_name):
         self.main_widget = main_widget
@@ -198,6 +256,7 @@ class Menu:
         self.bg_pixmap = QPixmap(ui_element_texture_path + bg_texture_name + ".png")
 
         self.shift_key_pressed = False
+        self.ctrl_key_pressed = False
 
     def click_element(self):
         if self.selected_element is not None:
@@ -209,6 +268,8 @@ class Menu:
             event.accept()
         elif event.key() == Qt.Key_Shift:
             self.shift_key_pressed = True
+        elif event.key() == Qt.Key_Control:
+            self.ctrl_key_pressed = True
         elif self.selected_element is not None:
             if not self.selected_element.key_press(event.key()):
                 return
@@ -219,6 +280,8 @@ class Menu:
     def key_release_event(self, event):
         if event.key() == Qt.Key_Shift:
             self.shift_key_pressed = False
+        elif event.key() == Qt.Key_Control:
+            self.ctrl_key_pressed = False
         else:
             return
         event.accept()

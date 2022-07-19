@@ -6,7 +6,6 @@ from client_world_sim import OnlineWorldSim
 from server_world_sim import ServerWorldSim
 from globals import Scene, Fonts, GameInfo
 from constants import ARENA_SIZE, DEBUG_MODE
-from networking import ClientPacket
 from ui_overlay import UIOverlay
 
 
@@ -113,13 +112,6 @@ class SPWorldScene(WorldScene):
 class OnlineWorldScene(WorldScene):
     def __init__(self, parent, size):
         super().__init__(parent, size, OnlineWorldSim)
-
-    def clean_mem(self):
-        super().clean_mem()
-
-        for i in range(2):
-            self.world_sim.udp_socket.send_packet(None, ClientPacket(
-                creation_time=(self.world_sim.curr_time_ns + 1000), disconnect=True))
 
 
 class ServerWorldScene(WorldScene):

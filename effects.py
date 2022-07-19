@@ -1,5 +1,6 @@
 import random
 
+from constants import FIXED_DELTA_TIME
 from globals import GameInfo
 
 
@@ -167,3 +168,18 @@ def apply_portal_effect(world_sim, robot, portal_type_1=True):
         robot.effect_data[("PortalTileEffect", "last_tp_type")] = portal_type
 
     robot.effect_data[("PortalTileEffect", "last_tp_frame")] = world_sim.physics_frame_count
+
+
+class HealthEffect(RobotEffect):
+    def __init__(self, duration=(FIXED_DELTA_TIME / 2), change_per_second=0, instant_change=0):
+        super().__init__(duration)
+
+        self.change_per_second = change_per_second
+        self.instant_change = instant_change
+
+    def apply(self, robot, delta_time=0):
+        super().apply(robot, delta_time)
+
+        robot.change_health(self.instant_change)
+        self.instant_change = 0
+        robot.change_health(self.change_per_second * delta_time)

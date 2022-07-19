@@ -164,11 +164,13 @@ class Robot:
                 return
             elif self.health > self.max_health:
                 self.health = self.max_health
+        elif self.health > self.max_health:
+            self.health = self.max_health
 
         self.revert_effects()
 
         tile_position = self.sim_body.position.copy()
-        tile_position.div(self.world_sim.arena.tile_size)
+        tile_position.div(GameInfo.arena_tile_size)
         tile_position.round()
         if self.world_sim.arena.power_ups[tile_position.y][tile_position.x] is not None:
             self.world_sim.arena.power_ups[tile_position.y][tile_position.x].apply(self)
@@ -263,8 +265,8 @@ class Robot:
             self.effects.remove(expired)
         expired_effects.clear()
 
-    def change_health(self, delta_healh):
-        self.health += delta_healh
+    def change_health(self, delta_health):
+        self.health += delta_health
 
     def die(self):
         print("<cool tank explode animation> or something... (for robot ID " + str(self.robot_id) + ")")

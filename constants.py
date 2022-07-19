@@ -3,6 +3,8 @@ from util import s_to_ns, Vector
 
 # Arena
 MAP_FORMAT_VERSION = 1
+MAX_POWER_UP_ITER = 10
+TILES_PER_POWER_UP = 100
 
 # Time
 FIXED_FPS = 60

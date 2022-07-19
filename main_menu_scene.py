@@ -97,7 +97,7 @@ class OnlineOptions(Menu):
 
         def __init__(self, main_widget, position, menu, max_text_length=-1):
             super().__init__(main_widget, position, menu,
-                             text_offset=Vector(30, 92), max_text_length=MAX_PLAYER_NAME_LENGTH)
+                             text_offset=Vector(35, 90), max_text_length=MAX_PLAYER_NAME_LENGTH)
 
             self.placeholder_text = GameInfo.placeholder_name
             if GameInfo.local_player_name != GameInfo.placeholder_name:
@@ -108,7 +108,7 @@ class OnlineOptions(Menu):
 
         def __init__(self, main_widget, position, menu, max_text_length=-1):
             super().__init__(main_widget, position, menu,
-                             text_offset=Vector(30, 92), max_text_length=MAX_SERVER_IP_LENGTH)
+                             text_offset=Vector(35, 90), max_text_length=MAX_SERVER_IP_LENGTH)
 
             self.placeholder_text = GameInfo.default_ip
             if GameInfo.server_ip != GameInfo.default_ip:

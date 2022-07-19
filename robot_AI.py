@@ -1,5 +1,5 @@
 import math
-import time
+import threading
 
 from util import Vector
 from constants import MAX_ASTART_ITER
@@ -12,6 +12,13 @@ class RobotAI:
         self.shortest_path = None
         self.walkable_check = DrivableTileCheck(self.world_sim.arena)
         self.last_target_position = Vector(-1000000, -1000000)
+        self.calculating_astar = False
+
+    def calc_astar(self, start, end, arena_size):
+        self.calculating_astar = True
+        self.shortest_path = astar(self.world_sim.arena.tiles, arena_size,
+                                   (start.x, start.y), (end.x, end.y), self.walkable_check)
+        self.calculating_astar = False
 
     def update(self, delta_time):
         # keep shooting
@@ -36,14 +43,14 @@ class RobotAI:
             end.floor()
             # TODO: replace with vector.as_tuple
             if self.shortest_path is None or not end.equal(self.last_target_position):
-                self.last_target_position = end.copy()
-                self.shortest_path = astar(self.world_sim.arena.tiles, arena_size,
-                                           (start.x, start.y), (end.x, end.y), self.walkable_check)
+                if not self.calculating_astar:
+                    self.last_target_position = end.copy()
+                    threading.Thread(target=self.calc_astar, args=(start, end, arena_size)).start()
             elif (len(self.shortest_path) >= 2
                   and start.equal(Vector(self.shortest_path[1][0], self.shortest_path[1][1]))):
                 self.shortest_path.pop(0)
             index = 0
-            while index + 2 < len(self.shortest_path):
+            while self.shortest_path is not None and index + 2 < len(self.shortest_path):
                 tuple_vecs = self.shortest_path[index:index + 3]
                 start = Vector(tuple_vecs[0][0], tuple_vecs[0][1])
                 corner = Vector(tuple_vecs[1][0], tuple_vecs[1][1])
@@ -78,6 +85,7 @@ class RobotAI:
             else:
                 self.robot.input.right = not should_rotate_right
                 self.robot.input.left = should_rotate_right
+
         if bearing < 0.25:
             self.robot.input.up = True
         else:

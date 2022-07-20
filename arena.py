@@ -117,6 +117,14 @@ class HealthPowerUp(PowerUp):
         super().__init__(arena, effect, index, position)
 
 
+class SpeedPowerUp(PowerUp):
+    name = "speed"
+
+    def __init__(self, arena, index, position):
+        effect = effects.PowerUpSpeedEffect()
+        super().__init__(arena, effect, index, position)
+
+
 class Arena:
     def __init__(self, tile_count):
         self.tile_count = tile_count.copy()
@@ -168,17 +176,21 @@ class Arena:
         if len(self.power_up_list) * TILES_PER_POWER_UP >= self.tile_count.x * self.tile_count.y:
             return
 
+        # pick random tile
         for i in range(MAX_POWER_UP_ITER):
             y = random.randrange(self.tile_count.y)
             x = random.randrange(self.tile_count.x)
             tile_type = self.tiles[y][x]
             power_up = self.power_ups[y][x]
+            # make sure tile is of type ground
             if tile_type.name == "ground" and power_up is None:
-                # place power_up on current tile
                 position = Vector(x, y)
                 position.mult(GameInfo.arena_tile_size)
                 position.add(Vector(GameInfo.arena_tile_size / 2, GameInfo.arena_tile_size / 2))
-                self.power_ups[y][x] = HealthPowerUp(self, Vector(x, y), position)
+                # decide which type of power up to place
+                power_up_types = [HealthPowerUp, SpeedPowerUp]
+                power_up_type = random.choice(power_up_types)
+                self.power_ups[y][x] = power_up_type(self, Vector(x, y), position)
                 break
 
     def draw(self, qp):

@@ -183,3 +183,13 @@ class HealthEffect(RobotEffect):
         robot.change_health(self.instant_change)
         self.instant_change = 0
         robot.change_health(self.change_per_second * delta_time)
+
+
+class PowerUpSpeedEffect(SpeedEffect):
+    speed_gain = 120
+    ang_speed_gain = 2
+
+    def __init__(self):
+        super().__init__(5)
+
+

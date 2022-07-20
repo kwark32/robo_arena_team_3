@@ -138,7 +138,7 @@ class Weapon:
             spawn_pos.add(position)
             self.weapon_type.bullet_type(self.world_sim, source_id=source_id, bullet_id=bullet_id,
                                          position=spawn_pos, rotation=total_rot)
-            SFXManager.instance.play_sound(self.weapon_type.shot_sound_name)
+            SFXManager.instance.play_sound(self.weapon_type.shot_sound_name, pos=position)
             return True
 
         return False

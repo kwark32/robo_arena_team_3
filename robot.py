@@ -342,6 +342,7 @@ def collide_robot(robot, other, normal=Vector(0, 0)):
 
     normal.rotate(robot.sim_body.rotation)
 
+    pos = robot.sim_body.position
     if isinstance(other, Robot):
         velocity = robot.real_velocity.diff(other.real_velocity)
         angle = velocity.angle(normal)
@@ -349,11 +350,11 @@ def collide_robot(robot, other, normal=Vector(0, 0)):
         if (robot.world_sim.physics_frame_count > robot.last_collision_sound_frame + MIN_SOUND_DELAY_FRAMES
                 and abs(mag) > robot.max_velocity * ROBOT_COLLISION_SOUND_SPEED_FACTOR):
             robot.last_collision_sound_frame = robot.world_sim.physics_frame_count
-            SFXManager.instance.play_sound("collision_tank_tank")
+            SFXManager.instance.play_sound("collision_tank_tank", pos=pos)
     elif isinstance(other, TileType) and other.has_collision:
         angle = robot.real_velocity.angle(normal)
         mag = robot.real_velocity.magnitude() * math.sin(angle)
         if (robot.world_sim.physics_frame_count > robot.last_collision_sound_frame + MIN_SOUND_DELAY_FRAMES
                 and abs(mag) > robot.max_velocity * ROBOT_COLLISION_SOUND_SPEED_FACTOR):
             robot.last_collision_sound_frame = robot.world_sim.physics_frame_count
-            SFXManager.instance.play_sound("collision_tank_wall")
+            SFXManager.instance.play_sound("collision_tank_wall", pos=pos)

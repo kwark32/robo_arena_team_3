@@ -1,4 +1,5 @@
 from util import s_to_ns, Vector
+from globals import GameInfo
 
 
 # Arena
@@ -31,6 +32,9 @@ TIME_SYNC_LERP_AMOUNT = 0.01
 MAX_PLAYER_NAME_LENGTH = 728
 MAX_SERVER_IP_LENGTH = 728
 CARET_BLINK_RATE_NS = s_to_ns(0.5)
+
+# Audio
+HALF_FALLOFF_DIST = 5 * GameInfo.arena_tile_size
 
 # Debug
 DEBUG_MODE = False

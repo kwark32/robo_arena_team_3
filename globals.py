@@ -46,6 +46,8 @@ class Settings:
 
     def __init__(self):
         self.master_volume = 0.1
+        self.sfx_volume = 1
+        self.music_volume = 1
 
     def load(self):
         pass

@@ -45,8 +45,7 @@ class Settings:
     instance = None
 
     def __init__(self):
-        Settings.instance = self
-        self.master_volume = 0.25
+        self.master_volume = 0.1
 
     def load(self):
         pass

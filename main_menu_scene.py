@@ -9,6 +9,8 @@ from globals import GameInfo, Scene, Menus, Fonts
 from camera import CameraState
 from constants import DEBUG_MODE, MAX_PLAYER_NAME_LENGTH, MAX_SERVER_IP_LENGTH
 
+from sound_manager import SFXManager
+
 
 class MainMenu(Menu):
     class ExitButton(Button):

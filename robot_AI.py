@@ -86,7 +86,7 @@ class RobotAI:
                 self.robot.input.right = not should_rotate_right
                 self.robot.input.left = should_rotate_right
 
-        if bearing < 0.25:
+        if abs(bearing) < 0.25:
             self.robot.input.up = True
         else:
             self.robot.input.up = False

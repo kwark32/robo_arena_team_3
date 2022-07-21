@@ -11,6 +11,7 @@ from camera import CameraState
 from constants import DEBUG_MODE
 from ui_overlay import UIOverlay
 from util import painter_transform_with_rot, Vector
+from sound_manager import SoundManager, music_names
 
 
 class WorldScene(QOpenGLWidget):
@@ -26,6 +27,9 @@ class WorldScene(QOpenGLWidget):
         self.ui_overlay = UIOverlay()
 
         self.init_ui()
+
+        SoundManager.instance.play_music(music_names[1], once=True)
+        SoundManager.instance.play_random_music = True
 
     def init_ui(self):
         self.setGeometry(0, 0, self.size.x, self.size.y)

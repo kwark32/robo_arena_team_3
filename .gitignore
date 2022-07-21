@@ -8,6 +8,8 @@
 *.vpp.bak*
 *.vpp.lck*
 
+settings.json
+
 .idea/
 
 # User-specific stuff

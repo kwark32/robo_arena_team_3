@@ -56,9 +56,9 @@ def add_physics(arena, physics_world):
 
 def load_map(file, physics_world=None):
     if file.endswith("json"):
-        arena = load_map_json(json_map_path + file, physics_world=physics_world)
+        arena = load_map_json(json_map_path + file)
     elif file.endswith("png"):
-        arena = load_map_png(png_map_path + file, physics_world=physics_world)
+        arena = load_map_png(png_map_path + file)
     else:
         return None
 
@@ -68,8 +68,9 @@ def load_map(file, physics_world=None):
     return arena
 
 
-def load_map_json(file, physics_world=None):
-    map_text = open(file, "r").read()
+def load_map_json(file):
+    with open(file, "r") as f:
+        map_text = f.read()
     map_json = json.loads(map_text)
     if map_json["version"] != MAP_FORMAT_VERSION:
         print("Invalid map version!")
@@ -116,7 +117,7 @@ tile_type_colors = {
 }
 
 
-def load_map_png(file, physics_world=None):
+def load_map_png(file):
     im = Image.open(file)
     pix = im.load()
     arena = Arena(Vector(im.size[0], im.size[1]))

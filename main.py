@@ -1,8 +1,9 @@
 import sys
 
-from globals import GameInfo
+from globals import GameInfo, Settings
 from camera import CameraState
 from util import get_main_path, Vector
+from sound_manager import SoundManager, HeadlessSound
 
 headless_args = []
 for arg in sys.argv:
@@ -20,7 +21,7 @@ if not GameInfo.is_headless:
     from world_scene import SPWorldScene, OnlineWorldScene, ServerWorldScene
     from PyQt5.QtGui import QFont, QColor, QFontDatabase
     from PyQt5.QtWidgets import QOpenGLWidget, QApplication, QDesktopWidget
-    from PyQt5.QtCore import Qt
+    from PyQt5.QtCore import Qt, QResource
 
     class ArenaWindow(QOpenGLWidget):
         def __init__(self):
@@ -117,8 +118,15 @@ def main():
     if not GameInfo.is_headless:
         GameInfo.window_reference_size = Vector(1920, 1080)
         GameInfo.window_size = GameInfo.window_reference_size.copy()
+        GameInfo.main_path = get_main_path()
 
         app = QApplication(sys.argv)
+
+        QResource.registerResource(get_main_path() + "/resources.rcc")
+
+        Settings.instance = Settings()
+        SoundManager.instance = SoundManager()
+
         window = ArenaWindow()
 
         press_start_font_id = QFontDatabase.addApplicationFont(get_main_path()
@@ -147,6 +155,9 @@ def main():
         sys.exit(0)
 
     else:
+        Settings.instance = Settings()
+        SoundManager.instance = HeadlessSound()
+
         world_sim = ServerWorldSim()
         while True:
             world_sim.update_world()

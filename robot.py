@@ -1,9 +1,14 @@
+import math
+
 from transform import SimBody
 from weapons import TankCannon
-from util import Vector, get_main_path, draw_img_with_rot
+from util import Vector, get_main_path, draw_img_with_rot, painter_transform_with_rot
 from globals import GameInfo, Fonts
-from constants import FIXED_DELTA_TIME, MAX_ROBOT_HEALTH, DEBUG_MODE
+from constants import FIXED_DELTA_TIME, MAX_ROBOT_HEALTH, DEBUG_MODE, ROBOT_COLLISION_SOUND_SPEED_FACTOR
+from constants import MIN_SOUND_DELAY_FRAMES
 from robot_AI import RobotAI
+from sound_manager import SoundManager
+from arena import TileType
 
 if not GameInfo.is_headless:
     from PyQt5.QtGui import QPixmap, QPolygon
@@ -97,6 +102,8 @@ class Robot:
         self.last_position = position.copy()
         self.forward_velocity_goal = 0
 
+        self.last_collision_sound_frame = 0
+
         self._body_texture = None
         self._texture_size = None
 
@@ -141,6 +148,7 @@ class Robot:
                           self.extrapolation_body.position, self.extrapolation_body.rotation)
 
         if DEBUG_MODE and self.robot_ai is not None and self.robot_ai.shortest_path is not None:
+            painter_transform_with_rot(qp, Vector(0, 0), 0)
             qp.setPen(Fonts.fps_color)
             poly = QPolygon()
             tile_size = GameInfo.arena_tile_size
@@ -154,7 +162,9 @@ class Robot:
                     poly.append(QPoint(int(self.sim_body.position.x), int(self.sim_body.position.y)))
                 else:
                     poly.append(QPoint(int(p[0] * tile_size + tile_size / 2), int(p[1] * tile_size + tile_size / 2)))
+
             qp.drawPolygon(poly)
+            qp.restore()
 
     def update(self, delta_time):
         if int(self.health) <= 0:
@@ -204,8 +214,9 @@ class Robot:
             if self.input.shoot or self.input.shoot_pressed:
                 self.input.shoot_pressed = False
                 if self.weapon is not None:
-                    self.weapon.shoot(self.robot_id, self.get_next_bullet_id,
-                                      self.sim_body.position, self.sim_body.rotation)
+                    if not self.weapon.shoot(self.robot_id, self.get_next_bullet_id,
+                                             self.sim_body.position, self.sim_body.rotation):
+                        self.next_bullet_id -= 1
 
             # if ((self.forward_velocity_goal == 0 and last_forward_velocity_goal != 0)
             #         or (self.forward_velocity_goal == 1 and self.sim_body.local_velocity.y < 0)
@@ -323,3 +334,27 @@ class PlayerInput:
         return ("PlayerInput {\n  Up: " + str(self.up) + "\n  Down: " + str(self.down) + "\n  Left: "
                 + str(self.left) + "\n  Right: " + str(self.right) + "\n  Shoot: " + str(self.shoot)
                 + "\n  Shoot Pressed: " + str(self.shoot_pressed) + "\n}")
+
+
+def collide_robot(robot, other, normal=Vector(0, 0)):
+    if normal.equal(Vector(0, 0) or robot.real_velocity.equal(Vector(0, 0))):
+        return
+
+    normal.rotate(robot.sim_body.rotation)
+
+    pos = robot.sim_body.position
+    if isinstance(other, Robot):
+        velocity = robot.real_velocity.diff(other.real_velocity)
+        angle = velocity.angle(normal)
+        mag = velocity.magnitude() * math.sin(angle)
+        if (robot.world_sim.physics_frame_count > robot.last_collision_sound_frame + MIN_SOUND_DELAY_FRAMES
+                and abs(mag) > robot.max_velocity * ROBOT_COLLISION_SOUND_SPEED_FACTOR):
+            robot.last_collision_sound_frame = robot.world_sim.physics_frame_count
+            SoundManager.instance.play_sfx("collision_tank_tank", pos=pos)
+    elif isinstance(other, TileType) and other.has_collision:
+        angle = robot.real_velocity.angle(normal)
+        mag = robot.real_velocity.magnitude() * math.sin(angle)
+        if (robot.world_sim.physics_frame_count > robot.last_collision_sound_frame + MIN_SOUND_DELAY_FRAMES
+                and abs(mag) > robot.max_velocity * ROBOT_COLLISION_SOUND_SPEED_FACTOR):
+            robot.last_collision_sound_frame = robot.world_sim.physics_frame_count
+            SoundManager.instance.play_sfx("collision_tank_wall", pos=pos)

@@ -16,6 +16,7 @@ class SFXManager:
 
     def __init__(self):
         self.sounds = {}
+        # url = QUrl("qrc:/sounds/sfx/collision_tank_cannon-shell.wav")
 
     def play_sound(self, name, pos=None):
         if pos is not None:
@@ -27,16 +28,20 @@ class SFXManager:
             sound = self.load_sound(name)
             self.sounds[name] = [(sound, pos)]
         else:
-            for s in sound_list:
+            for i, s in enumerate(sound_list):
+                #print((s[0].loopsRemaining(), s[0].isPlaying()))
                 if not s[0].isPlaying():
                     sound = s[0]
+                    sound_list[i] = (sound, pos)
                     break
             if sound is None:
                 sound = self.load_sound(name)
                 self.sounds[name].append((sound, pos))
+                #print(len(self.sounds[name]))
 
         sound.setVolume(Settings.instance.master_volume * Settings.instance.sfx_volume)
         sound.play()
+        #print(sound.loopsRemaining())
 
     def load_sound(self, name):
         sound = QSoundEffect()

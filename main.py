@@ -21,7 +21,7 @@ if not GameInfo.is_headless:
     from world_scene import SPWorldScene, OnlineWorldScene, ServerWorldScene
     from PyQt5.QtGui import QFont, QColor, QFontDatabase
     from PyQt5.QtWidgets import QOpenGLWidget, QApplication, QDesktopWidget
-    from PyQt5.QtCore import Qt
+    from PyQt5.QtCore import Qt, QResource
 
     class ArenaWindow(QOpenGLWidget):
         def __init__(self):
@@ -121,6 +121,8 @@ def main():
 
         app = QApplication(sys.argv)
         window = ArenaWindow()
+
+        QResource.registerResource(get_main_path() + "/resources.rcc")
 
         Settings.instance = Settings()
         SFXManager.instance = SFXManager()

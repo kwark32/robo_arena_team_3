@@ -3,7 +3,7 @@ import sys
 from globals import GameInfo, Settings
 from camera import CameraState
 from util import get_main_path, Vector
-from sound_manager import SFXManager, HeadlessSFX
+from sound_manager import SoundManager, HeadlessSound
 
 headless_args = []
 for arg in sys.argv:
@@ -120,12 +120,13 @@ def main():
         GameInfo.window_size = GameInfo.window_reference_size.copy()
 
         app = QApplication(sys.argv)
-        window = ArenaWindow()
 
         QResource.registerResource(get_main_path() + "/resources.rcc")
 
         Settings.instance = Settings()
-        SFXManager.instance = SFXManager()
+        SoundManager.instance = SoundManager()
+
+        window = ArenaWindow()
 
         press_start_font_id = QFontDatabase.addApplicationFont(get_main_path()
                                                                + "/fonts/press_start_2p/PressStart2P-Regular.ttf")
@@ -154,7 +155,7 @@ def main():
 
     else:
         Settings.instance = Settings()
-        SFXManager.instance = HeadlessSFX()
+        SoundManager.instance = HeadlessSound()
 
         world_sim = ServerWorldSim()
         while True:

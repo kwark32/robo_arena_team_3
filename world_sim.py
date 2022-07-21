@@ -8,7 +8,7 @@ from util import Vector, get_delta_time_s
 from globals import GameInfo
 from constants import FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_FIXED_TIMESTEPS
 from camera import CameraState
-from sound_manager import SFXManager
+from sound_manager import SoundManager
 
 
 class WorldSim:
@@ -104,7 +104,7 @@ class WorldSim:
         pos = CameraState.position
         if self.local_player_robot is not None:
             pos = self.local_player_robot.sim_body.position
-        SFXManager.instance.set_volumes(pos)
+        SoundManager.instance.update_sound(pos.copy())
 
         self.clear_dead_bullets()
         self.clear_dead_robots()

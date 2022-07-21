@@ -1,81 +1,126 @@
-from util import get_main_path, Vector
+import random
+
+# from util import get_main_path, Vector
 from globals import Settings, GameInfo
-from constants import HALF_FALLOFF_DIST
+from constants import HALF_FALLOFF_DIST, MAX_AUDIO_DIST, SFX_AUDIO_SOURCES
 
 if not GameInfo.is_headless:
     from PyQt5.QtCore import QUrl
     from PyQt5.QtMultimedia import QSoundEffect
 
 
-sfx_path = get_main_path() + "/sounds/sfx/"
-music_path = get_main_path() + "/sounds/music/"
+sfx_path = "qrc:" + "/sounds/sfx/"
+music_path = "qrc:" + "/sounds/music/"
+
+music_names = ["soundtrack-1_normal", "soundtrack-2_boss"]
+music_volume_factors = {"soundtrack-1_normal": 0.6, "soundtrack-2_boss": 1}
 
 
-class SFXManager:
+class SoundManager:
     instance = None
 
     def __init__(self):
-        self.sounds = {}
-        # url = QUrl("qrc:/sounds/sfx/collision_tank_cannon-shell.wav")
+        self.sounds = []
+        self.listener_pos = None
 
-    def play_sound(self, name, pos=None):
+        self.music = None
+        self.play_random_music = False
+        self.playing_music_name = ""
+
+    def update_sound(self, listener_pos=None):
+        self.listener_pos = listener_pos
+        self.set_sound_volumes()
+
+        if self.play_random_music and self.music is None:
+            random_state = random.getstate()
+            next_music = random.choice(music_names)
+            self.play_music(next_music)
+            random.setstate(random_state)
+
+    def play_sfx(self, name, pos=None):
         if pos is not None:
             pos = pos.copy()
 
-        sound = None
-        sound_list = self.sounds.get(name)
-        if sound_list is None:
-            sound = self.load_sound(name)
-            self.sounds[name] = [(sound, pos)]
-        else:
-            for i, s in enumerate(sound_list):
-                #print((s[0].loopsRemaining(), s[0].isPlaying()))
-                if not s[0].isPlaying():
-                    sound = s[0]
-                    sound_list[i] = (sound, pos)
-                    break
-            if sound is None:
-                sound = self.load_sound(name)
-                self.sounds[name].append((sound, pos))
-                #print(len(self.sounds[name]))
+        if len(self.sounds) >= SFX_AUDIO_SOURCES:
+            return
 
-        sound.setVolume(Settings.instance.master_volume * Settings.instance.sfx_volume)
-        sound.play()
-        #print(sound.loopsRemaining())
-
-    def load_sound(self, name):
         sound = QSoundEffect()
-        sound.setSource(QUrl.fromLocalFile(sfx_path + name + ".wav"))
-        sound.setVolume(0)
-        return sound
+        sound.setSource(QUrl(sfx_path + name + ".wav"))
+        sound.setVolume(self.get_sound_volume(pos=pos))
+        sound.play()
+        self.sounds.append((sound, pos))
 
-    def set_volumes(self, pos):
-        if pos is None:
-            pos = Vector(0, 0)
+    def play_music(self, name, once=True):
+        self.playing_music_name = name
 
-        for key in self.sounds:
-            sound_list = self.sounds[key]
-            for sound in sound_list:
-                sound_pos = sound[1]
-                sound = sound[0]
+        if self.music is not None:
+            self.music.stop()
+            self.music = None
 
-                if not sound.isPlaying():
-                    continue
+        self.music = QSoundEffect()
+        self.music.setSource(QUrl(music_path + name + ".wav"))
+        if once:
+            self.music.setLoopCount(1)
+        else:
+            self.music.setLoopCount(QSoundEffect.Infinite)
+        self.music.setVolume(self.get_sound_volume(sfx_volume=False))
+        self.music.play()
 
-                if sound_pos is not None:
-                    dist = pos.dist(sound_pos)
-                    volume = 1 / (dist / HALF_FALLOFF_DIST + 1)
-                else:
-                    volume = 1
-                sound.setVolume(Settings.instance.master_volume * Settings.instance.sfx_volume * volume)
+    def set_sound_volumes(self):
+        if self.music is not None and self.music.isPlaying():
+            self.music.setVolume(self.get_sound_volume(sfx_volume=False))
+        elif self.music is not None:
+            self.music.stop()
+            self.music = None
+
+        stopped = []
+        for sound in self.sounds:
+            sound_pos = sound[1]
+            sound = sound[0]
+
+            if not sound.isPlaying():
+                stopped.append((sound, sound_pos))
+                continue
+
+            sound.setVolume(self.get_sound_volume(pos=sound_pos))
+
+        for s in stopped:
+            s[0].stop()
+            self.sounds.remove(s)
+
+    def get_sound_volume(self, sfx_volume=True, pos=None):
+        if sfx_volume:
+            volume_setting = Settings.instance.master_volume * Settings.instance.sfx_volume
+        else:
+            volume_setting = Settings.instance.master_volume * Settings.instance.music_volume
+            factor = music_volume_factors.get(self.playing_music_name)
+            if factor is not None:
+                volume_setting *= factor
+
+        if self.listener_pos is None or pos is None:
+            return volume_setting
+
+        dist = self.listener_pos.dist(pos)
+        if dist <= MAX_AUDIO_DIST:
+            volume = 1 / (dist / HALF_FALLOFF_DIST + 1)
+        else:
+            return 0
+
+        return volume_setting * volume
 
 
-class HeadlessSFX(SFXManager):
-    def play_sound(self, name, pos=None):
+class HeadlessSound(SoundManager):
+    def update_sound(self, listener_pos=None):
         pass
 
-    def load_sound(self, name):
+    def play_sfx(self, name, pos=None):
         pass
 
-    def set_volumes(self, pos):
+    def play_music(self, name, once=True):
         pass
+
+    def set_sound_volumes(self, pos=None):
+        pass
+
+    def get_sound_volume(self, sfx_volume=True, pos=None):
+        return 0

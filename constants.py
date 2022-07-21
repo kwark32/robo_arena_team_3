@@ -35,6 +35,8 @@ CARET_BLINK_RATE_NS = s_to_ns(0.5)
 
 # Audio
 HALF_FALLOFF_DIST = 5 * GameInfo.arena_tile_size
+MAX_AUDIO_DIST = 1000
+SFX_AUDIO_SOURCES = 8
 
 # Debug
 DEBUG_MODE = False

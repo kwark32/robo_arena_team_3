@@ -2,7 +2,7 @@ from transform import SimpleBody
 from util import Vector, get_main_path, draw_img_with_rot, limit_rot
 from globals import GameInfo
 from constants import FIXED_FPS, FIXED_DELTA_TIME
-from sound_manager import SFXManager
+from sound_manager import SoundManager
 
 if not GameInfo.is_headless:
     from PyQt5.QtGui import QPixmap
@@ -138,7 +138,7 @@ class Weapon:
             spawn_pos.add(position)
             self.weapon_type.bullet_type(self.world_sim, source_id=source_id, bullet_id=bullet_id,
                                          position=spawn_pos, rotation=total_rot)
-            SFXManager.instance.play_sound(self.weapon_type.shot_sound_name, pos=position)
+            SoundManager.instance.play_sfx(self.weapon_type.shot_sound_name, pos=position)
             return True
 
         return False

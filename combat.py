@@ -1,6 +1,6 @@
 from weapons import Bullet
 from robot import Robot
-from sound_manager import SFXManager
+from sound_manager import SoundManager
 from arena import TileType
 
 
@@ -18,13 +18,13 @@ def hit_shell(bullet, other):
     pos = bullet.sim_body.position
     if other_is_bullet:
         # TODO: Create bullet-bullet collision sound
-        SFXManager.instance.play_sound("collision_tank_tank", pos=pos)
+        SoundManager.instance.play_sfx("collision_tank_tank", pos=pos)
         other.destroy()
     elif other_is_robot:
-        SFXManager.instance.play_sound("collision_tank_cannon-shell", pos=pos)
+        SoundManager.instance.play_sfx("collision_tank_cannon-shell", pos=pos)
         bullet.hit_robot(other)
     elif isinstance(other, TileType) and other.has_collision:
         # TODO: Create bullet-wall collision sound
-        SFXManager.instance.play_sound("collision_tank_wall", pos=pos)
+        SoundManager.instance.play_sfx("collision_tank_wall", pos=pos)
 
     bullet.destroy()

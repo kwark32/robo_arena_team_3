@@ -7,7 +7,7 @@ from globals import GameInfo, Fonts
 from constants import FIXED_DELTA_TIME, MAX_ROBOT_HEALTH, DEBUG_MODE, ROBOT_COLLISION_SOUND_SPEED_FACTOR
 from constants import MIN_SOUND_DELAY_FRAMES
 from robot_AI import RobotAI
-from sound_manager import SFXManager
+from sound_manager import SoundManager
 from arena import TileType
 
 if not GameInfo.is_headless:
@@ -350,11 +350,11 @@ def collide_robot(robot, other, normal=Vector(0, 0)):
         if (robot.world_sim.physics_frame_count > robot.last_collision_sound_frame + MIN_SOUND_DELAY_FRAMES
                 and abs(mag) > robot.max_velocity * ROBOT_COLLISION_SOUND_SPEED_FACTOR):
             robot.last_collision_sound_frame = robot.world_sim.physics_frame_count
-            SFXManager.instance.play_sound("collision_tank_tank", pos=pos)
+            SoundManager.instance.play_sfx("collision_tank_tank", pos=pos)
     elif isinstance(other, TileType) and other.has_collision:
         angle = robot.real_velocity.angle(normal)
         mag = robot.real_velocity.magnitude() * math.sin(angle)
         if (robot.world_sim.physics_frame_count > robot.last_collision_sound_frame + MIN_SOUND_DELAY_FRAMES
                 and abs(mag) > robot.max_velocity * ROBOT_COLLISION_SOUND_SPEED_FACTOR):
             robot.last_collision_sound_frame = robot.world_sim.physics_frame_count
-            SFXManager.instance.play_sound("collision_tank_wall", pos=pos)
+            SoundManager.instance.play_sfx("collision_tank_wall", pos=pos)

@@ -8,8 +8,7 @@ from util import Vector, ns_to_s
 from globals import GameInfo, Scene, Menus, Fonts
 from camera import CameraState
 from constants import DEBUG_MODE, MAX_PLAYER_NAME_LENGTH, MAX_SERVER_IP_LENGTH
-
-from sound_manager import SFXManager
+from sound_manager import SoundManager, music_names
 
 
 class MainMenu(Menu):
@@ -278,6 +277,8 @@ class MainMenuScene(QOpenGLWidget):
     def __init__(self, parent, size):
         super().__init__(parent)
 
+        self.first = True
+
         self.main_widget = self.parentWidget()
 
         self.parent = parent
@@ -297,7 +298,8 @@ class MainMenuScene(QOpenGLWidget):
 
         self.init_ui()
 
-        self.first = True
+        SoundManager.instance.play_music(music_names[0], once=False)
+        SoundManager.instance.play_random_music = False
 
     def init_ui(self):
         self.setGeometry(0, 0, self.size.x, self.size.y)

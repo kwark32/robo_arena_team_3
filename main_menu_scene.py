@@ -3,9 +3,9 @@ import time
 from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import QOpenGLWidget, QApplication
 from PyQt5.QtCore import Qt, QPoint
-from ui_elements import Button, Menu, TextField, UIImage
+from ui_elements import Button, Menu, TextField, UIImage, Slider
 from util import Vector, ns_to_s
-from globals import GameInfo, Scene, Menus, Fonts
+from globals import GameInfo, Scene, Menus, Fonts, Settings
 from camera import CameraState
 from constants import DEBUG_MODE, MAX_PLAYER_NAME_LENGTH, MAX_SERVER_IP_LENGTH
 from sound_manager import SoundManager, music_names
@@ -255,19 +255,83 @@ class OnlineOptions(Menu):
         self.main_menu_scene.switch_menu(Menus.MAIN_MENU)
 
 
-class Settings(Menu):
+class SettingsMenu(Menu):
     class BackButton(Button):
         name = "back"
 
         def click(self):
             self.menu.main_menu_scene.switch_menu(Menus.MAIN_MENU)
 
+    class MasterVolumeSlider(Slider):
+        name = "master_volume"
+        header_text = "Master Volume"
+        min_value = 0
+        max_value = 1
+        snap_step = 0.01
+        snap = True
+
+        def __init__(self, main_widget, position, menu):
+            super().__init__(main_widget, position, menu)
+
+            self.value = Settings.instance.master_volume
+
+        def value_changed(self):
+            Settings.instance.master_volume = self.value
+            Settings.instance.save()
+
+    class SFXVolumeSlider(Slider):
+        name = "sfx_volume"
+        header_text = "SFX Volume"
+        min_value = 0
+        max_value = 1
+        snap_step = 0.01
+        snap = True
+
+        def __init__(self, main_widget, position, menu):
+            super().__init__(main_widget, position, menu)
+
+            self.value = Settings.instance.sfx_volume
+
+        def value_changed(self):
+            Settings.instance.sfx_volume = self.value
+            Settings.instance.save()
+
+    class MusicVolumeSlider(Slider):
+        name = "music_volume"
+        header_text = "Music Volume"
+        min_value = 0
+        max_value = 1
+        snap_step = 0.01
+        snap = True
+
+        def __init__(self, main_widget, position, menu):
+            super().__init__(main_widget, position, menu)
+
+            self.value = Settings.instance.music_volume
+
+        def value_changed(self):
+            Settings.instance.music_volume = self.value
+            Settings.instance.save()
+
     def __init__(self, main_widget, size, main_menu_scene):
         super().__init__(main_widget, size, main_menu_scene, "black_bg")
 
-        self.elements.append(Settings.BackButton(main_widget,
-                                                 Vector(GameInfo.window_size.x / 2 / CameraState.scale.x,
-                                                        GameInfo.window_size.y / 2 + 425), self))
+        self.elements.append(SettingsMenu.MasterVolumeSlider(main_widget,
+                                                             Vector(GameInfo.window_size.x / 2 / CameraState.scale.x,
+                                                                    GameInfo.window_size.y / 2
+                                                                    / CameraState.scale.y - 385), self))
+        self.elements.append(SettingsMenu.SFXVolumeSlider(main_widget,
+                                                          Vector(GameInfo.window_size.x / 2 / CameraState.scale.x,
+                                                                 GameInfo.window_size.y / 2
+                                                                 / CameraState.scale.y - 235), self))
+        self.elements.append(SettingsMenu.MusicVolumeSlider(main_widget,
+                                                            Vector(GameInfo.window_size.x / 2 / CameraState.scale.x,
+                                                                   GameInfo.window_size.y / 2
+                                                                   / CameraState.scale.y - 55), self))
+        self.elements.append(SettingsMenu.BackButton(main_widget,
+                                                     Vector(GameInfo.window_size.x / 2 / CameraState.scale.x,
+                                                            GameInfo.window_size.y / 2
+                                                            / CameraState.scale.y + 425), self))
 
     def escape_pressed(self):
         self.main_menu_scene.switch_menu(Menus.MAIN_MENU)
@@ -313,7 +377,7 @@ class MainMenuScene(QOpenGLWidget):
         elif menu == Menus.ONLINE_OPTIONS:
             self.active_menu = OnlineOptions(self.main_widget, GameInfo.window_size, self)
         elif menu == Menus.SETTINGS:
-            self.active_menu = Settings(self.main_widget, GameInfo.window_size, self)
+            self.active_menu = SettingsMenu(self.main_widget, GameInfo.window_size, self)
 
     def clean_mem(self):
         pass
@@ -329,6 +393,9 @@ class MainMenuScene(QOpenGLWidget):
     def mouseMoveEvent(self, event):
         self.mouse_position.x = event.x() / CameraState.scale.x
         self.mouse_position.y = event.y() / CameraState.scale.y
+        if self.active_menu is not None and self.active_menu.drag_element is not None:
+            self.active_menu.dragging = True
+            self.active_menu.mouse_drag(self.mouse_position)
         event.accept()
 
     def mousePressEvent(self, event):
@@ -336,6 +403,16 @@ class MainMenuScene(QOpenGLWidget):
         self.mouse_position.y = event.y() / CameraState.scale.y
         if event.button() == Qt.LeftButton:
             self.is_clicking = True
+            if self.active_menu is not None:
+                if self.active_menu.drag_element is None:
+                    self.active_menu.drag_element = self.active_menu.selected_element
+                    self.active_menu.mouse_drag(self.mouse_position)
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            if self.active_menu is not None:
+                self.active_menu.dragging = False
+                self.active_menu.drag_element = None
 
     def paintEvent(self, event):
         # TODO: Look into why this strange fix is needed
@@ -352,6 +429,8 @@ class MainMenuScene(QOpenGLWidget):
             self.is_clicking = False
 
         self.active_menu.update_ui(self.mouse_position, curr_time_ns)
+
+        SoundManager.instance.update_sound()
 
         if DEBUG_MODE:
             self._frames_since_last_show += 1

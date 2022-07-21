@@ -3,7 +3,7 @@ import math
 from PyQt5.QtCore import QPoint, Qt
 from PyQt5.QtGui import QPixmap, QFontMetricsF, QPen
 from PyQt5.QtWidgets import QApplication
-from util import Vector, get_main_path, is_point_inside_rect, draw_img_with_rot
+from util import Vector, get_main_path, is_point_inside_rect, draw_img_with_rot, limit
 from globals import Fonts
 from constants import CARET_BLINK_RATE_NS
 from camera import CameraState
@@ -108,6 +108,9 @@ class UIElement:
 
         qp.drawPixmap(round(self.top_left_corner.x + CameraState.x_offset), round(self.top_left_corner.y), self.texture)
 
+    def mouse_drag(self, position):
+        pass
+
     def update_selected(self, curr_time_ns):
         self.is_selected = True
         self.update_time_ns = curr_time_ns
@@ -120,6 +123,72 @@ class UIElement:
 
     def key_press(self, key):
         return False
+
+
+# base class
+class Slider(UIElement):
+    header_offset_y = -30
+    image_border = 10
+
+    def __init__(self, main_widget, position, menu):
+        super().__init__(main_widget, position, menu)
+
+        self.slider_type = type(self)
+        if self.slider_type is Slider:
+            print("ERROR: Slider base class should not be instantiated!")
+
+        self.header_text = self.slider_type.header_text
+        self.min_value = self.slider_type.min_value
+        self.max_value = self.slider_type.max_value
+        self.snap_step = self.slider_type.snap_step
+        self.snap = self.slider_type.snap
+
+        self.value = self.min_value
+
+        self.fill_texture = None
+        self.fill_size = 0
+
+        self.font_metrics = QFontMetricsF(Fonts.text_field_font)
+        self.header_offset_x = -(self.font_metrics.width(self.slider_type.header_text) / 2)
+
+    def draw(self, qp):
+        qp.setFont(Fonts.text_field_font)
+        qp.setPen(QPen(Fonts.text_field_color, 6))
+        qp.drawText(QPoint(self.position.x + self.header_offset_x,
+                           self.position.y + Slider.header_offset_y), self.slider_type.header_text)
+
+        qp.drawPixmap(round(self.top_left_corner.x + CameraState.x_offset), round(self.top_left_corner.y), self.texture)
+
+        percentage = (self.value - self.min_value) / (self.max_value - self.min_value)
+        qp.drawPixmap(round(self.top_left_corner.x + CameraState.x_offset), round(self.top_left_corner.y),
+                      self.fill_texture, 0, 0, round(percentage * self.fill_size + Slider.image_border), 0)
+
+    def load_image(self, name=None):
+        texture, size = super().load_image(name="slider_empty")
+        self._texture = texture
+        self._texture_size = size
+        texture, size = super().load_image(name=(self.slider_type.name + "_fill"))
+        self.fill_texture = texture
+        self.fill_size = size.x - Slider.image_border * 2
+        if not self._texture_size.equal(size):
+            print("ERROR: Fill texture has different size as empty slider texture!")
+
+    def mouse_drag(self, position):
+        pos_range = self.texture_size.x - Slider.image_border * 2
+        pos_start = self.top_left_corner.x + Slider.image_border
+
+        mouse_pos = round(position.x - pos_start)
+        percentage = limit(mouse_pos, 0, pos_range) / pos_range
+
+        self.value = percentage * (self.max_value - self.min_value) + self.min_value
+
+        if self.snap:
+            self.value = round(self.value / self.snap_step) * self.snap_step
+
+        self.value_changed()
+
+    def value_changed(self):
+        pass
 
 
 # base class
@@ -253,6 +322,8 @@ class Menu:
 
         self.elements = []
         self.selected_element = None
+        self.drag_element = None
+        self.dragging = False
 
         self.bg_pixmap = QPixmap(ui_element_texture_path + bg_texture_name + ".png")
 
@@ -287,17 +358,22 @@ class Menu:
             return
         event.accept()
 
+    def mouse_drag(self, position):
+        if self.drag_element is not None:
+            self.drag_element.mouse_drag(position)
+
     def escape_pressed(self):
         pass
 
     def update_ui(self, mouse_pos, curr_time_ns):
-        self.selected_element = None
-        for element in self.elements:
-            if is_point_inside_rect(mouse_pos, element.top_left_corner, element.bottom_right_corner):
-                element.update_selected(curr_time_ns)
-                self.selected_element = element
-            elif element.is_selected:
-                element.unselect()
+        if not self.dragging:
+            self.selected_element = None
+            for element in self.elements:
+                if is_point_inside_rect(mouse_pos, element.top_left_corner, element.bottom_right_corner):
+                    element.update_selected(curr_time_ns)
+                    self.selected_element = element
+                elif element.is_selected:
+                    element.unselect()
 
     def draw(self, qp):
         # draw static menu background

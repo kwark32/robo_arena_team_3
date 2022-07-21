@@ -13,7 +13,7 @@ sfx_path = "qrc:" + "/sounds/sfx/"
 music_path = "qrc:" + "/sounds/music/"
 
 music_names = ["soundtrack-1_normal", "soundtrack-2_boss"]
-music_volume_factors = {"soundtrack-1_normal": 0.6, "soundtrack-2_boss": 1}
+music_volume_factors = {"soundtrack-1_normal": 0.36, "soundtrack-2_boss": 0.75}
 
 
 class SoundManager:

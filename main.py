@@ -118,6 +118,7 @@ def main():
     if not GameInfo.is_headless:
         GameInfo.window_reference_size = Vector(1920, 1080)
         GameInfo.window_size = GameInfo.window_reference_size.copy()
+        GameInfo.main_path = get_main_path()
 
         app = QApplication(sys.argv)
 

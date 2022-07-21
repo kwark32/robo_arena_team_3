@@ -163,10 +163,10 @@ class SPWorldSim(WorldSim):
 
         self.local_player_robot = self.create_player(player_name="")
         self.local_player_robot.input = self.player_input
-        self.create_enemy_robot(position=Vector(self.arena.size.x / 2 - 400, self.arena.size.y / 2 - 400))
-        #self.create_enemy_robot(position=Vector(self.arena.size.x / 2 + 400, self.arena.size.y / 2 - 400))
-        #self.create_enemy_robot(position=Vector(self.arena.size.x / 2 - 400, self.arena.size.y / 2 + 400))
-        #self.create_enemy_robot(position=Vector(self.arena.size.x / 2 + 400, self.arena.size.y / 2 + 400))
+        self.create_enemy_robot(position=Vector(self.arena.size.x / 2 - 800, self.arena.size.y / 2 - 800))
+        self.create_enemy_robot(position=Vector(self.arena.size.x / 2 + 800, self.arena.size.y / 2 - 800))
+        self.create_enemy_robot(position=Vector(self.arena.size.x / 2 - 800, self.arena.size.y / 2 + 800))
+        self.create_enemy_robot(position=Vector(self.arena.size.x / 2 + 800, self.arena.size.y / 2 + 800))
 
     def fixed_update(self, delta_time):
         GameInfo.current_frame_seed = self.world_start_time_ns + self.physics_frame_count

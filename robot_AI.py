@@ -61,7 +61,7 @@ class RobotAI:
                     continue
                 inner = start.copy()
                 inner.add(corner.diff(end))
-                if 0 <= self.walkable_check.get_walkable(inner.x, inner.y) <= 4:  # 4 = cut corner cost threshold
+                if 0 <= self.walkable_check.get_walkable(inner.x, inner.y) <= 2:  # 2 = cut corner cost threshold
                     self.shortest_path.pop(index + 1)
                 index += 1
         # take the shortest path to the closest player

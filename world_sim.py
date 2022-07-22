@@ -88,6 +88,9 @@ class WorldSim:
     def fixed_update(self, delta_time):
         random.seed(GameInfo.current_frame_seed)
 
+        for anim in self.arena.tile_animations:
+            anim.update(self.physics_frame_count)
+
         for bullet in self.bullets:
             bullet.update(delta_time)
 

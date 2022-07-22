@@ -14,10 +14,11 @@ animated_tiles_texture_path = get_main_path() + "/textures/animated_tiles/"
 
 
 class TileType:
-    def __init__(self, name, has_collision=False, effect_class=None):
+    def __init__(self, name, has_collision=False, effect_class=None, has_animation=False):
         self.name = name
         self.has_collision = has_collision
         self.effect_class = effect_class
+        self.has_animation = has_animation
         self._texture = None
         self._texture_size = None
 
@@ -35,10 +36,6 @@ class TileType:
 
     def load_image(self):
         filename = tile_texture_path + self.name + ".png"
-        # TODO: remove
-        if self.name == "fire" or self.name.startswith("portal_"):
-            filename = animated_tiles_texture_path + self.name + "/" + self.name + "_0.png"
-
         self._texture = QPixmap(filename)
         self._texture_size = Vector(self._texture.width(), self._texture.height())
         if self._texture_size.x == 0 or self._texture_size.y == 0:
@@ -54,9 +51,9 @@ tile_type_dict = {
     "hole": TileType("hole", effect_class=effects.HoleTileEffect),
     "water": TileType("water", effect_class=effects.WaterTileEffect),
     "lava": TileType("lava", effect_class=effects.LavaTileEffect),
-    "fire": TileType("fire", effect_class=effects.FireTileEffect),
-    "portal_1": TileType("portal_1", effect_class=effects.Portal1TileEffect),
-    "portal_2": TileType("portal_2", effect_class=effects.Portal2TileEffect),
+    "fire": TileType("fire", effect_class=effects.FireTileEffect, has_animation=True),
+    "portal_1": TileType("portal_1", effect_class=effects.Portal1TileEffect, has_animation=True),
+    "portal_2": TileType("portal_2", effect_class=effects.Portal2TileEffect, has_animation=True),
 }
 
 
@@ -67,6 +64,8 @@ class Arena:
         self.size = Vector(self.tile_count.x, self.tile_count.y)
         self.size.mult(GameInfo.arena_tile_size)
         self.tiles = self.get_empty_tiles()
+
+        self.tile_animations = []
 
         self._portal_tiles = None
 
@@ -144,3 +143,6 @@ class Arena:
                           self.background_pixmap, round(paint_cutoff.x), round(paint_cutoff.y),
                           round(size.x), round(size.y))
         qp.restore()
+
+        for anim in self.tile_animations:
+            anim.draw(qp)

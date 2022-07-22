@@ -1,12 +1,14 @@
 import math
 
-from PyQt5.QtCore import QPoint, Qt
-from PyQt5.QtGui import QPixmap, QFontMetricsF, QPen
-from PyQt5.QtWidgets import QApplication
 from util import Vector, get_main_path, is_point_inside_rect, draw_img_with_rot, limit
-from globals import Fonts
+from globals import Fonts, GameInfo
 from constants import CARET_BLINK_RATE_NS
 from camera import CameraState
+
+if not GameInfo.is_headless:
+    from PyQt5.QtCore import QPoint, Qt
+    from PyQt5.QtGui import QPixmap, QFontMetricsF, QPen
+    from PyQt5.QtWidgets import QApplication
 
 
 ui_element_texture_path = get_main_path() + "/textures/ui/main_menu/"

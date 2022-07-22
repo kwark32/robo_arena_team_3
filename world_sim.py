@@ -44,6 +44,7 @@ class WorldSim:
 
     def init_arena(self):
         self.arena = load_map(GameInfo.active_arena, physics_world=self.physics_world)
+        self.arena.world_sim = self
 
     def create_player(self, robot_id=-1, position=None,
                       player_name=None):
@@ -87,9 +88,6 @@ class WorldSim:
 
     def fixed_update(self, delta_time):
         random.seed(GameInfo.current_frame_seed)
-
-        for anim in self.arena.tile_animations:
-            anim.update(self.physics_frame_count)
 
         for bullet in self.bullets:
             bullet.update(delta_time)

@@ -76,6 +76,7 @@ def load_map(file, physics_world=None):
                     anim = Animation(tile.name, pos)
                     anim.play(True, 0)
                     arena.tile_animations.append(anim)
+        arena.calc_tile_anim_groups()
 
     if physics_world is not None:
         add_physics(arena, physics_world)

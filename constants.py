@@ -4,6 +4,7 @@ from globals import GameInfo
 
 # Arena
 MAP_FORMAT_VERSION = 1
+TILE_ANIM_GROUP_SIZE = 10
 
 # Time
 FIXED_FPS = 60

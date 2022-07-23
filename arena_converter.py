@@ -73,7 +73,7 @@ def load_map(file, physics_world=None):
                     pos.mult(GameInfo.arena_tile_size)
                     pos.add_scalar(GameInfo.arena_tile_size / 2)
                     pos.round()
-                    anim = Animation(tile.name, pos)
+                    anim = Animation("animated_tiles/" + tile.name, pos, single_vfx=False)
                     anim.play(True, 0)
                     arena.tile_animations.append(anim)
         arena.calc_tile_anim_groups()

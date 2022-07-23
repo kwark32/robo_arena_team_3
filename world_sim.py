@@ -15,6 +15,8 @@ class WorldSim:
     def __init__(self):
         self.robot_class = Robot
 
+        self.world_scene = None
+
         self.physics_world = PhysicsWorld()
         self.arena = None
         self.robots = []

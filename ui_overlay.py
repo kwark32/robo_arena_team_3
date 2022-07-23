@@ -23,6 +23,8 @@ class UIOverlay:
         qp.setFont(Fonts.name_tag_font)
         qp.setPen(Fonts.name_tag_color)
         for robot in robots:
+            if robot.is_dead:
+                continue
             if robot.player_name != "":
                 text_width = self.name_tag_font_metrics.width(robot.player_name)
                 pos = Vector(0, 0)

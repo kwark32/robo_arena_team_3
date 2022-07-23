@@ -9,22 +9,29 @@ if not GameInfo.is_headless:
     from PyQt5.QtGui import QPixmap
 
 
-animated_tiles_path = get_main_path() + "/textures/animated_tiles/"
+animation_path = get_main_path() + "/textures/"
 
 animations_fps = {
-    "fire": 10,
-    "portal_1": 10,
-    "portal_2": 10
+    "animated_tiles/fire": 10,
+    "animated_tiles/portal_1": 10,
+    "animated_tiles/portal_2": 10,
+    "vfx/tank_blue_explosion": 10,
+    "vfx/tank_red_explosion": 10
 }
 
 
 class Animation:
-    def __init__(self, name, position):
+    world_scene = None
+
+    def __init__(self, name, position, rotation=0, single_vfx=True):
         self.name = name
         self.position = position.copy()
+        self.rotation = rotation
 
         self._frames = None
-        self._fps = animations_fps[name]
+        self._fps = animations_fps.get(name)
+        if self._fps is None:
+            self._fps = 10
         self._curr_frame = 0
         self._playing = False
         self._loop = False
@@ -35,13 +42,17 @@ class Animation:
 
         if not GameInfo.is_headless:
             self._frames = []
-            path = animated_tiles_path + name + "/"
+            path = animation_path + name + "/"
             file_list = os.listdir(path)
             file_list = sorted(file_list)
             self._frames = np.empty(len(file_list), dtype=QPixmap)
             for i, name in enumerate(file_list):
                 self._frames[i] = QPixmap(path + name)
             self._frame_count = len(file_list)
+
+        if single_vfx and Animation.world_scene is not None:
+            Animation.world_scene.animations.append(self)
+            self.play(False, Animation.world_scene.world_sim.physics_frame_count)
 
     def update(self, physics_frame):
         self._curr_frame = int((physics_frame - self._start_physics_frame) * FIXED_DELTA_TIME * self._fps)
@@ -63,7 +74,8 @@ class Animation:
     def draw(self, qp, physics_frame):
         self.update(physics_frame)
         frame = self._frames[self._curr_frame]
-        draw_img_with_rot(qp, frame, frame.width(), frame.height(), self.position, 0)
+        draw_img_with_rot(qp, frame, frame.width(), frame.height(), self.position, self.rotation)
+        return self._curr_frame < len(self._frames) - 1 or self._loop
 
     def get_frame(self):
         return self._frames[self._curr_frame]

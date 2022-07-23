@@ -1,4 +1,5 @@
 import random
+import threading
 
 # from util import get_main_path, Vector
 from globals import Settings, GameInfo
@@ -27,6 +28,8 @@ class SoundManager:
         self.play_random_music = False
         self.playing_music_name = ""
 
+        self.sfx_start_threads = 0
+
     def update_sound(self, listener_pos=None):
         self.listener_pos = listener_pos
         self.set_sound_volumes()
@@ -41,14 +44,12 @@ class SoundManager:
         if pos is not None:
             pos = pos.copy()
 
-        if len(self.sounds) >= SFX_AUDIO_SOURCES:
+        if len(self.sounds) + self.sfx_start_threads >= SFX_AUDIO_SOURCES:
             return
 
+        self.sfx_start_threads += 1
         sound = QSoundEffect()
-        sound.setSource(QUrl(sfx_path + name + ".wav"))
-        sound.setVolume(self.get_sound_volume(pos=pos))
-        sound.play()
-        self.sounds.append((sound, pos))
+        threading.Thread(target=self._set_sound, args=(sound, pos, name)).start()
 
     def play_music(self, name, once=True):
         self.playing_music_name = name
@@ -108,6 +109,13 @@ class SoundManager:
 
         return volume_setting * volume
 
+    def _set_sound(self, sound, pos, name):
+        sound.setSource(QUrl(sfx_path + name + ".wav"))
+        sound.setVolume(self.get_sound_volume(pos=pos))
+        sound.play()
+        self.sounds.append((sound, pos))
+        self.sfx_start_threads -= 1
+
 
 class HeadlessSound(SoundManager):
     def update_sound(self, listener_pos=None):
@@ -124,3 +132,6 @@ class HeadlessSound(SoundManager):
 
     def get_sound_volume(self, sfx_volume=True, pos=None):
         return 0
+
+    def _set_sound(self, sound, pos, name):
+        pass

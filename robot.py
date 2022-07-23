@@ -5,10 +5,11 @@ from weapons import TankCannon
 from util import Vector, get_main_path, draw_img_with_rot, painter_transform_with_rot
 from globals import GameInfo, Fonts
 from constants import FIXED_DELTA_TIME, MAX_ROBOT_HEALTH, DEBUG_MODE, ROBOT_COLLISION_SOUND_SPEED_FACTOR
-from constants import MIN_SOUND_DELAY_FRAMES
+from constants import MIN_SOUND_DELAY_FRAMES, RESPAWN_DELAY
 from robot_AI import RobotAI
 from sound_manager import SoundManager
 from arena import TileType
+from animation import Animation
 
 if not GameInfo.is_headless:
     from PyQt5.QtGui import QPixmap, QPolygon
@@ -111,8 +112,8 @@ class Robot:
         self.world_sim = world_sim
         self.physics_world = world_sim.physics_world
 
-        self.physics_body = self.physics_world.add_rect(Vector(position.x, position.y), self.size.x, self.size.y,
-                                                        rotation=rotation, static=False, user_data=self)
+        self.physics_body = None
+        self.create_physics_body()
 
         self.weapon = TankCannon(self.world_sim)
 
@@ -144,6 +145,9 @@ class Robot:
         return self._body_texture
 
     def draw(self, qp, delta_time):
+        if self.is_dead:
+            return
+
         self.extrapolation_body.step(delta_time)
         draw_img_with_rot(qp, self.body_texture, self.size.x, self.size.y,
                           self.extrapolation_body.position, self.extrapolation_body.rotation)
@@ -168,13 +172,18 @@ class Robot:
             qp.restore()
 
     def update(self, delta_time):
+        if self.is_dead:
+            if self.world_sim.physics_frame_count >= self.last_death_frame + RESPAWN_DELAY:
+                self.respawn()
+            else:
+                return
+
         if int(self.health) <= 0:
             self.health = 0
             self.die()
-            if not self.should_respawn:
-                return
-            elif self.health > self.max_health:
-                self.health = self.max_health
+            return
+        elif self.health > self.max_health:
+            self.health = self.max_health
 
         self.revert_effects()
 
@@ -237,6 +246,12 @@ class Robot:
 
         self.set_physics_body()
 
+    def create_physics_body(self):
+        if self.physics_body is None:
+            self.physics_body = self.physics_world.add_rect(self.sim_body.position, self.size.x, self.size.y,
+                                                            rotation=self.sim_body.rotation, static=False,
+                                                            user_data=self)
+
     def get_center_tile(self):
         tile_size = GameInfo.arena_tile_size
         tile_count = self.world_sim.arena.tile_count
@@ -279,15 +294,22 @@ class Robot:
         self.health += delta_healh
 
     def die(self):
-        print("<cool tank explode animation> or something... (for robot ID " + str(self.robot_id) + ")")
+        explosion_path = "vfx/"
+        if self.is_player:
+            explosion_path += "tank_blue_explosion"
+        else:
+            explosion_path += "tank_red_explosion"
+        Animation(explosion_path, self.sim_body.position, rotation=self.sim_body.rotation)
         self.is_dead = True
         self.last_death_frame = self.world_sim.physics_frame_count
         if self.should_respawn:
-            self.respawn()
+            self.physics_world.world.DestroyBody(self.physics_body)
+            self.physics_body = None
         else:
             self.remove()
 
     def respawn(self):
+        self.create_physics_body()
         self.revert_effects()
         self.effects.clear()
         self.health = self.max_health

@@ -8,6 +8,7 @@ from arena import Arena, tile_type_dict
 from util import Vector, get_main_path
 from constants import MAP_FORMAT_VERSION
 from globals import GameInfo
+from animation import Animation
 
 
 json_map_path = get_main_path() + "/arenas/json/"
@@ -61,6 +62,21 @@ def load_map(file, physics_world=None):
         arena = load_map_png(png_map_path + file)
     else:
         return None
+
+    if not GameInfo.is_headless:
+        tiles = arena.tiles
+        for y in range(arena.tile_count.y):
+            for x in range(arena.tile_count.x):
+                tile = tiles[y][x]
+                if tile.has_animation:
+                    pos = Vector(x, y)
+                    pos.mult(GameInfo.arena_tile_size)
+                    pos.add_scalar(GameInfo.arena_tile_size / 2)
+                    pos.round()
+                    anim = Animation("animated_tiles/" + tile.name, pos, single_vfx=False)
+                    anim.play(True, 0)
+                    arena.tile_animations.append(anim)
+        arena.calc_tile_anim_groups()
 
     if physics_world is not None:
         add_physics(arena, physics_world)

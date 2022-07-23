@@ -5,10 +5,11 @@ from weapons import TankCannon
 from util import Vector, get_main_path, draw_img_with_rot, painter_transform_with_rot
 from globals import GameInfo, Fonts
 from constants import FIXED_DELTA_TIME, MAX_ROBOT_HEALTH, DEBUG_MODE, ROBOT_COLLISION_SOUND_SPEED_FACTOR
-from constants import MIN_SOUND_DELAY_FRAMES
+from constants import MIN_SOUND_DELAY_FRAMES, RESPAWN_DELAY
 from robot_AI import RobotAI
 from sound_manager import SoundManager
 from arena import TileType
+from animation import Animation
 
 if not GameInfo.is_headless:
     from PyQt5.QtGui import QPixmap, QPolygon
@@ -98,6 +99,7 @@ class Robot:
         self.size = size
 
         self.real_velocity = Vector(0, 0)
+        self.collider_push = Vector(0, 0)
 
         self.last_position = position.copy()
         self.forward_velocity_goal = 0
@@ -110,8 +112,8 @@ class Robot:
         self.world_sim = world_sim
         self.physics_world = world_sim.physics_world
 
-        self.physics_body = self.physics_world.add_rect(Vector(position.x, position.y), self.size.x, self.size.y,
-                                                        rotation=rotation, static=False, user_data=self)
+        self.physics_body = None
+        self.create_physics_body()
 
         self.weapon = TankCannon(self.world_sim)
 
@@ -143,6 +145,9 @@ class Robot:
         return self._body_texture
 
     def draw(self, qp, delta_time):
+        if self.is_dead:
+            return
+
         self.extrapolation_body.step(delta_time)
         draw_img_with_rot(qp, self.body_texture, self.size.x, self.size.y,
                           self.extrapolation_body.position, self.extrapolation_body.rotation)
@@ -167,13 +172,18 @@ class Robot:
             qp.restore()
 
     def update(self, delta_time):
+        if self.is_dead:
+            if self.world_sim.physics_frame_count >= self.last_death_frame + RESPAWN_DELAY:
+                self.respawn()
+            else:
+                return
+
         if int(self.health) <= 0:
             self.health = 0
             self.die()
-            if not self.should_respawn:
-                return
-            elif self.health > self.max_health:
-                self.health = self.max_health
+            return
+        elif self.health > self.max_health:
+            self.health = self.max_health
 
         self.revert_effects()
 
@@ -236,6 +246,12 @@ class Robot:
 
         self.set_physics_body()
 
+    def create_physics_body(self):
+        if self.physics_body is None:
+            self.physics_body = self.physics_world.add_rect(self.sim_body.position, self.size.x, self.size.y,
+                                                            rotation=self.sim_body.rotation, static=False,
+                                                            user_data=self)
+
     def get_center_tile(self):
         tile_size = GameInfo.arena_tile_size
         tile_count = self.world_sim.arena.tile_count
@@ -247,11 +263,17 @@ class Robot:
 
     def set_physics_body(self):
         self.physics_body.transform = ((self.sim_body.position.x, self.sim_body.position.y), self.sim_body.rotation)
+        self.collider_push = self.sim_body.position.copy()
 
     def refresh_from_physics(self):
         if self.physics_body is not None:
-            self.sim_body.position.x = self.physics_body.position[0]
-            self.sim_body.position.y = self.physics_body.position[1]
+            new_pos = Vector(self.physics_body.position[0], self.physics_body.position[1])
+            self.collider_push = self.collider_push.diff(new_pos)
+            self.sim_body.position = new_pos
+
+            push_vel = self.collider_push.copy()
+            push_vel.mult(FIXED_DELTA_TIME)
+            self.real_velocity.add(push_vel)
 
     def apply_effects(self, delta_time):
         for effect in self.effects:
@@ -272,15 +294,22 @@ class Robot:
         self.health += delta_healh
 
     def die(self):
-        print("<cool tank explode animation> or something... (for robot ID " + str(self.robot_id) + ")")
+        explosion_path = "vfx/"
+        if self.is_player:
+            explosion_path += "tank_blue_explosion"
+        else:
+            explosion_path += "tank_red_explosion"
+        Animation(explosion_path, self.sim_body.position, rotation=self.sim_body.rotation)
         self.is_dead = True
         self.last_death_frame = self.world_sim.physics_frame_count
         if self.should_respawn:
-            self.respawn()
+            self.physics_world.world.DestroyBody(self.physics_body)
+            self.physics_body = None
         else:
             self.remove()
 
     def respawn(self):
+        self.create_physics_body()
         self.revert_effects()
         self.effects.clear()
         self.health = self.max_health
@@ -336,24 +365,27 @@ class PlayerInput:
                 + "\n  Shoot Pressed: " + str(self.shoot_pressed) + "\n}")
 
 
-def collide_robot(robot, other, normal=Vector(0, 0)):
-    if normal.equal(Vector(0, 0) or robot.real_velocity.equal(Vector(0, 0))):
-        return
+def collide_robot(robot, other):
 
-    normal.rotate(robot.sim_body.rotation)
+    normal = robot.collider_push.copy()
+    pos = robot.sim_body.position.copy()
 
-    pos = robot.sim_body.position
     if isinstance(other, Robot):
+        normal = robot.collider_push.diff(other.collider_push)
         velocity = robot.real_velocity.diff(other.real_velocity)
+        if normal.equal(Vector(0, 0)) or velocity.equal(Vector(0, 0)):
+            return
         angle = velocity.angle(normal)
-        mag = velocity.magnitude() * math.sin(angle)
+        mag = velocity.magnitude() * math.cos(angle)
         if (robot.world_sim.physics_frame_count > robot.last_collision_sound_frame + MIN_SOUND_DELAY_FRAMES
                 and abs(mag) > robot.max_velocity * ROBOT_COLLISION_SOUND_SPEED_FACTOR):
             robot.last_collision_sound_frame = robot.world_sim.physics_frame_count
             SoundManager.instance.play_sfx("collision_tank_tank", pos=pos)
     elif isinstance(other, TileType) and other.has_collision:
+        if normal.equal(Vector(0, 0) or robot.real_velocity.equal(Vector(0, 0))):
+            return
         angle = robot.real_velocity.angle(normal)
-        mag = robot.real_velocity.magnitude() * math.sin(angle)
+        mag = robot.real_velocity.magnitude() * math.cos(angle)
         if (robot.world_sim.physics_frame_count > robot.last_collision_sound_frame + MIN_SOUND_DELAY_FRAMES
                 and abs(mag) > robot.max_velocity * ROBOT_COLLISION_SOUND_SPEED_FACTOR):
             robot.last_collision_sound_frame = robot.world_sim.physics_frame_count

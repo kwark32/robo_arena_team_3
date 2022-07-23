@@ -12,6 +12,7 @@ from constants import DEBUG_MODE
 from ui_overlay import UIOverlay
 from util import painter_transform_with_rot, Vector
 from sound_manager import SoundManager, music_names
+from animation import Animation
 
 
 class WorldScene(QOpenGLWidget):
@@ -23,6 +24,10 @@ class WorldScene(QOpenGLWidget):
         self.size = size.copy()
 
         self.world_sim = sim_class()
+        self.world_sim.world_scene = self
+
+        self.animations = []
+        Animation.world_scene = self
 
         self.ui_overlay = UIOverlay()
 
@@ -95,8 +100,15 @@ class WorldScene(QOpenGLWidget):
         for robot in self.world_sim.robots:
             robot.draw(qp, self.world_sim.extrapolation_delta_time)
 
+        ended_anims = []
+        for anim in self.animations:
+            if not anim.draw(qp, self.world_sim.physics_frame_count):
+                ended_anims.append(anim)
+        for ended in ended_anims:
+            self.animations.remove(ended)
+
         self.ui_overlay.draw_name_tags(qp, self.world_sim.robots)
-        if self.world_sim.local_player_robot is not None:
+        if self.world_sim.local_player_robot is not None and not self.world_sim.local_player_robot.is_dead:
             self.ui_overlay.draw_health_bar(qp, self.world_sim.local_player_robot)
 
         # debugging physics shapes

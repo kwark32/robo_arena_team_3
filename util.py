@@ -119,7 +119,8 @@ class Vector:
             from_vec = Vector(0, 1)
         mags = self.magnitude() * from_vec.magnitude()
         if mags > 0:
-            return math.acos((self.x * from_vec.x + self.y * from_vec.y) / mags)
+            cos = (self.x * from_vec.x + self.y * from_vec.y) / mags
+            return math.acos(limit(cos, -1, 1))
         return 0
 
     def as_tuple(self):

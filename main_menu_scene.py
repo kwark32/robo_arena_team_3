@@ -1,14 +1,16 @@
 import time
 
-from PyQt5.QtGui import QPainter
-from PyQt5.QtWidgets import QOpenGLWidget, QApplication
-from PyQt5.QtCore import Qt, QPoint
 from ui_elements import Button, Menu, TextField, UIImage, Slider
 from util import Vector, ns_to_s
 from globals import GameInfo, Scene, Menus, Fonts, Settings
 from camera import CameraState
 from constants import DEBUG_MODE, MAX_PLAYER_NAME_LENGTH, MAX_SERVER_IP_LENGTH
 from sound_manager import SoundManager, music_names
+
+if not GameInfo.is_headless:
+    from PyQt5.QtGui import QPainter
+    from PyQt5.QtWidgets import QOpenGLWidget, QApplication
+    from PyQt5.QtCore import Qt, QPoint
 
 
 class MainMenu(Menu):

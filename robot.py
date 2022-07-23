@@ -98,6 +98,7 @@ class Robot:
         self.size = size
 
         self.real_velocity = Vector(0, 0)
+        self.collider_push = Vector(0, 0)
 
         self.last_position = position.copy()
         self.forward_velocity_goal = 0
@@ -247,11 +248,17 @@ class Robot:
 
     def set_physics_body(self):
         self.physics_body.transform = ((self.sim_body.position.x, self.sim_body.position.y), self.sim_body.rotation)
+        self.collider_push = self.sim_body.position.copy()
 
     def refresh_from_physics(self):
         if self.physics_body is not None:
-            self.sim_body.position.x = self.physics_body.position[0]
-            self.sim_body.position.y = self.physics_body.position[1]
+            new_pos = Vector(self.physics_body.position[0], self.physics_body.position[1])
+            self.collider_push = self.collider_push.diff(new_pos)
+            self.sim_body.position = new_pos
+
+            push_vel = self.collider_push.copy()
+            push_vel.mult(FIXED_DELTA_TIME)
+            self.real_velocity.add(push_vel)
 
     def apply_effects(self, delta_time):
         for effect in self.effects:
@@ -336,24 +343,27 @@ class PlayerInput:
                 + "\n  Shoot Pressed: " + str(self.shoot_pressed) + "\n}")
 
 
-def collide_robot(robot, other, normal=Vector(0, 0)):
-    if normal.equal(Vector(0, 0) or robot.real_velocity.equal(Vector(0, 0))):
-        return
+def collide_robot(robot, other):
 
-    normal.rotate(robot.sim_body.rotation)
+    normal = robot.collider_push.copy()
+    pos = robot.sim_body.position.copy()
 
-    pos = robot.sim_body.position
     if isinstance(other, Robot):
+        normal = robot.collider_push.diff(other.collider_push)
         velocity = robot.real_velocity.diff(other.real_velocity)
+        if normal.equal(Vector(0, 0)) or velocity.equal(Vector(0, 0)):
+            return
         angle = velocity.angle(normal)
-        mag = velocity.magnitude() * math.sin(angle)
+        mag = velocity.magnitude() * math.cos(angle)
         if (robot.world_sim.physics_frame_count > robot.last_collision_sound_frame + MIN_SOUND_DELAY_FRAMES
                 and abs(mag) > robot.max_velocity * ROBOT_COLLISION_SOUND_SPEED_FACTOR):
             robot.last_collision_sound_frame = robot.world_sim.physics_frame_count
             SoundManager.instance.play_sfx("collision_tank_tank", pos=pos)
     elif isinstance(other, TileType) and other.has_collision:
+        if normal.equal(Vector(0, 0) or robot.real_velocity.equal(Vector(0, 0))):
+            return
         angle = robot.real_velocity.angle(normal)
-        mag = robot.real_velocity.magnitude() * math.sin(angle)
+        mag = robot.real_velocity.magnitude() * math.cos(angle)
         if (robot.world_sim.physics_frame_count > robot.last_collision_sound_frame + MIN_SOUND_DELAY_FRAMES
                 and abs(mag) > robot.max_velocity * ROBOT_COLLISION_SOUND_SPEED_FACTOR):
             robot.last_collision_sound_frame = robot.world_sim.physics_frame_count

@@ -46,8 +46,7 @@ class WorldSim:
         self.arena = load_map(GameInfo.active_arena, physics_world=self.physics_world)
         self.arena.world_sim = self
 
-    def create_player(self, robot_id=-1, position=None,
-                      player_name=None):
+    def create_player(self, robot_id=-1, position=None, player_name=None):
         if player_name is None:
             player_name = GameInfo.local_player_name
         if position is None:
@@ -57,8 +56,7 @@ class WorldSim:
         self.robots.append(player)
         return player
 
-    def create_enemy_robot(self, robot_id=-1, position=None,
-                           has_ai=True, player_name=""):
+    def create_enemy_robot(self, robot_id=-1, position=None, has_ai=True, player_name=""):
         if position is None:
             position = Vector(self.arena.size.x / 2, self.arena.size.y / 2)
         enemy = Robot(self, robot_id=robot_id, has_ai=has_ai, position=position, player_name=player_name)
@@ -105,7 +103,9 @@ class WorldSim:
         pos = CameraState.position
         if self.local_player_robot is not None:
             pos = self.local_player_robot.sim_body.position
-        SoundManager.instance.update_sound(pos.copy())
+        if pos is not None:
+            pos = pos.copy()
+        SoundManager.instance.update_sound(pos)
 
         self.clear_dead_bullets()
         self.clear_dead_robots()

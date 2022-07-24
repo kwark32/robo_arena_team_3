@@ -156,8 +156,8 @@ class Slider(UIElement):
     def draw(self, qp):
         qp.setFont(Fonts.text_field_font)
         qp.setPen(QPen(Fonts.text_field_color, 6))
-        qp.drawText(QPoint(self.position.x + self.header_offset_x,
-                           self.position.y + Slider.header_offset_y), self.slider_type.header_text)
+        qp.drawText(QPoint(round(self.position.x + self.header_offset_x),
+                           round(self.position.y + Slider.header_offset_y)), self.slider_type.header_text)
 
         qp.drawPixmap(round(self.top_left_corner.x + CameraState.x_offset), round(self.top_left_corner.y), self.texture)
 

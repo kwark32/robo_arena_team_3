@@ -50,12 +50,14 @@ class GameInfo:
 
 class Settings:
     instance = None
-    protocol_version = "1.0"
+    protocol_version = "1.1"
 
     def __init__(self):
         self.master_volume = 0.1
         self.sfx_volume = 1
         self.music_volume = 1
+        self.player_name = ""
+        self.ip_address = ""
 
         self.filename = GameInfo.main_path + "/settings.json"
 
@@ -79,13 +81,17 @@ class Settings:
         self.master_volume = settings["master_volume"]
         self.sfx_volume = settings["sfx_volume"]
         self.music_volume = settings["music_volume"]
+        self.player_name = settings["player_name"]
+        self.ip_address = settings["ip_address"]
 
     def save(self):
         settings = {
             "version": Settings.protocol_version,
             "master_volume": self.master_volume,
             "sfx_volume": self.sfx_volume,
-            "music_volume": self.music_volume
+            "music_volume": self.music_volume,
+            "player_name": self.player_name,
+            "ip_address": self.ip_address
         }
 
         with open(self.filename, 'w', encoding='utf-8') as f:

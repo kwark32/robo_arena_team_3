@@ -106,6 +106,15 @@ class OnlineOptions(Menu):
             if GameInfo.local_player_name != GameInfo.placeholder_name:
                 self.text = GameInfo.local_player_name
 
+            if Settings.instance.player_name != "":
+                self.text = Settings.instance.player_name
+
+        def add_character(self, character, use_shift=True):
+            super().add_character(character, use_shift=use_shift)
+
+            Settings.instance.player_name = self.text
+            Settings.instance.save()
+
     class ServerIPField(TextField):
         name = "server_ip"
 
@@ -119,6 +128,9 @@ class OnlineOptions(Menu):
 
             self.dot_count = 0
             self.number_counts = [0, 0, 0, 0]
+
+            if Settings.instance.ip_address != "":
+                self.text = Settings.instance.ip_address
 
         def key_press(self, key):
             character = chr(0)
@@ -162,7 +174,12 @@ class OnlineOptions(Menu):
                 valid_input = False
 
             if valid_input:
-                return super().add_character(character, use_shift=False)
+                ret = super().add_character(character, use_shift=False)
+
+                Settings.instance.ip_address = self.text
+                Settings.instance.save()
+
+                return ret
 
             return False
 

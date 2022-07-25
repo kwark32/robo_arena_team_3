@@ -55,6 +55,8 @@ class RobotInfo:
         robot.weapon.last_shot_frame = self.last_shot_frame
         robot.last_position = Vector(self.last_position[0], self.last_position[1])
         robot.forward_velocity_goal = 0
+        if robot.physics_body is None:
+            robot.create_physics_body()
         robot.set_physics_body()
         if not robot.has_ai:
             robot.input = self.input

@@ -1,4 +1,5 @@
 import math
+import random
 import threading
 
 from util import Vector
@@ -42,6 +43,9 @@ class RobotAI:
 
         # get the shortest path to the closest player
         if self.target_robot is not None:
+            pos_diff = self.robot.sim_body.position.diff(self.target_robot.sim_body.position)
+            self.robot.input.turret_rot = pos_diff.signed_angle() + (random.random() - 0.5) * 0.5
+
             arena_size = self.world_sim.arena.tile_count.as_tuple()
             start = self.robot.sim_body.position.copy()
             start.div(GameInfo.arena_tile_size)

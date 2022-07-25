@@ -164,14 +164,42 @@ class SPWorldSim(WorldSim):
     def __init__(self):
         super().__init__()
 
+        self.last_enemy_spawn_time = 0
+        self.enemy_spawn_delay = 600
+
         self.local_player_robot = self.create_player(player_name="")
         self.local_player_robot.input = self.player_input
-        self.create_enemy_robot(position=Vector(self.arena.size.x / 2 - 800, self.arena.size.y / 2 - 800))
-        self.create_enemy_robot(position=Vector(self.arena.size.x / 2 + 800, self.arena.size.y / 2 - 800))
-        self.create_enemy_robot(position=Vector(self.arena.size.x / 2 - 800, self.arena.size.y / 2 + 800))
-        self.create_enemy_robot(position=Vector(self.arena.size.x / 2 + 800, self.arena.size.y / 2 + 800))
+
+        self.spawn_random_enemy()
+
+        # self.create_enemy_robot(position=Vector(self.arena.size.x / 2 - 800, self.arena.size.y / 2 - 800))
+        # self.create_enemy_robot(position=Vector(self.arena.size.x / 2 + 800, self.arena.size.y / 2 - 800))
+        # self.create_enemy_robot(position=Vector(self.arena.size.x / 2 - 800, self.arena.size.y / 2 + 800))
+        # self.create_enemy_robot(position=Vector(self.arena.size.x / 2 + 800, self.arena.size.y / 2 + 800))
 
     def fixed_update(self, delta_time):
         GameInfo.current_frame_seed = self.world_start_time_ns + self.physics_frame_count
 
+        if self.physics_frame_count - self.last_enemy_spawn_time > self.enemy_spawn_delay:
+            self.spawn_random_enemy()
+            self.last_enemy_spawn_time = self.physics_frame_count
+            self.enemy_spawn_delay *= 0.9
+
         super().fixed_update(delta_time)
+
+    def spawn_random_enemy(self):
+        if self.arena.tiles is None:
+            return
+
+        pos = None
+        while pos is None:
+            pos = Vector(random.randrange(self.arena.tile_count.x), random.randrange(self.arena.tile_count.y))
+            tile = self.arena.tiles[pos.y][pos.x]
+            if tile.has_collision or tile.name == "hole" or tile.name == "lava" or tile.name.startswith("portal_"):
+                pos = None
+                continue
+            pos.mult(GameInfo.arena_tile_size)
+            pos.add_scalar(GameInfo.arena_tile_size / 2)
+            pos.round()
+
+        self.create_enemy_robot(position=pos)

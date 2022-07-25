@@ -146,8 +146,8 @@ def main():
         Fonts.name_tag_color = QColor(200, 200, 200)  # QColor(225, 50, 225)
 
         while window.running:  # main loop
-            app.processEvents()
             window.update()
+            app.processEvents()
             if not window.frame_drawn:
                 if window.active_scene.world_sim is not None:
                     window.active_scene.world_sim.update_world()

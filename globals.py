@@ -13,10 +13,8 @@ class Scene(IntEnum):
     SERVER_WORLD = 3
 
 
-class Menus(IntEnum):
-    MAIN_MENU = 0
-    ONLINE_OPTIONS = 1
-    SETTINGS = 2
+class Menus:
+    menus = {}
 
 
 class GameInfo:
@@ -46,6 +44,9 @@ class GameInfo:
     server_ip = default_ip
     port = 54345
     buffer_size = 4096
+
+    score_per_kill = 600  # = 10s survival
+    local_player_score = 0
 
 
 class Settings:

@@ -133,7 +133,7 @@ def main():
             window.update()
             app.processEvents()
             if not window.frame_drawn:
-                if window.active_scene.world_sim is not None:
+                if hasattr(window.active_scene, "world_sim") and window.active_scene.world_sim is not None:
                     window.active_scene.world_sim.update_world()
             window.frame_drawn = False
 

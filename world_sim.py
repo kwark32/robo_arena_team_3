@@ -6,7 +6,7 @@ from arena_converter import load_map
 from physics import PhysicsWorld
 from util import Vector, get_delta_time_s
 from globals import GameInfo
-from constants import FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_FIXED_TIMESTEPS
+from constants import FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_FIXED_TIMESTEPS, FIXED_FPS, RESPAWN_DELAY
 from camera import CameraState
 from sound_manager import SoundManager
 
@@ -162,11 +162,15 @@ class SPWorldSim(WorldSim):
     def __init__(self):
         super().__init__()
 
-        self.last_enemy_spawn_time = 0
-        self.enemy_spawn_delay = 600
-
         self.local_player_robot = self.create_player(player_name="")
         self.local_player_robot.input = self.player_input
+
+        GameInfo.player_score = 0
+
+        self.player_die_frame = None
+
+        self.last_enemy_spawn_frame = 0
+        self.enemy_spawn_delay = 20 * FIXED_FPS
 
         self.spawn_random_enemy()
 
@@ -178,12 +182,21 @@ class SPWorldSim(WorldSim):
     def fixed_update(self, delta_time):
         GameInfo.current_frame_seed = self.world_start_time_ns + self.physics_frame_count
 
-        if self.physics_frame_count - self.last_enemy_spawn_time > self.enemy_spawn_delay:
+        if self.physics_frame_count > self.last_enemy_spawn_frame + self.enemy_spawn_delay:
             self.spawn_random_enemy()
-            self.last_enemy_spawn_time = self.physics_frame_count
-            self.enemy_spawn_delay *= 0.9
+            self.last_enemy_spawn_frame = self.physics_frame_count
+        self.enemy_spawn_delay -= 0.00008 * self.enemy_spawn_delay
 
         super().fixed_update(delta_time)
+
+        if self.local_player_robot is None and self.player_die_frame is None:
+            self.player_die_frame = self.physics_frame_count
+            GameInfo.local_player_score += self.player_die_frame
+            print(GameInfo.local_player_score)
+
+        if (self.player_die_frame is not None and self.world_scene.active_menu is None
+                and self.physics_frame_count > self.player_die_frame + RESPAWN_DELAY):
+            self.world_scene.switch_menu("game_over_menu")
 
     def spawn_random_enemy(self):
         if self.arena.tiles is None:

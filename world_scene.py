@@ -1,28 +1,26 @@
 import time
 
-from PyQt5.QtGui import QPainter, QPolygon
-from PyQt5.QtWidgets import QOpenGLWidget
-from PyQt5.QtCore import Qt, QPoint
 from world_sim import SPWorldSim
 from client_world_sim import OnlineWorldSim
 from server_world_sim import ServerWorldSim
 from globals import Scene, Fonts, GameInfo
 from camera import CameraState
 from constants import DEBUG_MODE
-from ui_overlay import UIOverlay
+from ui_overlay import UIOverlay, OverlayWidget
 from util import painter_transform_with_rot, Vector
 from sound_manager import SoundManager, music_names
 from animation import Animation
 
+if not GameInfo.is_headless:
+    from PyQt5.QtGui import QPainter, QPolygon
+    from PyQt5.QtCore import Qt, QPoint
 
-class WorldScene(QOpenGLWidget):
-    def __init__(self, parent, size, sim_class):
-        super().__init__(parent)
 
-        self.main_widget = parent
+class WorldScene(OverlayWidget):
+    def __init__(self, parent, size):
+        super().__init__(parent, size)
 
-        self.size = size.copy()
-
+        sim_class = type(self).sim_class
         self.world_sim = sim_class()
         self.world_sim.world_scene = self
 
@@ -31,24 +29,20 @@ class WorldScene(QOpenGLWidget):
 
         self.ui_overlay = UIOverlay()
 
-        self.mouse_pos = Vector(0, 0)
-        self.mouse_clicked = False
+        self.mouse_pressed = False
         self.space_pressed = False
-
-        self.init_ui()
 
         SoundManager.instance.play_music(music_names[1], once=True)
         SoundManager.instance.play_random_music = True
 
-    def init_ui(self):
-        self.setGeometry(0, 0, self.size.x, self.size.y)
-        self.setMouseTracking(True)
-        self.show()
-
     def clean_mem(self):
+        super().clean_mem()
+
         self.world_sim.clean_mem()
 
     def keyPressEvent(self, event):
+        super().keyPressEvent(event)
+
         if self.world_sim.player_input is None:
             return
         if event.key() == Qt.Key_W:
@@ -64,12 +58,14 @@ class WorldScene(QOpenGLWidget):
             self.world_sim.player_input.shoot = True
             self.world_sim.player_input.shoot_pressed = True
         elif event.key() == Qt.Key_Escape:
-            self.parentWidget().switch_scene(Scene.MAIN_MENU)
+            self.main_widget.switch_scene(Scene.MAIN_MENU)
         else:
             return
         event.accept()
 
     def keyReleaseEvent(self, event):
+        super().keyReleaseEvent(event)
+
         if self.world_sim.player_input is None:
             return
         if event.key() == Qt.Key_W:
@@ -82,44 +78,45 @@ class WorldScene(QOpenGLWidget):
             self.world_sim.player_input.right = False
         elif event.key() == Qt.Key_Space:
             self.space_pressed = False
-            if not self.mouse_clicked:
+            if not self.mouse_pressed:
                 self.world_sim.player_input.shoot = False
         else:
             return
         event.accept()
 
     def mousePressEvent(self, event):
+        super().mousePressEvent(event)
+
         if event.button() == Qt.LeftButton:
-            self.mouse_clicked = True
+            self.mouse_pressed = True
             self.world_sim.player_input.shoot = True
             self.world_sim.player_input.shoot_pressed = True
             event.accept()
 
     def mouseReleaseEvent(self, event):
+        super().mouseReleaseEvent(event)
+
         if event.button() == Qt.LeftButton:
-            self.mouse_clicked = False
+            self.mouse_pressed = False
             if not self.space_pressed:
                 self.world_sim.player_input.shoot = False
             event.accept()
 
-    def mouseMoveEvent(self, event):
-        self.mouse_pos.x = event.x() / CameraState.scale.x
-        self.mouse_pos.y = event.y() / CameraState.scale.y
-        event.accept()
-
     def paintEvent(self, event):
+        # TODO: Look into why this strange fix is needed
+        if not hasattr(self, "first") or self.first or not self.main_widget.running:
+            self.first = False
+            return
+
         self.set_turret_rotation()
 
         self.world_sim.update_world()
 
         qp = QPainter(self)
+        qp.fillRect(event.rect(), Qt.black)
+
         qp.scale(CameraState.scale_factor, CameraState.scale_factor)
         qp.setRenderHint(QPainter.Antialiasing)
-
-        qp.save()
-        qp.resetTransform()
-        qp.fillRect(event.rect(), Qt.black)
-        qp.restore()
 
         self.world_sim.arena.draw(qp)
 
@@ -155,6 +152,8 @@ class WorldScene(QOpenGLWidget):
                     qp.drawPolygon(poly)
             qp.restore()
 
+        super().draw(qp)
+
         qp.setFont(Fonts.fps_font)
         qp.setPen(Fonts.fps_color)
         qp.drawText(QPoint(5, 20), str(round(self.world_sim.fps)) + "fps")
@@ -167,7 +166,7 @@ class WorldScene(QOpenGLWidget):
     def set_turret_rotation(self):
         if self.world_sim.player_input is not None and self.world_sim.local_player_robot is not None:
             robot_pos = self.world_sim.local_player_robot.sim_body.position.copy()
-            mouse_pos = self.mouse_pos.copy()
+            mouse_pos = self.mouse_position.copy()
             half_screen = GameInfo.window_reference_size.copy()
             half_screen.div(2)
             mouse_pos.sub(half_screen)
@@ -179,18 +178,20 @@ class WorldScene(QOpenGLWidget):
 
 
 class SPWorldScene(WorldScene):
-    def __init__(self, parent, size):
-        super().__init__(parent, size, SPWorldSim)
+    sim_class = SPWorldSim
 
 
 class OnlineWorldScene(WorldScene):
-    def __init__(self, parent, size):
-        super().__init__(parent, size, OnlineWorldSim)
+    sim_class = OnlineWorldSim
 
 
 class ServerWorldScene(WorldScene):
+    sim_class = ServerWorldSim
+
     def __init__(self, parent, size):
-        super().__init__(parent, size, ServerWorldSim)
+        super().__init__(parent, size)
 
         self.world_sim.local_player_robot = self.world_sim.create_player(robot_id=GameInfo.local_player_id)
         self.world_sim.local_player_robot.input = self.world_sim.player_input
+
+        self.game_over_menu = ServerWorldScene.GameOver(self.main_widget, size, self)

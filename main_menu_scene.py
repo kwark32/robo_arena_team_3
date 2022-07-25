@@ -6,10 +6,11 @@ from globals import GameInfo, Scene, Menus, Fonts, Settings
 from camera import CameraState
 from constants import DEBUG_MODE, MAX_PLAYER_NAME_LENGTH, MAX_SERVER_IP_LENGTH
 from sound_manager import SoundManager, music_names
+from ui_overlay import OverlayWidget
 
 if not GameInfo.is_headless:
     from PyQt5.QtGui import QPainter
-    from PyQt5.QtWidgets import QOpenGLWidget, QApplication
+    from PyQt5.QtWidgets import QApplication
     from PyQt5.QtCore import Qt, QPoint
 
 
@@ -36,13 +37,13 @@ class MainMenu(Menu):
         name = "online_multiplayer"
 
         def click(self):
-            self.menu.main_menu_scene.switch_menu(Menus.ONLINE_OPTIONS)
+            self.menu.main_menu_scene.switch_menu("online_options")
 
     class SettingsButton(Button):
         name = "settings"
 
         def click(self):
-            self.menu.main_menu_scene.switch_menu(Menus.SETTINGS)
+            self.menu.main_menu_scene.switch_menu("settings")
 
     class Logo(UIImage):
         name = "logo"
@@ -87,7 +88,7 @@ class OnlineOptions(Menu):
         name = "back"
 
         def click(self):
-            self.menu.main_menu_scene.switch_menu(Menus.MAIN_MENU)
+            self.menu.main_menu_scene.switch_menu("main_menu")
 
     class PlayerNameHeader(UIImage):
         name = "player_name_header"
@@ -254,7 +255,7 @@ class OnlineOptions(Menu):
                                                              / CameraState.scale.y + 425), self))
 
     def escape_pressed(self):
-        self.main_menu_scene.switch_menu(Menus.MAIN_MENU)
+        self.main_menu_scene.switch_menu("main_menu")
 
 
 class SettingsMenu(Menu):
@@ -262,7 +263,7 @@ class SettingsMenu(Menu):
         name = "back"
 
         def click(self):
-            self.menu.main_menu_scene.switch_menu(Menus.MAIN_MENU)
+            self.menu.main_menu_scene.switch_menu("main_menu")
 
     class MasterVolumeSlider(Slider):
         name = "master_volume"
@@ -336,87 +337,24 @@ class SettingsMenu(Menu):
                                                             / CameraState.scale.y + 425), self))
 
     def escape_pressed(self):
-        self.main_menu_scene.switch_menu(Menus.MAIN_MENU)
+        self.main_menu_scene.switch_menu("main_menu")
 
 
-class MainMenuScene(QOpenGLWidget):
+Menus.menus["main_menu"] = MainMenu
+Menus.menus["online_options"] = OnlineOptions
+Menus.menus["settings"] = SettingsMenu
+
+
+class MainMenuScene(OverlayWidget):
     def __init__(self, parent, size):
-        super().__init__(parent)
-
-        self.first = True
-
-        self.main_widget = self.parentWidget()
-
-        self.parent = parent
-        self.size = size
-
-        self.mouse_position = Vector(0, 0)
-
-        self.world_sim = None
-
-        self._last_frame_time_ns = time.time_ns()
-        self._frames_since_last_show = 0
-        self._last_fps_show_time = time.time_ns()
-        self.fps = 0
-
-        self.active_menu = MainMenu(self.main_widget, self.size, self)
-        self.is_clicking = False
+        super().__init__(parent, size)
 
         CameraState.position = None
 
-        self.init_ui()
+        self.switch_menu("main_menu")
 
         SoundManager.instance.play_music(music_names[0], once=False)
         SoundManager.instance.play_random_music = False
-
-    def init_ui(self):
-        self.setGeometry(0, 0, self.size.x, self.size.y)
-        self.setMouseTracking(True)
-        self.show()
-
-    def switch_menu(self, menu):
-        self.active_menu = None
-        if menu == Menus.MAIN_MENU:
-            self.active_menu = MainMenu(self.main_widget, GameInfo.window_size, self)
-        elif menu == Menus.ONLINE_OPTIONS:
-            self.active_menu = OnlineOptions(self.main_widget, GameInfo.window_size, self)
-        elif menu == Menus.SETTINGS:
-            self.active_menu = SettingsMenu(self.main_widget, GameInfo.window_size, self)
-
-    def clean_mem(self):
-        pass
-
-    def keyPressEvent(self, event):
-        if self.active_menu is not None:
-            self.active_menu.key_press_event(event)
-
-    def keyReleaseEvent(self, event):
-        if self.active_menu is not None:
-            self.active_menu.key_release_event(event)
-
-    def mouseMoveEvent(self, event):
-        self.mouse_position.x = event.x() / CameraState.scale.x
-        self.mouse_position.y = event.y() / CameraState.scale.y
-        if self.active_menu is not None and self.active_menu.drag_element is not None:
-            self.active_menu.dragging = True
-            self.active_menu.mouse_drag(self.mouse_position)
-        event.accept()
-
-    def mousePressEvent(self, event):
-        self.mouse_position.x = event.x() / CameraState.scale.x
-        self.mouse_position.y = event.y() / CameraState.scale.y
-        if event.button() == Qt.LeftButton:
-            self.is_clicking = True
-            if self.active_menu is not None:
-                if self.active_menu.drag_element is None:
-                    self.active_menu.drag_element = self.active_menu.selected_element
-                    self.active_menu.mouse_drag(self.mouse_position)
-
-    def mouseReleaseEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            if self.active_menu is not None:
-                self.active_menu.dragging = False
-                self.active_menu.drag_element = None
 
     def paintEvent(self, event):
         # TODO: Look into why this strange fix is needed
@@ -424,33 +362,21 @@ class MainMenuScene(QOpenGLWidget):
             self.first = False
             return
 
-        curr_time_ns = time.time_ns()
-        # delta_time = ns_to_s(curr_time_ns - self._last_frame_time_ns)
-        self._last_frame_time_ns = curr_time_ns
+        qp = QPainter(self)
+        qp.scale(CameraState.scale_factor, CameraState.scale_factor)
+        qp.setRenderHint(QPainter.Antialiasing)
 
-        if self.is_clicking:
-            self.active_menu.click_element()
-            self.is_clicking = False
-
-        self.active_menu.update_ui(self.mouse_position, curr_time_ns)
+        super().draw(qp)
 
         SoundManager.instance.update_sound()
 
         if DEBUG_MODE:
             self._frames_since_last_show += 1
-            last_fps_show_delta = ns_to_s(curr_time_ns - self._last_fps_show_time)
+            last_fps_show_delta = ns_to_s(self.curr_time_ns - self._last_fps_show_time)
             if last_fps_show_delta > 0.5:
                 self.fps = self._frames_since_last_show / last_fps_show_delta
                 self._frames_since_last_show = 0
-                self._last_fps_show_time = curr_time_ns
-
-        qp = QPainter(self)
-        qp.scale(CameraState.scale_factor, CameraState.scale_factor)
-        qp.setRenderHint(QPainter.Antialiasing)
-
-        self.active_menu.draw(qp)
-
-        if DEBUG_MODE:
+                self._last_fps_show_time = self.curr_time_ns
             qp.setFont(Fonts.fps_font)
             qp.setPen(Fonts.fps_color)
             qp.drawText(QPoint(5, 20), str(round(self.fps)))

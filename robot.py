@@ -322,8 +322,13 @@ class Robot:
             self.effects.remove(expired)
         expired_effects.clear()
 
-    def change_health(self, delta_healh):
-        self.health += delta_healh
+    def change_health(self, delta_health):
+        self.health += delta_health
+
+    def hit_bullet(self, damage, source_id):
+        self.change_health(-damage)
+        if source_id == self.world_sim.local_player_robot.robot_id and self.robot_id != source_id:
+            GameInfo.local_player_score += GameInfo.score_per_kill
 
     def die(self):
         explosion_path = "vfx/"

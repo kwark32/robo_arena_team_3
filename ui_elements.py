@@ -1,6 +1,6 @@
 import math
 
-from util import Vector, get_main_path, is_point_inside_rect, draw_img_with_rot, limit
+from util import Vector, get_main_path, is_point_inside_rect, rad_to_deg, limit
 from globals import Fonts, GameInfo
 from constants import CARET_BLINK_RATE_NS
 from camera import CameraState
@@ -11,13 +11,12 @@ if not GameInfo.is_headless:
     from PyQt5.QtWidgets import QApplication
 
 
-ui_element_texture_path = get_main_path() + "/textures/ui/main_menu/"
+ui_element_texture_path = get_main_path() + "/textures/ui/menu/"
 
 
 # absolute base class
 class UIElement:
     selected_edge_top_right = None
-    selected_edge_size = None
 
     def __init__(self, main_widget, position, menu):
         self.element_class = type(self)
@@ -31,7 +30,7 @@ class UIElement:
             self.element_type = UIImage
 
         if UIElement.selected_edge_top_right is None:
-            UIElement.selected_edge_top_right, UIElement.selected_edge_size = self.load_image("selected_edge_top_right")
+            UIElement.selected_edge_top_right, selected_edge_size = self.load_image("selected_edge_top_right")
 
         self.main_widget = main_widget
         self.position = position.copy()
@@ -97,16 +96,23 @@ class UIElement:
 
     def draw(self, qp):
         if self.is_selected and self.draw_selected:
-            edge_size = UIElement.selected_edge_size
             edge_offset = Vector(-15, 15)
             pos_rots = [(Vector(self.bottom_right_corner.x, self.top_left_corner.y), 0),
                         (Vector(self.bottom_right_corner.x, self.bottom_right_corner.y), math.pi / 2),
                         (Vector(self.top_left_corner.x, self.bottom_right_corner.y), math.pi),
                         (Vector(self.top_left_corner.x, self.top_left_corner.y), -math.pi / 2)]
+            edge_image = UIElement.selected_edge_top_right
+            edge_size = Vector(edge_image.width(), edge_image.height())
+
             for pos, rot in pos_rots:
+                qp.save()
                 pos.add(edge_offset)
-                draw_img_with_rot(qp, UIElement.selected_edge_top_right, edge_size.x, edge_size.y, pos, rot)
+                qp.translate(pos.x, pos.y)
+                qp.rotate(rad_to_deg(rot))
+                qp.drawPixmap(round(CameraState.x_offset - (edge_size.x / 2)),
+                              round(-edge_size.y / 2), edge_image)
                 edge_offset.rotate(math.pi / 2)
+                qp.restore()
 
         qp.drawPixmap(round(self.top_left_corner.x + CameraState.x_offset), round(self.top_left_corner.y), self.texture)
 
@@ -327,7 +333,9 @@ class Menu:
         self.drag_element = None
         self.dragging = False
 
-        self.bg_pixmap = QPixmap(ui_element_texture_path + bg_texture_name + ".png")
+        self.bg_pixmap = None
+        if bg_texture_name is not None:
+            self.bg_pixmap = QPixmap(ui_element_texture_path + bg_texture_name + ".png")
 
         self.shift_key_pressed = False
         self.ctrl_key_pressed = False

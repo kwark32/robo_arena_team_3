@@ -37,13 +37,12 @@ if not GameInfo.is_headless:
             self.switch_scene(Scene.MAIN_MENU)
 
         def init_window(self):
+            self.setWindowTitle("Robo Arena")
+            self.setFocusPolicy(Qt.StrongFocus)
+            self.showFullScreen()
+
             geometry = QDesktopWidget().screenGeometry()
-
-            # Use main monitor size:
             main_window_size = Vector(geometry.size().width(), geometry.size().height())
-            # Always use exact reference size:
-            #  main_window_size = GameInfo.window_reference_size
-
             GameInfo.window_size = main_window_size
             CameraState.scale = Vector(main_window_size.x / GameInfo.window_reference_size.x,
                                        main_window_size.y / GameInfo.window_reference_size.y)
@@ -51,15 +50,6 @@ if not GameInfo.is_headless:
             CameraState.scale_factor = CameraState.scale.y
 
             CameraState.x_offset = (CameraState.scale.x - CameraState.scale.y) * GameInfo.window_reference_size.x * 0.5
-
-            self.setFixedSize(main_window_size.x, main_window_size.y)
-            self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
-            geometry_rect = self.frameGeometry()
-            geometry_rect.moveCenter(geometry.center())
-            self.move(geometry_rect.topLeft())
-            self.setWindowTitle("Robo Arena")
-            self.setFocusPolicy(Qt.StrongFocus)
-            self.show()
 
         def closeEvent(self, event):
             self.running = False
@@ -84,12 +74,6 @@ if not GameInfo.is_headless:
         def mouseReleaseEvent(self, event):
             if self.active_scene is not None:
                 self.active_scene.mouseReleaseEvent(event)
-
-        def focusInEvent(self, event):
-            self.focused = True
-
-        def focusOutEvent(self, event):
-            self.focused = False
 
         def switch_scene(self, scene):
             if self.active_scene is not None:

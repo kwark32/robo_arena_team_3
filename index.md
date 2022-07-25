@@ -9,6 +9,8 @@ There are several different tiles scattered across the map, with the most common
 
 The metal tile has no effect on the player and can be driven over. 
 
+![Summary](/Summary/metal_tile.png)
+
 The tires block the player from passing over it, which gives the map a border that the tanks cannot pass through and also some cover to hide behind. Bullets cannot pass through the tires and they cannot be destroyed. 
 
 There are 6 special tiles on the map. The fire tile gives the tanks high damage and increases the movement speed. 

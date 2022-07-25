@@ -1,3 +1,33 @@
+## Robo Arena Overview and Summary
+
+
+Gameplay:
+
+The player controls a tank with a turret on top. The tank is moved with the WASD keys and the mouse is used to aim and shoot the turrets. On the map there are several enemy tanks which will find and shoot the player. The enemies use an A*-algorithm to locate and follow the player and avoids different tiles based on their priority. Hitting an enemy with a bullet will instantly destroy it, whereas the player can get hit several times, with a health bar above the tank showing the amount of health that is left. 
+
+There are several different tiles scattered across the map, with the most common being the basic metal tile and the tires. 
+
+The metal tile has no effect on the player and can be driven over. 
+
+The tires block the player from passing over it, which gives the map a border that the tanks cannot pass through and also some cover to hide behind. Bullets cannot pass through the tires and they cannot be destroyed. 
+
+There are 6 special tiles on the map. The fire tile gives the tanks high damage and increases the movement speed. 
+
+The water tile gives the tanks more short circuit damage with lower health. It also decreases movement speed. 
+
+The lava tiles causes low fire damage and decreases movement speed. 
+
+The earth tile decreases movement speed. 
+
+The hole tile gives the tanks fall damage and immobilises the tank for a few seconds. 
+
+The portal tile teleports the tanks to a random portal of the other colour and gives tank either health or damage. 
+
+If a tank loses all its health, the tank explodes. If the player explodes, it gets respawned after a couple of seconds.
+
+
+
+
 ## Weeks 11 & 12
 
 We created a better robot-AI.

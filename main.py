@@ -28,7 +28,7 @@ if not GameInfo.is_headless:
             super().__init__()
 
             self.running = True
-            self.focused = True
+            self.frame_drawn = True
 
             self.active_scene = None
 
@@ -107,6 +107,7 @@ if not GameInfo.is_headless:
                 self.active_scene = ServerWorldScene(self, GameInfo.window_size)
 
         def paintEvent(self, event):
+            self.frame_drawn = True
             if self.active_scene is not None:
                 self.active_scene.paintEvent(event)
 
@@ -146,11 +147,11 @@ def main():
 
         while window.running:  # main loop
             app.processEvents()
-            if window.focused:
-                window.update()
-            else:
+            window.update()
+            if not window.frame_drawn:
                 if window.active_scene.world_sim is not None:
                     window.active_scene.world_sim.update_world()
+            window.frame_drawn = False
 
         sys.exit(0)
 

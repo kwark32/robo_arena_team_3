@@ -362,6 +362,8 @@ class MainMenuScene(QOpenGLWidget):
         self.active_menu = MainMenu(self.main_widget, self.size, self)
         self.is_clicking = False
 
+        CameraState.position = None
+
         self.init_ui()
 
         SoundManager.instance.play_music(music_names[0], once=False)

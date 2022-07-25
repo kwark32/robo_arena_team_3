@@ -1,11 +1,11 @@
-# Robo Arena Team 3 (Die luftigen Kwarkschafe u. der UI Designer)
+# Robo Arena Team 3 (Die luftigen Kwarkbällchen und der UI Designer)
 
 Python 3.9 + PyQt5 project
 
 #### Requirements:
   - Python3.9 (so far 3.8 & 3.10 work too)
   - PyQt5
-  - PyBox2D: `pip3 install box2d box2d-kengz box2d-py`
+  - PyBox2D: `pip3 install box2d-py`
 
 #### Project agreements:
 

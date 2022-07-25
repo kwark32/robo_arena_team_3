@@ -154,8 +154,6 @@ class WorldSim:
             else:
                 CameraState.position.lerp_to(self.local_player_robot.extrapolation_body.position,
                                              CameraState.lerp_per_sec * self.delta_time)
-        else:
-            CameraState.position = None
 
         self.calc_fps()
 

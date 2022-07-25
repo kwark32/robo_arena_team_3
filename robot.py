@@ -71,7 +71,7 @@ class Robot:
     size = Vector(32, 32)
     turret_texture_center_offset = Vector(0, 10)
 
-    def __init__(self, world_sim, robot_id=-1, is_player=False, has_ai=True,
+    def __init__(self, world_sim, robot_id=-1, is_player=False, has_ai=True, should_respawn=False,
                  position=Vector(0, 0), rotation=0, player_name=""):
         self.creation_frame = world_sim.physics_frame_count
 
@@ -131,10 +131,9 @@ class Robot:
         self.is_dead = False
         self.last_death_frame = 0
 
-        self.should_respawn = True
+        self.should_respawn = should_respawn
         self.robot_ai = None
         if has_ai:
-            self.should_respawn = False
             self.robot_ai = RobotAI(self)
 
     @property

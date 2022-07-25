@@ -107,6 +107,7 @@ class Robot:
                                                         rotation=rotation, static=False, user_data=self)
 
         self.weapon = TankCannon(self.world_sim)
+        self.damage_factor = 1
 
         self.max_health = MAX_ROBOT_HEALTH
         self.health = self.max_health
@@ -213,7 +214,7 @@ class Robot:
                 self.input.shoot_pressed = False
                 if self.weapon is not None:
                     self.weapon.shoot(self.robot_id, self.get_next_bullet_id,
-                                      self.sim_body.position, self.sim_body.rotation)
+                                      self.sim_body.position, self.sim_body.rotation, self.damage_factor)
 
             # if ((self.forward_velocity_goal == 0 and last_forward_velocity_goal != 0)
             #         or (self.forward_velocity_goal == 1 and self.sim_body.local_velocity.y < 0)

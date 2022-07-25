@@ -125,6 +125,16 @@ class SpeedPowerUp(PowerUp):
         super().__init__(arena, effect, index, position)
 
 
+class DamagePowerUp(PowerUp):
+    name = "damage"
+    duration = 5
+    damage_factor = 2
+
+    def __init__(self, arena, index, position):
+        effect = effects.PowerUpDamageEffect(duration=DamagePowerUp.duration, damage_factor=DamagePowerUp.damage_factor)
+        super().__init__(arena, effect, index, position)
+
+
 class Arena:
     def __init__(self, tile_count):
         self.tile_count = tile_count.copy()
@@ -188,7 +198,7 @@ class Arena:
                 position.mult(GameInfo.arena_tile_size)
                 position.add(Vector(GameInfo.arena_tile_size / 2, GameInfo.arena_tile_size / 2))
                 # decide which type of power up to place
-                power_up_types = [HealthPowerUp, SpeedPowerUp]
+                power_up_types = [HealthPowerUp, SpeedPowerUp, DamagePowerUp]
                 power_up_type = random.choice(power_up_types)
                 self.power_ups[y][x] = power_up_type(self, Vector(x, y), position)
                 break

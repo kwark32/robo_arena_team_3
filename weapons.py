@@ -153,7 +153,7 @@ class CannonShell(Bullet):
 
 
 class TankCannon(Weapon):
-    pos_offset = Vector(0, 18)
+    pos_offset = Vector(0, 24)
     rot_offset = 0
     fire_rate = 1
     bullet_type = CannonShell

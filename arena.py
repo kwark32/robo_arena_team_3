@@ -180,9 +180,9 @@ class Arena:
                         for anim in anim_list:
                             pos = anim.position.copy()
                             pos.sub(half_tile_size)
-                            anim.update(self.world_sim.physics_frame_count)
-                            frame = anim.get_frame()
-                            qp.drawPixmap(pos.x, pos.y, frame)
+                            if anim.update(self.world_sim.physics_frame_count):
+                                frame = anim.get_frame()
+                                qp.drawPixmap(pos.x, pos.y, frame)
 
             qp.restore()
 

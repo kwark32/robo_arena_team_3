@@ -62,7 +62,11 @@ class Animation:
                 self._curr_frame = self._curr_frame % self._frame_count
                 self._start_physics_frame = physics_frame
             else:
+                self._curr_frame = 0
                 self._playing = False
+                return False
+
+        return True
 
     def play(self, loop, physics_frame):
         self._curr_frame = 0
@@ -72,7 +76,9 @@ class Animation:
         self._start_physics_frame = physics_frame
 
     def draw(self, qp, physics_frame):
-        self.update(physics_frame)
+        if not self._playing or not self.update(physics_frame):
+            return False
+
         frame = self._frames[self._curr_frame]
         draw_img_with_rot(qp, frame, frame.width(), frame.height(), self.position, self.rotation)
         return self._curr_frame < len(self._frames) - 1 or self._loop

@@ -16,7 +16,7 @@ if not GameInfo.is_headless:
     from PyQt5.QtCore import QPoint
 
 
-robot_texture_path = get_main_path() + "/textures/moving/"
+robot_texture_path = get_main_path() + "/textures/moving/tanks/"
 
 
 class RobotInfo:
@@ -63,9 +63,16 @@ class RobotInfo:
 
 
 class Robot:
+    max_velocity = 120
+    max_ang_velocity = 4
+    max_accel = 200
+    max_ang_accel = 12
+
+    size = Vector(32, 32)
+    turret_texture_center_offset = Vector(0, 10)
+
     def __init__(self, world_sim, robot_id=-1, is_player=False, has_ai=True,
-                 size=Vector(40, 40), position=Vector(0, 0), rotation=0,
-                 max_velocity=120, max_ang_velocity=4, max_accel=200, max_ang_accel=12, player_name=""):
+                 position=Vector(0, 0), rotation=0, player_name=""):
         self.creation_frame = world_sim.physics_frame_count
 
         self.robot_id = robot_id
@@ -79,13 +86,14 @@ class Robot:
 
         self.player_name = player_name
 
-        self.max_velocity = max_velocity
-        self.max_ang_velocity = max_ang_velocity
-        self.max_accel = max_accel
-        self.max_ang_accel = max_ang_accel
+        self.max_velocity = Robot.max_velocity
+        self.max_ang_velocity = Robot.max_ang_velocity
+        self.max_accel = Robot.max_accel
+        self.max_ang_accel = Robot.max_ang_accel
 
-        self.sim_body = SimBody(position=position, rotation=rotation, max_velocity=max_velocity,
-                                max_ang_velocity=max_ang_velocity, max_accel=max_accel, max_ang_accel=max_ang_accel)
+        self.sim_body = SimBody(position=position, rotation=rotation,
+                                max_velocity=self.max_velocity, max_ang_velocity=self.max_ang_velocity,
+                                max_accel=self.max_accel, max_ang_accel=self.max_ang_accel)
         self.extrapolation_body = self.sim_body.copy()
 
         self.effects = []
@@ -96,7 +104,7 @@ class Robot:
 
         self.input = None
 
-        self.size = size
+        self.size = Robot.size.copy()
 
         self.real_velocity = Vector(0, 0)
         self.collider_push = Vector(0, 0)
@@ -107,7 +115,7 @@ class Robot:
         self.last_collision_sound_frame = 0
 
         self._body_texture = None
-        self._texture_size = None
+        self._turret_texture = None
 
         self.world_sim = world_sim
         self.physics_world = world_sim.physics_world
@@ -137,20 +145,41 @@ class Robot:
     @property
     def body_texture(self):
         if self._body_texture is None:
-            self._body_texture = QPixmap(robot_texture_path + "tank_red_40.png")
+            self._body_texture = QPixmap(robot_texture_path + "tank_red_body.png")
             if self.is_player:
-                self._body_texture = QPixmap(robot_texture_path + "tank_blue_40.png")
-            if self._body_texture.width() != self.size.x or self._body_texture.height() != self.size.y:
-                print("WARN: Robot texture size is not equal to robot (collider) size!")
+                self._body_texture = QPixmap(robot_texture_path + "tank_blue_body.png")
         return self._body_texture
+
+    @property
+    def turret_texture(self):
+        if self._turret_texture is None:
+            self._turret_texture = QPixmap(robot_texture_path + "tank_red_turret.png")
+            if self.is_player:
+                self._turret_texture = QPixmap(robot_texture_path + "tank_blue_turret.png")
+        return self._turret_texture
 
     def draw(self, qp, delta_time):
         if self.is_dead:
             return
 
         self.extrapolation_body.step(delta_time)
-        draw_img_with_rot(qp, self.body_texture, self.size.x, self.size.y,
+
+        body_texture = self.body_texture
+        turret_texture = self.turret_texture
+        if self.input is None:
+            turret_rot = 0
+        else:
+            turret_rot = self.input.turret_rot
+
+        draw_img_with_rot(qp, body_texture, body_texture.width(), body_texture.height(),
                           self.extrapolation_body.position, self.extrapolation_body.rotation)
+
+        turret_pos = self.extrapolation_body.position.copy()
+        turret_offset = Robot.turret_texture_center_offset.copy()
+        turret_offset.rotate(turret_rot)
+        turret_pos.add(turret_offset)
+
+        draw_img_with_rot(qp, turret_texture, turret_texture.width(), turret_texture.height(), turret_pos, turret_rot)
 
         if DEBUG_MODE and self.robot_ai is not None and self.robot_ai.shortest_path is not None:
             painter_transform_with_rot(qp, Vector(0, 0), 0)
@@ -224,8 +253,12 @@ class Robot:
             if self.input.shoot or self.input.shoot_pressed:
                 self.input.shoot_pressed = False
                 if self.weapon is not None:
+                    if self.input is None:
+                        turret_rot = 0
+                    else:
+                        turret_rot = self.input.turret_rot
                     if not self.weapon.shoot(self.robot_id, self.get_next_bullet_id,
-                                             self.sim_body.position, self.sim_body.rotation):
+                                             self.sim_body.position, turret_rot):
                         self.next_bullet_id -= 1
 
             # if ((self.forward_velocity_goal == 0 and last_forward_velocity_goal != 0)
@@ -348,6 +381,7 @@ class PlayerInput:
         self.right = False
         self.shoot = False
         self.shoot_pressed = False
+        self.turret_rot = 0
 
     def copy(self):
         player_input = PlayerInput()
@@ -357,12 +391,14 @@ class PlayerInput:
         player_input.right = self.right
         player_input.shoot = self.shoot
         player_input.shoot_pressed = self.shoot_pressed
+        player_input.turret_rot = self.turret_rot
         return player_input
 
     def to_string(self):
         return ("PlayerInput {\n  Up: " + str(self.up) + "\n  Down: " + str(self.down) + "\n  Left: "
                 + str(self.left) + "\n  Right: " + str(self.right) + "\n  Shoot: " + str(self.shoot)
-                + "\n  Shoot Pressed: " + str(self.shoot_pressed) + "\n}")
+                + "\n  Shoot Pressed: " + str(self.shoot_pressed) + "\n Turret rotation: "
+                + str(round(self.turret_rot, 2)) + "\n}")
 
 
 def collide_robot(robot, other):

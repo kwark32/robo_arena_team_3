@@ -145,11 +145,11 @@ class Weapon:
 
 
 class CannonShell(Bullet):
-    speed = 2000
+    speed = 1000
     damage = 250
-    size = Vector(12, 36)
+    size = Vector(8, 20)
     texture = None
-    texture_name = "cannon-shell_12x36.png"
+    texture_name = "cannon-shell.png"
 
 
 class TankCannon(Weapon):

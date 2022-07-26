@@ -1,6 +1,6 @@
 import math
 
-from util import Vector, get_main_path, is_point_inside_rect, draw_img_with_rot, limit
+from util import Vector, get_main_path, is_point_inside_rect, rad_to_deg, limit
 from globals import Fonts, GameInfo
 from constants import CARET_BLINK_RATE_NS
 from camera import CameraState
@@ -11,13 +11,12 @@ if not GameInfo.is_headless:
     from PyQt5.QtWidgets import QApplication
 
 
-ui_element_texture_path = get_main_path() + "/textures/ui/main_menu/"
+ui_element_texture_path = get_main_path() + "/textures/ui/menu/"
 
 
 # absolute base class
 class UIElement:
     selected_edge_top_right = None
-    selected_edge_size = None
 
     def __init__(self, main_widget, position, menu):
         self.element_class = type(self)
@@ -31,13 +30,14 @@ class UIElement:
             self.element_type = UIImage
 
         if UIElement.selected_edge_top_right is None:
-            UIElement.selected_edge_top_right, UIElement.selected_edge_size = self.load_image("selected_edge_top_right")
+            UIElement.selected_edge_top_right, selected_edge_size = self.load_image("selected_edge_top_right")
 
         self.main_widget = main_widget
         self.position = position.copy()
         self.menu = menu
 
         self.is_selected = False
+        self.is_selectable = True
         self.draw_selected = True
 
         self.update_time_ns = 0
@@ -97,16 +97,23 @@ class UIElement:
 
     def draw(self, qp):
         if self.is_selected and self.draw_selected:
-            edge_size = UIElement.selected_edge_size
             edge_offset = Vector(-15, 15)
             pos_rots = [(Vector(self.bottom_right_corner.x, self.top_left_corner.y), 0),
                         (Vector(self.bottom_right_corner.x, self.bottom_right_corner.y), math.pi / 2),
                         (Vector(self.top_left_corner.x, self.bottom_right_corner.y), math.pi),
                         (Vector(self.top_left_corner.x, self.top_left_corner.y), -math.pi / 2)]
+            edge_image = UIElement.selected_edge_top_right
+            edge_size = Vector(edge_image.width(), edge_image.height())
+
             for pos, rot in pos_rots:
+                qp.save()
                 pos.add(edge_offset)
-                draw_img_with_rot(qp, UIElement.selected_edge_top_right, edge_size.x, edge_size.y, pos, rot)
+                qp.translate(pos.x + CameraState.x_offset, pos.y)
+                qp.rotate(rad_to_deg(rot))
+                qp.drawPixmap(round(-edge_size.x / 2),
+                              round(-edge_size.y / 2), edge_image)
                 edge_offset.rotate(math.pi / 2)
+                qp.restore()
 
         qp.drawPixmap(round(self.top_left_corner.x + CameraState.x_offset), round(self.top_left_corner.y), self.texture)
 
@@ -156,7 +163,7 @@ class Slider(UIElement):
     def draw(self, qp):
         qp.setFont(Fonts.text_field_font)
         qp.setPen(QPen(Fonts.text_field_color, 6))
-        qp.drawText(QPoint(round(self.position.x + self.header_offset_x),
+        qp.drawText(QPoint(round(self.position.x + CameraState.x_offset + self.header_offset_x),
                            round(self.position.y + Slider.header_offset_y)), self.slider_type.header_text)
 
         qp.drawPixmap(round(self.top_left_corner.x + CameraState.x_offset), round(self.top_left_corner.y), self.texture)
@@ -225,11 +232,11 @@ class TextField(UIElement):
 
         if len(self.text) > 0 or self.is_selected:
             qp.setPen(QPen(Fonts.text_field_color, 6))
-            qp.drawText(QPoint(self.top_left_corner.x + self.text_offset.x,
+            qp.drawText(QPoint(self.top_left_corner.x + CameraState.x_offset + self.text_offset.x,
                                self.top_left_corner.y + self.text_offset.y), draw_text)
         else:
             qp.setPen(QPen(Fonts.text_field_default_color, 6))
-            qp.drawText(QPoint(self.top_left_corner.x + self.text_offset.x,
+            qp.drawText(QPoint(self.top_left_corner.x + CameraState.x_offset + self.text_offset.x,
                                self.top_left_corner.y + self.text_offset.y), self.placeholder_text)
 
     def key_press(self, key):
@@ -313,7 +320,81 @@ class UIImage(UIElement):
     def __init__(self, main_widget, position, menu):
         super().__init__(main_widget, position, menu)
 
+        self.is_selectable = False
         self.draw_selected = False
+
+
+# base class
+class UIText(UIElement):
+    def __init__(self, main_widget, position, menu):
+        super().__init__(main_widget, position, menu)
+
+        self.is_selectable = False
+        self.draw_selected = False
+
+        self.left_align = False
+
+        self.font = Fonts.ui_text_font
+        self.font_color = Fonts.text_field_color
+        self.font_metrics = QFontMetricsF(self.font)
+
+        self.text = ""
+
+    def draw(self, qp):
+        if self.left_align:
+            text_width = 0
+        else:
+            text_width = self.font_metrics.width(self.text)
+
+        qp.setFont(self.font)
+        qp.setPen(QPen(self.font_color, 6))
+        qp.drawText(self.position.x - (text_width / 2) + CameraState.x_offset, self.position.y, self.text)
+
+
+# base class
+class Checkbox(UIElement):
+    header_offset_y = -60
+
+    def __init__(self, main_widget, position, menu):
+        super().__init__(main_widget, position, menu)
+
+        self.checkbox_type = type(self)
+        if self.checkbox_type is Checkbox:
+            print("ERROR: Checkbox base class should not be instantiated!")
+
+        self.draw_selected = False
+
+        self.fill_texture = None
+
+        self.font = Fonts.text_field_font
+        self.font_color = Fonts.text_field_color
+        self.font_metrics = QFontMetricsF(self.font)
+
+        if self.checkbox_type.left_align:
+            self.header_offset_x = 0
+        else:
+            self.header_offset_x = -(self.font_metrics.width(self.checkbox_type.header_text) / 2)
+
+        self.checked = False
+
+    def draw(self, qp):
+        qp.setFont(self.font)
+        qp.setPen(QPen(self.font_color, 6))
+        qp.drawText(self.position.x + self.header_offset_x + CameraState.x_offset,
+                    self.position.y + Checkbox.header_offset_y, self.checkbox_type.header_text)
+        qp.drawPixmap(round(self.top_left_corner.x + CameraState.x_offset), round(self.top_left_corner.y), self.texture)
+        if self.checked:
+            qp.drawPixmap(round(self.top_left_corner.x + CameraState.x_offset),
+                          round(self.top_left_corner.y), self.fill_texture)
+
+    def load_image(self, name=None):
+        self._texture, self._texture_size = super().load_image(name="checkbox")
+        self.fill_texture, size = super().load_image(name="checkbox_fill")
+        if not self._texture_size.equal(size):
+            print("ERROR: Fill texture has different size as empty checkbox texture!")
+
+    def click(self):
+        self.checked = not self.checked
 
 
 class Menu:
@@ -327,7 +408,9 @@ class Menu:
         self.drag_element = None
         self.dragging = False
 
-        self.bg_pixmap = QPixmap(ui_element_texture_path + bg_texture_name + ".png")
+        self.bg_pixmap = None
+        if bg_texture_name is not None:
+            self.bg_pixmap = QPixmap(ui_element_texture_path + bg_texture_name + ".png")
 
         self.shift_key_pressed = False
         self.ctrl_key_pressed = False
@@ -371,11 +454,12 @@ class Menu:
         if not self.dragging:
             self.selected_element = None
             for element in self.elements:
-                if is_point_inside_rect(mouse_pos, element.top_left_corner, element.bottom_right_corner):
-                    element.update_selected(curr_time_ns)
-                    self.selected_element = element
-                elif element.is_selected:
-                    element.unselect()
+                if element.is_selectable:
+                    if is_point_inside_rect(mouse_pos, element.top_left_corner, element.bottom_right_corner):
+                        element.update_selected(curr_time_ns)
+                        self.selected_element = element
+                    elif element.is_selected:
+                        element.unselect()
 
     def draw(self, qp):
         # draw static menu background

@@ -50,7 +50,7 @@ class Animation:
                 self._frames[i] = QPixmap(path + name)
             self._frame_count = len(file_list)
 
-        if single_vfx and Animation.world_scene is not None:
+        if single_vfx and Animation.world_scene is not None and not Animation.world_scene.world_sim.catchup_frame:
             Animation.world_scene.animations.append(self)
             self.play(False, Animation.world_scene.world_sim.physics_frame_count)
 
@@ -85,3 +85,6 @@ class Animation:
 
     def get_frame(self):
         return self._frames[self._curr_frame]
+
+    def get_start_time_frame(self):
+        return self._start_physics_frame

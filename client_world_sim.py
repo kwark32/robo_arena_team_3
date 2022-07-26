@@ -36,13 +36,14 @@ class OnlineWorldSim(WorldSim):
 
             if existing_robot is None:
                 if GameInfo.local_player_id == new_robot_info.player_id:
-                    self.local_player_robot = self.create_player(robot_id=new_robot_info.player_id)
+                    self.local_player_robot = self.create_player(robot_id=GameInfo.local_player_id, should_respawn=True)
                     self.local_player_robot.input = self.player_input
                     existing_robot = self.local_player_robot
                 else:
-                    existing_robot = self.create_enemy_robot(has_ai=False, robot_id=new_robot_info.player_id)
+                    existing_robot = self.create_enemy_robot(has_ai=False, robot_id=new_robot_info.player_id,
+                                                             should_respawn=True)
 
-            new_robot_info.set_robot_values(existing_robot)
+            new_robot_info.set_robot_values(existing_robot, self.physics_frame_count)
 
         if len(self.robots) > len(robots):
             dead_robots = []
@@ -50,8 +51,6 @@ class OnlineWorldSim(WorldSim):
                 contained = False
                 for new_robot_info in robots:
                     if robot.robot_id == new_robot_info.player_id:
-                        if new_robot_info.died:
-                            robot.die()
                         contained = True
                         break
                 if not contained:
@@ -112,13 +111,15 @@ class OnlineWorldSim(WorldSim):
 
                 # print("extrapolation count: " + str(extrapolation_count))
                 for i in range(extrapolation_count):
-                    GameInfo.current_frame_seed = self.server_world_start_time_ns + self.physics_frame_count
-                    self.local_player_robot.input = frame_inputs[i]
-                    super().fixed_update(FIXED_DELTA_TIME)
+                    self.set_seed()
+                    if self.local_player_robot is not None:
+                        self.local_player_robot.input = frame_inputs[i]
+                    super().fixed_update(FIXED_DELTA_TIME, catchup_frame=(i < extrapolation_count - 1))
                     # self.physics_frame_count += 1
                     # self.physics_world_time_ns = FIXED_DELTA_TIME_NS * self.physics_frame_count
 
-                self.local_player_robot.input = self.player_input
+                if self.local_player_robot is not None:
+                    self.local_player_robot.input = self.player_input
 
             i = len(self.previous_inputs) - 1
             while i >= 0:
@@ -126,10 +127,10 @@ class OnlineWorldSim(WorldSim):
                     self.previous_inputs.pop(i)
                 i -= 1
 
-    def fixed_update(self, delta_time):
+    def fixed_update(self, delta_time, catchup_frame=False):
         # print(self.curr_time_ns - self.udp_socket.curr_time_ns)
         self.udp_socket.curr_time_ns = self.curr_time_ns
-        GameInfo.current_frame_seed = self.server_world_start_time_ns + self.physics_frame_count
+        self.set_seed()
 
         if self.local_player_robot is not None:
             input_delay_frames = round(self.server_client_latency_ns / FIXED_DELTA_TIME_NS)

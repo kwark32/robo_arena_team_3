@@ -5,8 +5,9 @@ from robot import Robot, PlayerInput
 from arena_converter import load_map
 from physics import PhysicsWorld
 from util import Vector, get_delta_time_s
-from globals import GameInfo
-from constants import FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_FIXED_TIMESTEPS, POWER_UPS_PER_S
+from globals import GameInfo, Settings
+from constants import FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_FIXED_TIMESTEPS, FIXED_FPS, RESPAWN_DELAY
+from constants import POWER_UPS_PER_S
 from camera import CameraState
 from sound_manager import SoundManager
 
@@ -34,6 +35,7 @@ class WorldSim:
         self.curr_world_time_ns = 0
         self.delta_time = 0
         self.extrapolation_delta_time = 0
+        self.catchup_frame = False
 
         self._frames_since_last_show = 0
         self._last_fps_show_time = self.world_start_time_ns
@@ -48,20 +50,21 @@ class WorldSim:
         self.arena = load_map(GameInfo.active_arena, physics_world=self.physics_world)
         self.arena.world_sim = self
 
-    def create_player(self, robot_id=-1, position=None, player_name=None):
+    def create_player(self, robot_id=-1, position=None, player_name=None, should_respawn=False):
         if player_name is None:
             player_name = GameInfo.local_player_name
         if position is None:
             position = Vector(self.arena.size.x / 2, self.arena.size.y / 2)
-        player = Robot(self, robot_id=robot_id, is_player=True, has_ai=False,
+        player = Robot(self, robot_id=robot_id, is_player=True, has_ai=False, should_respawn=should_respawn,
                        position=position, player_name=player_name)
         self.robots.append(player)
         return player
 
-    def create_enemy_robot(self, robot_id=-1, position=None, has_ai=True, player_name=""):
+    def create_enemy_robot(self, robot_id=-1, position=None, has_ai=True, player_name="", should_respawn=False):
         if position is None:
             position = Vector(self.arena.size.x / 2, self.arena.size.y / 2)
-        enemy = Robot(self, robot_id=robot_id, has_ai=has_ai, position=position, player_name=player_name)
+        enemy = Robot(self, robot_id=robot_id, has_ai=has_ai, position=position,
+                      player_name=player_name, should_respawn=should_respawn)
         self.robots.append(enemy)
         return enemy
 
@@ -86,7 +89,9 @@ class WorldSim:
                 self.local_player_robot = None
         dead_robots.clear()
 
-    def fixed_update(self, delta_time):
+    def fixed_update(self, delta_time, catchup_frame=False):
+        self.catchup_frame = catchup_frame
+
         random.seed(GameInfo.current_frame_seed)
 
         if self.physics_frame_count % POWER_UPS_PER_S == 0:
@@ -105,18 +110,24 @@ class WorldSim:
 
         self.physics_world.do_collisions()
 
-        pos = CameraState.position
-        if self.local_player_robot is not None:
-            pos = self.local_player_robot.sim_body.position
-        if pos is not None:
-            pos = pos.copy()
-        SoundManager.instance.update_sound(pos)
+        if not catchup_frame:
+            pos = CameraState.position
+            if self.local_player_robot is not None:
+                pos = self.local_player_robot.sim_body.position
+            if pos is not None:
+                pos = pos.copy()
+            SoundManager.instance.update_sound(pos)
+
+            if self.world_scene is not None and self.world_scene.score_board is not None:
+                self.world_scene.score_board.set_scores(self.robots)
 
         self.clear_dead_bullets()
         self.clear_dead_robots()
 
         self.physics_frame_count += 1
         self.physics_world_time_ns = FIXED_DELTA_TIME_NS * self.physics_frame_count
+
+        self.catchup_frame = False
 
     def update_times(self):
         last_world_time_ns = self.curr_world_time_ns
@@ -157,10 +168,11 @@ class WorldSim:
             else:
                 CameraState.position.lerp_to(self.local_player_robot.extrapolation_body.position,
                                              CameraState.lerp_per_sec * self.delta_time)
-        else:
-            CameraState.position = None
 
         self.calc_fps()
+
+    def set_seed(self):
+        GameInfo.current_frame_seed = self.world_start_time_ns + self.physics_frame_count
 
 
 class SPWorldSim(WorldSim):
@@ -170,12 +182,56 @@ class SPWorldSim(WorldSim):
         self.local_player_robot = self.create_player(player_name="")
         self.local_player_robot.input = self.player_input
 
-        self.create_enemy_robot(position=Vector(self.arena.size.x / 2 - 800, self.arena.size.y / 2 - 800))
-        self.create_enemy_robot(position=Vector(self.arena.size.x / 2 + 800, self.arena.size.y / 2 - 800))
-        self.create_enemy_robot(position=Vector(self.arena.size.x / 2 - 800, self.arena.size.y / 2 + 800))
-        self.create_enemy_robot(position=Vector(self.arena.size.x / 2 + 800, self.arena.size.y / 2 + 800))
+        GameInfo.local_player_score = 0
+        GameInfo.local_player_score_is_highscore = False
 
-    def fixed_update(self, delta_time):
-        GameInfo.current_frame_seed = self.world_start_time_ns + self.physics_frame_count
+        self.player_die_frame = None
+
+        self.last_enemy_spawn_frame = 0
+        self.enemy_spawn_delay = 20 * FIXED_FPS
+
+        self.spawn_random_enemy()
+
+        # self.create_enemy_robot(position=Vector(self.arena.size.x / 2 - 800, self.arena.size.y / 2 - 800))
+        # self.create_enemy_robot(position=Vector(self.arena.size.x / 2 + 800, self.arena.size.y / 2 - 800))
+        # self.create_enemy_robot(position=Vector(self.arena.size.x / 2 - 800, self.arena.size.y / 2 + 800))
+        # self.create_enemy_robot(position=Vector(self.arena.size.x / 2 + 800, self.arena.size.y / 2 + 800))
+
+    def fixed_update(self, delta_time, catchup_frame=False):
+        self.set_seed()
+
+        if self.physics_frame_count > self.last_enemy_spawn_frame + self.enemy_spawn_delay:
+            self.spawn_random_enemy()
+            self.last_enemy_spawn_frame = self.physics_frame_count
+        self.enemy_spawn_delay -= 0.00008 * self.enemy_spawn_delay
 
         super().fixed_update(delta_time)
+
+        if self.local_player_robot is None and self.player_die_frame is None:
+            self.player_die_frame = self.physics_frame_count
+            GameInfo.local_player_score += self.player_die_frame
+            if GameInfo.local_player_score > Settings.instance.highscore:
+                GameInfo.local_player_score_is_highscore = True
+                Settings.instance.highscore = GameInfo.local_player_score
+                Settings.instance.save()
+
+        if (self.player_die_frame is not None and self.world_scene.active_menu is None
+                and self.physics_frame_count > self.player_die_frame + RESPAWN_DELAY):
+            self.world_scene.switch_menu("game_over_menu")
+
+    def spawn_random_enemy(self):
+        if self.arena.tiles is None:
+            return
+
+        pos = None
+        while pos is None:
+            pos = Vector(random.randrange(self.arena.tile_count.x), random.randrange(self.arena.tile_count.y))
+            tile = self.arena.tiles[pos.y][pos.x]
+            if tile.has_collision or tile.name == "hole" or tile.name == "lava" or tile.name.startswith("portal_"):
+                pos = None
+                continue
+            pos.mult(GameInfo.arena_tile_size)
+            pos.add_scalar(GameInfo.arena_tile_size / 2)
+            pos.round()
+
+        self.create_enemy_robot(position=pos)

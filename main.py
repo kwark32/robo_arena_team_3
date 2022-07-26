@@ -21,45 +21,28 @@ if not GameInfo.is_headless:
     from world_scene import SPWorldScene, OnlineWorldScene, ServerWorldScene
     from PyQt5.QtGui import QFont, QColor, QFontDatabase
     from PyQt5.QtWidgets import QOpenGLWidget, QApplication, QDesktopWidget
-    from PyQt5.QtCore import Qt, QResource
+    from PyQt5.QtCore import Qt, QResource, QSize
 
     class ArenaWindow(QOpenGLWidget):
         def __init__(self):
             super().__init__()
 
             self.running = True
-            self.focused = True
+            self.frame_drawn = True
 
             self.active_scene = None
+
+            self.window_geometry = None
 
             self.init_window()
 
             self.switch_scene(Scene.MAIN_MENU)
 
         def init_window(self):
-            geometry = QDesktopWidget().screenGeometry()
-
-            # Use main monitor size:
-            main_window_size = Vector(geometry.size().width(), geometry.size().height())
-            # Always use exact reference size:
-            #  main_window_size = GameInfo.window_reference_size
-
-            GameInfo.window_size = main_window_size
-            CameraState.scale = Vector(main_window_size.x / GameInfo.window_reference_size.x,
-                                       main_window_size.y / GameInfo.window_reference_size.y)
-            # Adjust scaling to height:
-            CameraState.scale_factor = CameraState.scale.y
-
-            CameraState.x_offset = (CameraState.scale.x - CameraState.scale.y) * GameInfo.window_reference_size.x * 0.5
-
-            self.setFixedSize(main_window_size.x, main_window_size.y)
-            self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
-            geometry_rect = self.frameGeometry()
-            geometry_rect.moveCenter(geometry.center())
-            self.move(geometry_rect.topLeft())
             self.setWindowTitle("Robo Arena")
             self.setFocusPolicy(Qt.StrongFocus)
-            self.show()
+            self.setMinimumSize(640, 360)
+            self.update_fullscreen()
 
         def closeEvent(self, event):
             self.running = False
@@ -85,11 +68,10 @@ if not GameInfo.is_headless:
             if self.active_scene is not None:
                 self.active_scene.mouseReleaseEvent(event)
 
-        def focusInEvent(self, event):
-            self.focused = True
-
-        def focusOutEvent(self, event):
-            self.focused = False
+        def resizeGL(self, w, h):
+            self.update_window_size()
+            if self.active_scene is not None:
+                self.active_scene.resizeGL(w, h)
 
         def switch_scene(self, scene):
             if self.active_scene is not None:
@@ -98,17 +80,47 @@ if not GameInfo.is_headless:
                 self.active_scene.deleteLater()
                 self.active_scene = None
             if scene == Scene.MAIN_MENU:
-                self.active_scene = MainMenuScene(self, GameInfo.window_size)
+                self.active_scene = MainMenuScene(self)
             elif scene == Scene.SP_WORLD:
-                self.active_scene = SPWorldScene(self, GameInfo.window_size)
+                self.active_scene = SPWorldScene(self)
             elif scene == Scene.ONLINE_WORLD:
-                self.active_scene = OnlineWorldScene(self, GameInfo.window_size)
+                self.active_scene = OnlineWorldScene(self)
             elif scene == Scene.SERVER_WORLD:
-                self.active_scene = ServerWorldScene(self, GameInfo.window_size)
+                self.active_scene = ServerWorldScene(self)
 
         def paintEvent(self, event):
+            self.frame_drawn = True
             if self.active_scene is not None:
                 self.active_scene.paintEvent(event)
+
+        def update_fullscreen(self):
+            if Settings.instance.fullscreen:
+                self.showFullScreen()
+            else:
+                screen_geometry = QDesktopWidget().screenGeometry()
+                center = screen_geometry.center()
+                screen_geometry.setSize(QSize(1280, 720))
+                screen_geometry.moveCenter(center)
+                self.setGeometry(screen_geometry)
+                self.showNormal()
+
+            self.update_window_size()
+
+        def update_window_size(self):
+            if Settings.instance.fullscreen:
+                self.window_geometry = QDesktopWidget().screenGeometry()
+            else:
+                self.window_geometry = self.geometry()
+
+            main_window_size = Vector(self.window_geometry.size().width(), self.window_geometry.size().height())
+            GameInfo.window_size = main_window_size
+            CameraState.scale = Vector(main_window_size.x / GameInfo.window_reference_size.x,
+                                       main_window_size.y / GameInfo.window_reference_size.y)
+            # Adjust scaling to height:
+            CameraState.scale_factor = CameraState.scale.y
+
+            CameraState.x_offset = ((CameraState.scale.x - CameraState.scale.y) / CameraState.scale_factor
+                                    * GameInfo.window_reference_size.x * 0.5)
 
 else:
     from server_world_sim import ServerWorldSim
@@ -143,14 +155,21 @@ def main():
         Fonts.name_tag_font = QFont(press_start_font_str)
         Fonts.name_tag_font.setPixelSize(12)
         Fonts.name_tag_color = QColor(200, 200, 200)  # QColor(225, 50, 225)
+        Fonts.ui_text_font = QFont(press_start_font_str)
+        Fonts.ui_text_font.setPixelSize(60)
+        Fonts.score_color = QColor(167, 77, 216)
+        Fonts.highscore_color = QColor(10, 200, 50)
+        Fonts.score_board_font = QFont(press_start_font_str)
+        Fonts.score_board_font.setPixelSize(18)
+        Fonts.score_board_color = QColor(200, 200, 200)
 
         while window.running:  # main loop
+            window.update()
             app.processEvents()
-            if window.focused:
-                window.update()
-            else:
-                if window.active_scene.world_sim is not None:
+            if not window.frame_drawn:
+                if hasattr(window.active_scene, "world_sim") and window.active_scene.world_sim is not None:
                     window.active_scene.world_sim.update_world()
+            window.frame_drawn = False
 
         sys.exit(0)
 

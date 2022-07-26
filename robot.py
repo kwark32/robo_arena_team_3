@@ -20,7 +20,7 @@ robot_texture_path = get_main_path() + "/textures/moving/tanks/"
 
 
 class RobotInfo:
-    def __init__(self, robot, physics_frame=0):
+    def __init__(self, robot):
         self.robot_body = robot.sim_body.as_tuples()
         self.player_id = robot.robot_id
         self.next_bullet_id = robot.next_bullet_id
@@ -34,13 +34,11 @@ class RobotInfo:
             self.effects.append(effect.copy())
         self.effect_data = robot.effect_data
         self.input = robot.input
+        self.kills = robot.kills
+        self.is_dead = robot.is_dead
+        self.last_death_frame = robot.last_death_frame
 
-        self.died = False
-
-        if robot.last_death_frame == physics_frame > 0:
-            self.died = True
-
-    def set_robot_values(self, robot):
+    def set_robot_values(self, robot, physics_frame=0):
         robot.robot_id = self.player_id
         robot.next_bullet_id = self.next_bullet_id
         robot.player_name = self.player_name
@@ -50,18 +48,22 @@ class RobotInfo:
         robot.effects = self.effects
         robot.effect_data = self.effect_data
         robot.health = self.health
+        robot.kills = self.kills
         if robot.weapon is None or robot.weapon.weapon_type is not self.weapon_class:
             robot.weapon = self.weapon_class()
         robot.weapon.last_shot_frame = self.last_shot_frame
         robot.last_position = Vector(self.last_position[0], self.last_position[1])
         robot.forward_velocity_goal = 0
+        robot.last_death_frame = self.last_death_frame
         if robot.physics_body is None:
             robot.create_physics_body()
         robot.set_physics_body()
         if not robot.has_ai:
             robot.input = self.input
-        if self.died:
-            robot.die()
+        if self.is_dead:
+            if robot.last_death_frame == physics_frame:
+                robot.die()
+            robot.is_dead = True
 
 
 class Robot:
@@ -73,7 +75,7 @@ class Robot:
     size = Vector(32, 32)
     turret_texture_center_offset = Vector(0, 10)
 
-    def __init__(self, world_sim, robot_id=-1, is_player=False, has_ai=True,
+    def __init__(self, world_sim, robot_id=-1, is_player=False, has_ai=True, should_respawn=False,
                  position=Vector(0, 0), rotation=0, player_name=""):
         self.creation_frame = world_sim.physics_frame_count
 
@@ -135,10 +137,11 @@ class Robot:
         self.is_dead = False
         self.last_death_frame = 0
 
-        self.should_respawn = True
+        self.kills = 0
+
+        self.should_respawn = should_respawn
         self.robot_ai = None
         if has_ai:
-            self.should_respawn = False
             self.robot_ai = RobotAI(self)
 
     @property
@@ -267,7 +270,7 @@ class Robot:
                         turret_rot = 0
                     else:
                         turret_rot = self.input.turret_rot
-                    if not self.weapon.shoot(self.robot_id, self.get_next_bullet_id,
+                    if not self.weapon.shoot(self, self.robot_id, self.get_next_bullet_id,
                                              self.sim_body.position, turret_rot, self.damage_factor):
                         self.next_bullet_id -= 1
 
@@ -336,10 +339,16 @@ class Robot:
     def change_health(self, delta_health):
         self.health += delta_health
 
-    def hit_bullet(self, damage, source_id):
+    def hit_bullet(self, damage, source_robot):
         self.change_health(-damage / self.bullet_resistance_factor)
+        if int(self.health) <= 0 and source_robot is not self:
+            if source_robot is not None:
+                source_robot.kills += 1
 
     def die(self):
+        if self is self.world_sim.local_player_robot:
+            GameInfo.local_player_score += self.kills * GameInfo.score_per_kill
+
         explosion_path = "vfx/"
         if self.is_player:
             explosion_path += "tank_blue_explosion"
@@ -375,6 +384,9 @@ class Robot:
 
     def set_position(self, position, stop_robot=False, stop_robot_rotation=False):
         self.last_position = position.copy()
+        last_pos_change = self.real_velocity.copy()
+        last_pos_change.mult(FIXED_DELTA_TIME)
+        self.last_position.sub(last_pos_change)
         self.sim_body.position = position.copy()
         if stop_robot:
             self.real_velocity = (0, 0)

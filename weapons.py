@@ -95,7 +95,7 @@ class Bullet:
         pass
 
     def hit_robot(self, robot):
-        robot.change_health(-self.damage)
+        robot.hit_bullet(self.damage, self.source_id)
         self.apply_effect(robot)
 
     def update(self, delta_time):

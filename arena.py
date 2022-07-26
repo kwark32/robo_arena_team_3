@@ -127,7 +127,8 @@ class Arena:
                 position.mult(GameInfo.arena_tile_size)
                 position.add_scalar(GameInfo.arena_tile_size / 2)
                 # decide which type of power up to place
-                power_up_types = [powerups.HealthPowerUp, powerups.SpeedPowerUp, powerups.DamagePowerUp]
+                power_up_types = [powerups.HealthPowerUp, powerups.SpeedPowerUp,
+                                  powerups.DamagePowerUp, powerups.BulletResistancePowerUp]
                 power_up_type = random.choice(power_up_types)
                 self.power_ups[y][x] = power_up_type(self, Vector(x, y), position)
                 break

@@ -108,6 +108,7 @@ class Robot:
 
         self.weapon = TankCannon(self.world_sim)
         self.damage_factor = 1
+        self.bullet_resistance_factor = 1
 
         self.max_health = MAX_ROBOT_HEALTH
         self.health = self.max_health
@@ -268,6 +269,9 @@ class Robot:
 
     def change_health(self, delta_health):
         self.health += delta_health
+
+    def hit_bullet(self, damage, source_id):
+        self.change_health(-damage / self.bullet_resistance_factor)
 
     def die(self):
         print("<cool tank explode animation> or something... (for robot ID " + str(self.robot_id) + ")")

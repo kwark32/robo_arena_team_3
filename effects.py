@@ -209,3 +209,18 @@ class DamageEffect(RobotEffect):
 
     def revert(self, robot):
         robot.damage_factor = 1
+
+
+class BulletResistanceEffect(RobotEffect):
+    def __init__(self, duration=(FIXED_DELTA_TIME / 2), bullet_resistance_factor=1):
+        super().__init__(duration)
+
+        self.bullet_resistance_factor = bullet_resistance_factor
+
+    def apply(self, robot, delta_time=0):
+        super().apply(robot, delta_time)
+
+        robot.bullet_resistance_factor *= self.bullet_resistance_factor
+
+    def revert(self, robot):
+        robot.bullet_resistance_factor = 1

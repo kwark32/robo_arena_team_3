@@ -83,3 +83,15 @@ class DamagePowerUp(PowerUp):
     def __init__(self, arena, index, position):
         effect = effects.DamageEffect(duration=DamagePowerUp.duration, damage_factor=DamagePowerUp.damage_factor)
         super().__init__(arena, effect, index, position)
+
+
+class BulletResistancePowerUp(PowerUp):
+    name = "bullet_resistance"
+    duration = 10
+    bullet_resistance_factor = 2
+
+    def __init__(self, arena, index, position):
+        effect = effects.BulletResistanceEffect(
+            duration=BulletResistancePowerUp.duration,
+            bullet_resistance_factor=BulletResistancePowerUp.bullet_resistance_factor)
+        super().__init__(arena, effect, index, position)

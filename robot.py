@@ -366,6 +366,9 @@ class Robot:
 
     def set_position(self, position, stop_robot=False, stop_robot_rotation=False):
         self.last_position = position.copy()
+        last_pos_change = self.real_velocity.copy()
+        last_pos_change.mult(FIXED_DELTA_TIME)
+        self.last_position.sub(last_pos_change)
         self.sim_body.position = position.copy()
         if stop_robot:
             self.real_velocity = (0, 0)

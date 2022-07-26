@@ -340,7 +340,7 @@ class UIText(UIElement):
         text_width = self.font_metrics.width(self.text)
 
         qp.setFont(Fonts.ui_text_font)
-        qp.setPen(QPen(Fonts.ui_text_color, 6))
+        qp.setPen(QPen(Fonts.score_color, 6))
         qp.drawText(QPoint(self.position.x - (text_width / 2), self.position.y), self.text)
 
 

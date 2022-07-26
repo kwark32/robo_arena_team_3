@@ -32,7 +32,9 @@ class GameInfo:
     # test_map.json
     # arena_1.png
     # arena_1_big-100.png
-    active_arena = "arena_1_big-100.png"
+    # LuftigeKwarkschafeMitUIDisigner.png
+    # semi_divided_arena.png
+    active_arena = "semi_divided_arena.png"
 
     current_frame_seed = 0
 

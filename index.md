@@ -1,5 +1,23 @@
 ## Robo Arena Overview and Summary
 
+Idea:
+
+Our game was inspired by retro pixelated games. The sprites and tiles are all pixel art and the soundtrack and sound effects are also 8-bit. 
+
+
+
+Main Menu:
+
+The main menu has our Robo Arena logo and 5 buttons: Single Player, Online, Local, Settings and Exit. 
+
+![Summary](/Summary/main_menu.png)
+
+The single player, online and local buttons start an offline, online and local game respectively. 
+The settings includes sliders for the master, sound effects and music volume.
+
+![Summary](/Summary/settings.png)
+
+
 
 Gameplay:
 

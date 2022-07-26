@@ -13,7 +13,7 @@ The main menu has our Robo Arena logo and 5 buttons: Single Player, Online, Loca
 ![Summary](/Summary/main_menu.png)
 
 The single player, online and local buttons start an offline, online and local game respectively. 
-The settings includes sliders for the master, sound effects and music volume.
+The settings include sliders for the master, sound effects and music volume.
 
 ![Summary](/Summary/settings.png)
 
@@ -21,11 +21,11 @@ The settings includes sliders for the master, sound effects and music volume.
 
 Gameplay:
 
-The player controls a tank with a turret on top. The tank is moved with the WASD keys and the mouse is used to aim and shoot the turrets. On the map there are several enemy tanks which will find and shoot the player. The enemies use an A*-algorithm to locate and follow the player and avoids different tiles based on their priority. Hitting an enemy with a bullet will instantly destroy it, whereas the player can get hit several times, with a health bar above the tank showing the amount of health that is left. 
+The player controls a tank with a turret on top. The tank is moved with the WASD keys and the mouse is used to aim and shoot the turrets. On the map there are several enemy tanks which will find and shoot the player. The enemies use an A*-algorithm to locate and follow the player and avoid different tiles based on their priority. All robots in the arena (players and AI robots) have 1000HP maximum health and deal 250dmg with a bullet from their tank cannon so it usually takes 4 hits to destroy a robot. However the health and damage of the robots in the arena can not only be influenced by other robots, but by the tile effects and the power up effects of the arena as well. The current health of a player is always visually availible to them by the healthbar displayed over their robot.
 
 ![Summary](/Summary/gameplay_healthbar.png)
 
-There are several different tiles scattered across the map, with the most common being the basic metal tile and the tires. 
+There are several different tiles scattered across the map, with the most common being the basic metal ground tile and the wall tile (tires). 
 
 ![Summary](/Summary/gameplay.gif)
 
@@ -33,37 +33,37 @@ The metal tile has no effect on the player and can be driven over.
 
 ![Summary](/Summary/metal_tile.png)
 
-The tires block the player from passing over it, which gives the map a border that the tanks cannot pass through and also some cover to hide behind. Bullets cannot pass through the tires and they cannot be destroyed. 
+The wall tile (tires) block the player from passing over them, which gives the map a border that the tanks cannot pass through and also some cover to hide behind. Bullets cannot pass through the wall tiles (tires) and they cannot be destroyed. 
 
 ![Summary](/Summary/tires.png)
 
-There are 6 special tiles on the map. The fire tile gives the tanks high damage and increases the movement speed. 
+There are 6 special tiles on the map. The fire tile inflicts rather low damage and increases the movement speed of a robot while driven over. 
 
 ![Summary](/Summary/fire.gif)
 
-The water tile gives the tanks more short circuit damage with lower health. It also decreases movement speed. 
+The water tile inflicts short circuit damage to robots when their health is below 50% of the maximium health (=500). It also decreases movement speed by 50%. 
 
 ![Summary](/Summary/water_tile.png)
 
-The lava tiles causes low fire damage and decreases movement speed. 
+The lava tile causes high melting damage and greatly decreases movement speed by 75%. 
 
 ![Summary](/Summary/lava_tile.png)
 
-The earth tile decreases movement speed. 
+The earth tile decreases movement speed by 25% and has no damage effect. 
 
 ![Summary](/Summary/dirt_tile.png)
 
-The hole tile gives the tanks fall damage and immobilises the tank for a few seconds. 
+The hole tile gives the tanks fall damage wich results in immobilisation and an instant destruct after a short "falling animation". 
 
 ![Summary](/Summary/hole_tile.png)
 
-The portal tile teleports the tanks to a random portal of the other colour and gives tank either health or damage. 
+The portal tile teleports the robots to a random portal of the other colour and inflicts rather low damage of 100 so the player cant just keep teleporting around to get away and survive. 
 
 ![Summary](/Summary/portal_blue.gif)
 
 ![Summary](/Summary/portal_purple.gif)
 
-If a tank loses all its health, the tank explodes. If the player explodes, it gets respawned after a couple of seconds.
+When a robot loses all its health, it explodes (short animation). In singleplayer mode this means game over, the score is saved. In multiplayer mode the players respawn after a few seconds.
 
 ![Summary](/Summary/explosion.gif)
 

@@ -6,7 +6,7 @@ from server_world_sim import ServerWorldSim
 from globals import Scene, Fonts, GameInfo
 from camera import CameraState
 from constants import DEBUG_MODE
-from ui_overlay import UIOverlay, OverlayWidget
+from ui_overlay import UIOverlay, OverlayWidget, Scoreboard
 from util import painter_transform_with_rot, Vector
 from sound_manager import SoundManager, music_names
 from animation import Animation
@@ -28,6 +28,8 @@ class WorldScene(OverlayWidget):
         Animation.world_scene = self
 
         self.ui_overlay = UIOverlay()
+
+        self.score_board = None
 
         self.mouse_pressed = False
         self.space_pressed = False
@@ -152,7 +154,15 @@ class WorldScene(OverlayWidget):
                     qp.drawPolygon(poly)
             qp.restore()
 
+        if CameraState.scale.x > CameraState.scale.y:
+            qp.fillRect(0, 0, CameraState.x_offset, GameInfo.window_reference_size.y, Qt.black)
+            qp.fillRect(GameInfo.window_reference_size.x + CameraState.x_offset, 0,
+                        CameraState.x_offset, GameInfo.window_reference_size.y, Qt.black)
+
         super().draw(qp)
+
+        if self.score_board is not None:
+            self.score_board.draw(qp)
 
         qp.setFont(Fonts.fps_font)
         qp.setPen(Fonts.fps_color)
@@ -184,6 +194,11 @@ class SPWorldScene(WorldScene):
 class OnlineWorldScene(WorldScene):
     sim_class = OnlineWorldSim
 
+    def __init__(self, parent, size):
+        super().__init__(parent, size)
+
+        self.score_board = Scoreboard()
+
 
 class ServerWorldScene(WorldScene):
     sim_class = ServerWorldSim
@@ -191,7 +206,8 @@ class ServerWorldScene(WorldScene):
     def __init__(self, parent, size):
         super().__init__(parent, size)
 
-        self.world_sim.local_player_robot = self.world_sim.create_player(robot_id=GameInfo.local_player_id)
+        self.world_sim.local_player_robot = self.world_sim.create_player(robot_id=GameInfo.local_player_id,
+                                                                         should_respawn=True)
         self.world_sim.local_player_robot.input = self.world_sim.player_input
 
-        self.game_over_menu = ServerWorldScene.GameOver(self.main_widget, size, self)
+        self.score_board = Scoreboard()

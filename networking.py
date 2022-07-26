@@ -39,6 +39,14 @@ class StatePacket(Packet):
         if self.bullets is None:
             self.bullets = []
 
+    def semi_copy(self):
+        cp = StatePacket()
+        cp.world_start_time = self.world_start_time
+        cp.physics_frame = self.physics_frame
+        cp.robots = self.robots
+        cp.bullets = self.bullets
+        return cp
+
     def to_string(self):
         ret = ("{\n  rtt start time: " + str(self.client_rtt_start) + "\n  physics frame: " + str(self.physics_frame)
                + "\n  player ID: " + str(self.player_id) + "\n  robot IDs: {")
@@ -97,7 +105,6 @@ class UDPSocket:
         return len(read_sockets) > 0 or self._buffered_message_address is not None
 
     def get_packet(self):
-        buffer_count = 0
         if self._buffered_message_address is not None:
             bytes_address_tuple = self._buffered_message_address
             self._buffered_message_address = None

@@ -108,9 +108,9 @@ class UIElement:
             for pos, rot in pos_rots:
                 qp.save()
                 pos.add(edge_offset)
-                qp.translate(pos.x, pos.y)
+                qp.translate(pos.x + CameraState.x_offset, pos.y)
                 qp.rotate(rad_to_deg(rot))
-                qp.drawPixmap(round(CameraState.x_offset - (edge_size.x / 2)),
+                qp.drawPixmap(round(-edge_size.x / 2),
                               round(-edge_size.y / 2), edge_image)
                 edge_offset.rotate(math.pi / 2)
                 qp.restore()
@@ -163,7 +163,7 @@ class Slider(UIElement):
     def draw(self, qp):
         qp.setFont(Fonts.text_field_font)
         qp.setPen(QPen(Fonts.text_field_color, 6))
-        qp.drawText(QPoint(round(self.position.x + self.header_offset_x),
+        qp.drawText(QPoint(round(self.position.x + CameraState.x_offset + self.header_offset_x),
                            round(self.position.y + Slider.header_offset_y)), self.slider_type.header_text)
 
         qp.drawPixmap(round(self.top_left_corner.x + CameraState.x_offset), round(self.top_left_corner.y), self.texture)
@@ -232,11 +232,11 @@ class TextField(UIElement):
 
         if len(self.text) > 0 or self.is_selected:
             qp.setPen(QPen(Fonts.text_field_color, 6))
-            qp.drawText(QPoint(self.top_left_corner.x + self.text_offset.x,
+            qp.drawText(QPoint(self.top_left_corner.x + CameraState.x_offset + self.text_offset.x,
                                self.top_left_corner.y + self.text_offset.y), draw_text)
         else:
             qp.setPen(QPen(Fonts.text_field_default_color, 6))
-            qp.drawText(QPoint(self.top_left_corner.x + self.text_offset.x,
+            qp.drawText(QPoint(self.top_left_corner.x + CameraState.x_offset + self.text_offset.x,
                                self.top_left_corner.y + self.text_offset.y), self.placeholder_text)
 
     def key_press(self, key):
@@ -334,9 +334,9 @@ class UIText(UIElement):
 
         self.left_align = False
 
+        self.font = Fonts.ui_text_font
         self.font_color = Fonts.text_field_color
-
-        self.font_metrics = QFontMetricsF(Fonts.ui_text_font)
+        self.font_metrics = QFontMetricsF(self.font)
 
         self.text = ""
 
@@ -346,9 +346,9 @@ class UIText(UIElement):
         else:
             text_width = self.font_metrics.width(self.text)
 
-        qp.setFont(Fonts.ui_text_font)
+        qp.setFont(self.font)
         qp.setPen(QPen(self.font_color, 6))
-        qp.drawText(QPoint(self.position.x - (text_width / 2), self.position.y), self.text)
+        qp.drawText(self.position.x - (text_width / 2) + CameraState.x_offset, self.position.y, self.text)
 
 
 class Menu:

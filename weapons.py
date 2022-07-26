@@ -30,13 +30,14 @@ class BulletInfo:
 
 # base class
 class Bullet:
-    def __init__(self, world_sim, source_id=-1, bullet_id=-1, position=Vector(0, 0), rotation=0):
+    def __init__(self, world_sim, robot=None, source_id=-1, bullet_id=-1, position=Vector(0, 0), rotation=0):
         self.bullet_type = type(self)
         if self.bullet_type is Bullet:
             print("ERROR: Bullet base class should not be instantiated!")
 
         self.creation_frame = world_sim.physics_frame_count
 
+        self.robot = robot
         self.source_id = source_id
         self.bullet_id = bullet_id
 
@@ -96,8 +97,8 @@ class Bullet:
         pass
 
     def hit_robot(self, robot):
-        robot.hit_bullet(self.damage, self.source_id)
         self.apply_effect(robot)
+        robot.hit_bullet(self.damage, self.robot)
 
     def update(self, delta_time):
         if self.world_sim.physics_frame_count > self.creation_frame:
@@ -129,14 +130,14 @@ class Weapon:
         fire_delay = round(FIXED_FPS / self.weapon_type.fire_rate)
         return self.world_sim.physics_frame_count - fire_delay >= self.last_shot_frame
 
-    def shoot(self, source_id, bullet_id, position, rotation):
+    def shoot(self, robot, source_id, bullet_id, position, rotation):
         if self.is_shot_ready():
             self.last_shot_frame = self.world_sim.physics_frame_count
             total_rot = rotation + self.weapon_type.rot_offset
             spawn_pos = self.weapon_type.pos_offset.copy()
             spawn_pos.rotate(total_rot)
             spawn_pos.add(position)
-            self.weapon_type.bullet_type(self.world_sim, source_id=source_id, bullet_id=bullet_id,
+            self.weapon_type.bullet_type(self.world_sim, robot=robot, source_id=source_id, bullet_id=bullet_id,
                                          position=spawn_pos, rotation=total_rot)
             SoundManager.instance.play_sfx(self.weapon_type.shot_sound_name, pos=position)
             return True

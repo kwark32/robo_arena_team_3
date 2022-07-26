@@ -121,6 +121,9 @@ class Fonts:
     score_color = None
     highscore_color = None
 
+    score_board_font = None
+    score_board_color = None
+
 
 def scramble_int(num):
     s = str(num)

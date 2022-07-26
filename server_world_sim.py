@@ -3,7 +3,6 @@ from networking import UDPServer, StatePacket
 from constants import CLIENT_DISCONNECT_TIMEOUT_NS
 from robot import RobotInfo
 from weapons import BulletInfo
-from globals import GameInfo
 
 
 class ServerWorldSim(WorldSim):
@@ -16,17 +15,16 @@ class ServerWorldSim(WorldSim):
         super().clean_mem()
         self.udp_socket.close()
 
-    def fixed_update(self, delta_time):
+    def fixed_update(self, delta_time, catchup_frame=False):
         self.udp_socket.curr_time_ns = self.curr_time_ns
-        GameInfo.current_frame_seed = self.world_start_time_ns + self.physics_frame_count
+        self.set_seed()
 
         self.udp_socket.update_socket()
 
         self.udp_socket.get_client_packets()
 
         disconnected_clients = []
-        for key in self.udp_socket.clients:
-            client = self.udp_socket.clients[key]
+        for client in self.udp_socket.clients.values():
             if client.last_rx_packet is None:
                 continue
             if (client.last_rx_packet.receive_time + CLIENT_DISCONNECT_TIMEOUT_NS < self.curr_time_ns
@@ -40,7 +38,7 @@ class ServerWorldSim(WorldSim):
                         break
                 if existing_robot is None:
                     existing_robot = self.create_enemy_robot(robot_id=client.player_id, has_ai=False,
-                                                             player_name=client.player_name)
+                                                             should_respawn=True, player_name=client.player_name)
                     client.robot = existing_robot
                 existing_robot.input = client.last_rx_packet.player_input
         for disconnected in disconnected_clients:
@@ -66,9 +64,9 @@ class ServerWorldSim(WorldSim):
                                    physics_frame=self.physics_frame_count, robots=robot_info_list,
                                    bullets=bullet_info_list)
 
-        for key in self.udp_socket.clients:
+        for client in self.udp_socket.clients.values():
             if client.last_rx_packet is not None:
-                client = self.udp_socket.clients[key]
                 state_packet.player_id = client.player_id
                 state_packet.client_rtt_start = client.last_rx_packet.creation_time
                 self.udp_socket.send_packet(client, state_packet)
+                state_packet = state_packet.semi_copy()

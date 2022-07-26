@@ -49,7 +49,8 @@ if not GameInfo.is_headless:
             # Adjust scaling to height:
             CameraState.scale_factor = CameraState.scale.y
 
-            CameraState.x_offset = (CameraState.scale.x - CameraState.scale.y) * GameInfo.window_reference_size.x * 0.5
+            CameraState.x_offset = ((CameraState.scale.x - CameraState.scale.y) / CameraState.scale_factor
+                                    * GameInfo.window_reference_size.x * 0.5)
 
         def closeEvent(self, event):
             self.running = False
@@ -132,6 +133,9 @@ def main():
         Fonts.ui_text_font.setPixelSize(60)
         Fonts.score_color = QColor(167, 77, 216)
         Fonts.highscore_color = QColor(10, 200, 50)
+        Fonts.score_board_font = QFont(press_start_font_str)
+        Fonts.score_board_font.setPixelSize(18)
+        Fonts.score_board_color = QColor(200, 200, 200)
 
         while window.running:  # main loop
             window.update()

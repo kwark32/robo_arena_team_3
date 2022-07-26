@@ -7,7 +7,7 @@ from ui_elements import Menu, Button, UIImage, UIText
 from camera import CameraState
 
 if not GameInfo.is_headless:
-    from PyQt5.QtGui import QPixmap, QFontMetricsF
+    from PyQt5.QtGui import QPixmap, QFontMetricsF, QPen, QColor
     from PyQt5.QtCore import Qt
     from PyQt5.QtWidgets import QOpenGLWidget
 
@@ -53,6 +53,59 @@ class UIOverlay:
                 qp.drawPixmap(round(-self.health_bar_bg_size.x / 2), round(-self.health_bar_bg_size.y / 2),
                               self.health_bar, 0, 0, health_fill, 0)
             qp.restore()
+
+
+class Scoreboard:
+    def __init__(self):
+        self.score_list = None
+
+        self.font = Fonts.score_board_font
+        self.font_color = Fonts.score_board_color
+        self.font_metrics = QFontMetricsF(self.font)
+
+    def set_scores(self, robots):
+        scores = []
+        for robot in robots:
+            scores.append((robot.player_name, robot.kills))
+        scores.sort(key=lambda tup: tup[1], reverse=True)
+        self.score_list = []
+        for name, score in scores:
+            self.score_list.append((name, str(score)))
+
+    def draw(self, qp):
+        if self.score_list is None:
+            return
+
+        max_width = 0
+        max_name_width = 0
+        for name, score in self.score_list:
+            name_width = self.font_metrics.width(name)
+            width = name_width + self.font_metrics.width(score)
+            if width > max_width:
+                max_width = width
+            if name_width > max_name_width:
+                max_name_width = name_width
+
+        if max_width <= 1:  # Leave some room for imprecision errors
+            return
+
+        font_height = self.font.pixelSize()
+        top_margin = 200
+        height_per_name = font_height * 2
+        outer_margin = font_height
+        inner_space = font_height * 2
+
+        qp.setFont(self.font)
+        qp.setPen(QPen(self.font_color, 6))
+
+        qp.fillRect(0, top_margin, round(max_width + (2 * outer_margin + inner_space)),
+                    round(len(self.score_list) * height_per_name), QColor(0, 0, 0, 150))
+        for i, (name, score) in enumerate(self.score_list):
+            name_x = outer_margin
+            score_x = outer_margin + inner_space + max_name_width
+            y = top_margin + i * height_per_name + font_height / 2 + height_per_name / 2
+            qp.drawText(round(name_x), round(y), name)
+            qp.drawText(round(score_x), round(y), score)
 
 
 class GameOverMenu(Menu):
@@ -180,16 +233,16 @@ class OverlayWidget(QOpenGLWidget):
             self.active_menu.key_release_event(event)
 
     def mouseMoveEvent(self, event):
-        self.mouse_position.x = event.x() / CameraState.scale.x
-        self.mouse_position.y = event.y() / CameraState.scale.y
+        self.mouse_position.x = event.x() / CameraState.scale_factor - CameraState.x_offset
+        self.mouse_position.y = event.y() / CameraState.scale_factor
         if self.active_menu is not None and self.active_menu.drag_element is not None:
             self.active_menu.dragging = True
             self.active_menu.mouse_drag(self.mouse_position)
         event.accept()
 
     def mousePressEvent(self, event):
-        self.mouse_position.x = event.x() / CameraState.scale.x
-        self.mouse_position.y = event.y() / CameraState.scale.y
+        self.mouse_position.x = event.x() / CameraState.scale_factor - CameraState.x_offset
+        self.mouse_position.y = event.y() / CameraState.scale_factor
         if event.button() == Qt.LeftButton:
             self.is_clicking = True
             if self.active_menu is not None:

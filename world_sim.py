@@ -34,6 +34,7 @@ class WorldSim:
         self.curr_world_time_ns = 0
         self.delta_time = 0
         self.extrapolation_delta_time = 0
+        self.catchup_frame = False
 
         self._frames_since_last_show = 0
         self._last_fps_show_time = self.world_start_time_ns
@@ -48,20 +49,21 @@ class WorldSim:
         self.arena = load_map(GameInfo.active_arena, physics_world=self.physics_world)
         self.arena.world_sim = self
 
-    def create_player(self, robot_id=-1, position=None, player_name=None):
+    def create_player(self, robot_id=-1, position=None, player_name=None, should_respawn=False):
         if player_name is None:
             player_name = GameInfo.local_player_name
         if position is None:
             position = Vector(self.arena.size.x / 2, self.arena.size.y / 2)
-        player = Robot(self, robot_id=robot_id, is_player=True, has_ai=False,
+        player = Robot(self, robot_id=robot_id, is_player=True, has_ai=False, should_respawn=should_respawn,
                        position=position, player_name=player_name)
         self.robots.append(player)
         return player
 
-    def create_enemy_robot(self, robot_id=-1, position=None, has_ai=True, player_name=""):
+    def create_enemy_robot(self, robot_id=-1, position=None, has_ai=True, player_name="", should_respawn=False):
         if position is None:
             position = Vector(self.arena.size.x / 2, self.arena.size.y / 2)
-        enemy = Robot(self, robot_id=robot_id, has_ai=has_ai, position=position, player_name=player_name)
+        enemy = Robot(self, robot_id=robot_id, has_ai=has_ai, position=position,
+                      player_name=player_name, should_respawn=should_respawn)
         self.robots.append(enemy)
         return enemy
 
@@ -86,7 +88,9 @@ class WorldSim:
                 self.local_player_robot = None
         dead_robots.clear()
 
-    def fixed_update(self, delta_time):
+    def fixed_update(self, delta_time, catchup_frame=False):
+        self.catchup_frame = catchup_frame
+
         random.seed(GameInfo.current_frame_seed)
 
         for bullet in self.bullets:
@@ -102,18 +106,24 @@ class WorldSim:
 
         self.physics_world.do_collisions()
 
-        pos = CameraState.position
-        if self.local_player_robot is not None:
-            pos = self.local_player_robot.sim_body.position
-        if pos is not None:
-            pos = pos.copy()
-        SoundManager.instance.update_sound(pos)
+        if not catchup_frame:
+            pos = CameraState.position
+            if self.local_player_robot is not None:
+                pos = self.local_player_robot.sim_body.position
+            if pos is not None:
+                pos = pos.copy()
+            SoundManager.instance.update_sound(pos)
+
+            if self.world_scene is not None and self.world_scene.score_board is not None:
+                self.world_scene.score_board.set_scores(self.robots)
 
         self.clear_dead_bullets()
         self.clear_dead_robots()
 
         self.physics_frame_count += 1
         self.physics_world_time_ns = FIXED_DELTA_TIME_NS * self.physics_frame_count
+
+        self.catchup_frame = False
 
     def update_times(self):
         last_world_time_ns = self.curr_world_time_ns
@@ -157,6 +167,9 @@ class WorldSim:
 
         self.calc_fps()
 
+    def set_seed(self):
+        GameInfo.current_frame_seed = self.world_start_time_ns + self.physics_frame_count
+
 
 class SPWorldSim(WorldSim):
     def __init__(self):
@@ -180,8 +193,8 @@ class SPWorldSim(WorldSim):
         # self.create_enemy_robot(position=Vector(self.arena.size.x / 2 - 800, self.arena.size.y / 2 + 800))
         # self.create_enemy_robot(position=Vector(self.arena.size.x / 2 + 800, self.arena.size.y / 2 + 800))
 
-    def fixed_update(self, delta_time):
-        GameInfo.current_frame_seed = self.world_start_time_ns + self.physics_frame_count
+    def fixed_update(self, delta_time, catchup_frame=False):
+        self.set_seed()
 
         if self.physics_frame_count > self.last_enemy_spawn_frame + self.enemy_spawn_delay:
             self.spawn_random_enemy()

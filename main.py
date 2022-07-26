@@ -97,11 +97,6 @@ if not GameInfo.is_headless:
             if Settings.instance.fullscreen:
                 self.showFullScreen()
             else:
-                screen_geometry = QDesktopWidget().screenGeometry()
-                center = screen_geometry.center()
-                screen_geometry.setSize(QSize(1280, 720))
-                screen_geometry.moveCenter(center)
-                self.setGeometry(screen_geometry)
                 self.showNormal()
 
             self.update_window_size()

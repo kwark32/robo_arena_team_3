@@ -4,6 +4,7 @@ except ImportError:
     import json
 
 from enum import IntEnum
+from codecs import encode, decode
 
 
 class Scene(IntEnum):
@@ -47,16 +48,19 @@ class GameInfo:
 
     score_per_kill = 600  # = 10s survival
     local_player_score = 0
+    local_player_score_is_highscore = False
 
 
 class Settings:
     instance = None
-    protocol_version = "1.0"
+    protocol_version = "1.2"
 
     def __init__(self):
         self.master_volume = 0.1
         self.sfx_volume = 1
         self.music_volume = 1
+
+        self.highscore = 0
 
         self.filename = GameInfo.main_path + "/settings.json"
 
@@ -77,16 +81,24 @@ class Settings:
             self.save()
             return
 
+        hs_key = scramble_int(6942069)
+        hs = unscramble_int(settings[hs_key])
+
         self.master_volume = settings["master_volume"]
         self.sfx_volume = settings["sfx_volume"]
         self.music_volume = settings["music_volume"]
+        self.highscore = hs
 
     def save(self):
+        hs = scramble_int(self.highscore)
+        hs_key = scramble_int(6942069)
+
         settings = {
             "version": Settings.protocol_version,
             "master_volume": self.master_volume,
             "sfx_volume": self.sfx_volume,
-            "music_volume": self.music_volume
+            "music_volume": self.music_volume,
+            hs_key: hs
         }
 
         with open(self.filename, 'w', encoding='utf-8') as f:
@@ -108,3 +120,27 @@ class Fonts:
 
     score_color = None
     highscore_color = None
+
+
+def scramble_int(num):
+    s = str(num)
+    b = [(int(c) * 11) + 169 for c in s]
+    s = ""
+    for i in b:
+        s += chr(i)
+    s = encode(s, "rot13")
+    b = s.encode("raw_unicode_escape")
+    s = ""
+    for i in b:
+        s += chr(i)
+    return s
+
+def unscramble_int(string):
+    b = bytes([ord(s) for s in string])
+    s = b.decode("raw_unicode_escape")
+    s = decode(s, "rot13")
+    b = [round((ord(c) - 169) / 11) for c in s]
+    s = ""
+    for i in b:
+        s += str(i)
+    return int(s)

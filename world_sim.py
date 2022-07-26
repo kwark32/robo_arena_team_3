@@ -5,7 +5,7 @@ from robot import Robot, PlayerInput
 from arena_converter import load_map
 from physics import PhysicsWorld
 from util import Vector, get_delta_time_s
-from globals import GameInfo
+from globals import GameInfo, Settings
 from constants import FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_FIXED_TIMESTEPS, FIXED_FPS, RESPAWN_DELAY
 from camera import CameraState
 from sound_manager import SoundManager
@@ -165,7 +165,8 @@ class SPWorldSim(WorldSim):
         self.local_player_robot = self.create_player(player_name="")
         self.local_player_robot.input = self.player_input
 
-        GameInfo.player_score = 0
+        GameInfo.local_player_score = 0
+        GameInfo.local_player_score_is_highscore = False
 
         self.player_die_frame = None
 
@@ -192,6 +193,10 @@ class SPWorldSim(WorldSim):
         if self.local_player_robot is None and self.player_die_frame is None:
             self.player_die_frame = self.physics_frame_count
             GameInfo.local_player_score += self.player_die_frame
+            if GameInfo.local_player_score > Settings.instance.highscore:
+                GameInfo.local_player_score_is_highscore = True
+                Settings.instance.highscore = GameInfo.local_player_score
+                Settings.instance.save()
 
         if (self.player_die_frame is not None and self.world_scene.active_menu is None
                 and self.physics_frame_count > self.player_die_frame + RESPAWN_DELAY):

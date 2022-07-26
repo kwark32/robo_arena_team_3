@@ -6,7 +6,8 @@ from arena_converter import load_map
 from physics import PhysicsWorld
 from util import Vector, get_delta_time_s
 from globals import GameInfo, Settings
-from constants import FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_FIXED_TIMESTEPS, FIXED_FPS, RESPAWN_DELAY, POWER_UPS_PER_S
+from constants import FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_FIXED_TIMESTEPS, FIXED_FPS, RESPAWN_DELAY
+from constants import POWER_UPS_PER_S
 from camera import CameraState
 from sound_manager import SoundManager
 

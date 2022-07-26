@@ -30,7 +30,8 @@ class BulletInfo:
 
 # base class
 class Bullet:
-    def __init__(self, world_sim, robot=None, source_id=-1, bullet_id=-1, position=Vector(0, 0), rotation=0, damage_factor=1):
+    def __init__(self, world_sim, robot=None, source_id=-1, bullet_id=-1,
+                 position=Vector(0, 0), rotation=0, damage_factor=1):
         self.bullet_type = type(self)
         if self.bullet_type is Bullet:
             print("ERROR: Bullet base class should not be instantiated!")

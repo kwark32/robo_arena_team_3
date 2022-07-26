@@ -47,6 +47,8 @@ The portal tile teleports the tanks to a random portal of the other colour and g
 
 If a tank loses all its health, the tank explodes. If the player explodes, it gets respawned after a couple of seconds.
 
+![Summary](/Summary/explosion.gif)
+
 
 
 

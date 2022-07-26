@@ -34,7 +34,8 @@ class GameInfo:
     # arena_1_big-100.png
     # LuftigeKwarkschafeMitUIDisigner.png
     # semi_divided_arena.png
-    active_arena = "semi_divided_arena.png"
+    # arena_for_better_pathfinding.png
+    active_arena = "arena_for_better_pathfinding.png"
 
     current_frame_seed = 0
 

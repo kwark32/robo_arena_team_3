@@ -29,11 +29,22 @@ class SpeedEffect(RobotEffect):
     speed_gain = 0
     ang_speed_gain = 0
 
+    def __init__(self, duration, speed_gain=None, ang_speed_gain=None):
+        super().__init__(duration)
+
+        self.speed_gain = speed_gain
+        self.ang_speed_gain = ang_speed_gain
+
+        if self.speed_gain is None:
+            self.speed_gain = self.effect_class.speed_gain
+        if self.ang_speed_gain is None:
+            self.ang_speed_gain = self.effect_class.ang_speed_gain
+
     def apply(self, robot, delta_time=0):
         super().apply(robot, delta_time=delta_time)
 
-        robot.sim_body.max_velocity += self.effect_class.speed_gain
-        robot.sim_body.max_ang_velocity += self.effect_class.ang_speed_gain
+        robot.sim_body.max_velocity += self.speed_gain
+        robot.sim_body.max_ang_velocity += self.ang_speed_gain
 
     def revert(self, robot):
         robot.sim_body.max_velocity = robot.max_velocity
@@ -185,15 +196,7 @@ class HealthEffect(RobotEffect):
         robot.change_health(self.change_per_second * delta_time)
 
 
-class PowerUpSpeedEffect(SpeedEffect):
-    speed_gain = 120
-    ang_speed_gain = 2
-
-    def __init__(self):
-        super().__init__(5)
-
-
-class PowerUpDamageEffect(RobotEffect):
+class DamageEffect(RobotEffect):
     def __init__(self, duration=(FIXED_DELTA_TIME / 2), damage_factor=1):
         super().__init__(duration)
 

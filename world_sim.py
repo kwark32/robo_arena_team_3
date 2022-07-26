@@ -6,7 +6,7 @@ from arena_converter import load_map
 from physics import PhysicsWorld
 from util import Vector, get_delta_time_s
 from globals import GameInfo
-from constants import FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_FIXED_TIMESTEPS
+from constants import FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_FIXED_TIMESTEPS, POWER_UPS_PER_S
 from camera import CameraState
 
 
@@ -87,7 +87,8 @@ class WorldSim:
     def fixed_update(self, delta_time):
         random.seed(GameInfo.current_frame_seed)
 
-        self.arena.place_power_ups(delta_time)
+        if self.physics_frame_count % POWER_UPS_PER_S == 0:
+            self.arena.place_power_up(delta_time)
 
         for bullet in self.bullets:
             bullet.update(delta_time)

@@ -37,6 +37,7 @@ class UIElement:
         self.menu = menu
 
         self.is_selected = False
+        self.is_selectable = True
         self.draw_selected = True
 
         self.update_time_ns = 0
@@ -319,7 +320,28 @@ class UIImage(UIElement):
     def __init__(self, main_widget, position, menu):
         super().__init__(main_widget, position, menu)
 
+        self.is_selectable = False
         self.draw_selected = False
+
+
+# base class
+class UIText(UIElement):
+    def __init__(self, main_widget, position, menu):
+        super().__init__(main_widget, position, menu)
+
+        self.is_selectable = False
+        self.draw_selected = False
+
+        self.font_metrics = QFontMetricsF(Fonts.ui_text_font)
+
+        self.text = ""
+
+    def draw(self, qp):
+        text_width = self.font_metrics.width(self.text)
+
+        qp.setFont(Fonts.ui_text_font)
+        qp.setPen(QPen(Fonts.ui_text_color, 6))
+        qp.drawText(QPoint(self.position.x - (text_width / 2), self.position.y), self.text)
 
 
 class Menu:
@@ -379,11 +401,12 @@ class Menu:
         if not self.dragging:
             self.selected_element = None
             for element in self.elements:
-                if is_point_inside_rect(mouse_pos, element.top_left_corner, element.bottom_right_corner):
-                    element.update_selected(curr_time_ns)
-                    self.selected_element = element
-                elif element.is_selected:
-                    element.unselect()
+                if element.is_selectable:
+                    if is_point_inside_rect(mouse_pos, element.top_left_corner, element.bottom_right_corner):
+                        element.update_selected(curr_time_ns)
+                        self.selected_element = element
+                    elif element.is_selected:
+                        element.unselect()
 
     def draw(self, qp):
         # draw static menu background

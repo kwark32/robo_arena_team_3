@@ -2,13 +2,13 @@ import time
 
 from util import get_main_path, Vector, painter_transform_with_rot, is_object_on_screen
 from globals import Fonts, GameInfo, Scene, Menus
-from constants import PLAYER_NAME_OFFSET, HEALTH_BAR_OFFSET, DEBUG_MODE
-from ui_elements import Menu, Button, UIImage
+from constants import PLAYER_NAME_OFFSET, HEALTH_BAR_OFFSET
+from ui_elements import Menu, Button, UIImage, UIText
 from camera import CameraState
 
 if not GameInfo.is_headless:
-    from PyQt5.QtGui import QPixmap, QFontMetricsF, QPainter
-    from PyQt5.QtCore import Qt, QPoint
+    from PyQt5.QtGui import QPixmap, QFontMetricsF
+    from PyQt5.QtCore import Qt
     from PyQt5.QtWidgets import QOpenGLWidget
 
 
@@ -59,6 +59,9 @@ class GameOverMenu(Menu):
     class Image(UIImage):
         name = "game_over_image"
 
+    class Score(UIText):
+        name = "score"
+
     class Restart(Button):
         name = "singleplayer"
 
@@ -82,12 +85,19 @@ class GameOverMenu(Menu):
         self.elements.append(GameOverMenu.Image(main_widget, pos, self))
 
         pos = center_pos.copy()
+        pos.y -= 0
+        self.player_score = GameOverMenu.Score(main_widget, pos, self)
+        self.elements.append(self.player_score)
+
+        pos = center_pos.copy()
         pos.y += 178
         self.elements.append(GameOverMenu.Restart(main_widget, pos, self))
 
         pos = center_pos.copy()
         pos.y += 425
         self.elements.append(GameOverMenu.ExitButton(main_widget, pos, self))
+
+        self.player_score.text = "Score: " + str(GameInfo.local_player_score)
 
 
 Menus.menus["game_over_menu"] = GameOverMenu

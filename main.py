@@ -128,6 +128,9 @@ def main():
         Fonts.name_tag_font = QFont(press_start_font_str)
         Fonts.name_tag_font.setPixelSize(12)
         Fonts.name_tag_color = QColor(200, 200, 200)  # QColor(225, 50, 225)
+        Fonts.ui_text_font = QFont(press_start_font_str)
+        Fonts.ui_text_font.setPixelSize(60)
+        Fonts.ui_text_color = QColor(0, 0, 0)
 
         while window.running:  # main loop
             window.update()

@@ -192,7 +192,6 @@ class SPWorldSim(WorldSim):
         if self.local_player_robot is None and self.player_die_frame is None:
             self.player_die_frame = self.physics_frame_count
             GameInfo.local_player_score += self.player_die_frame
-            print(GameInfo.local_player_score)
 
         if (self.player_die_frame is not None and self.world_scene.active_menu is None
                 and self.physics_frame_count > self.player_die_frame + RESPAWN_DELAY):

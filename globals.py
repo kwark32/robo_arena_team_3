@@ -101,5 +101,8 @@ class Fonts:
     text_field_color = None
     text_field_default_color = None
 
+    ui_text_font = None
+    ui_text_color = None
+
     name_tag_font = None
     name_tag_color = None

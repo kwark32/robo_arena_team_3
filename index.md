@@ -68,6 +68,11 @@ If a tank loses all its health, the tank explodes. If the player explodes, it ge
 ![Summary](/Summary/explosion.gif)
 
 
+General Class Diagram:
+
+![Summary](/Summary/class.png)
+
+
 
 
 ## Weeks 11 & 12

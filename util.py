@@ -117,7 +117,11 @@ class Vector:
     def angle(self, from_vec=None):
         if from_vec is None:
             from_vec = Vector(0, 1)
-        return math.acos((self.x * from_vec.x + self.y * from_vec.y) / (self.magnitude() * from_vec.magnitude()))
+        mags = self.magnitude() * from_vec.magnitude()
+        if mags > 0:
+            cos = (self.x * from_vec.x + self.y * from_vec.y) / mags
+            return math.acos(limit(cos, -1, 1))
+        return 0
 
     def as_tuple(self):
         return self.x, self.y

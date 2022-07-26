@@ -1,8 +1,10 @@
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtGui import QFontMetricsF
 from util import get_main_path, Vector, painter_transform_with_rot, is_object_on_screen
-from globals import Fonts
+from globals import Fonts, GameInfo
 from constants import PLAYER_NAME_OFFSET, HEALTH_BAR_OFFSET
+
+if not GameInfo.is_headless:
+    from PyQt5.QtGui import QPixmap
+    from PyQt5.QtGui import QFontMetricsF
 
 
 overlay_texture_path = get_main_path() + "/textures/ui/overlay/"
@@ -21,6 +23,8 @@ class UIOverlay:
         qp.setFont(Fonts.name_tag_font)
         qp.setPen(Fonts.name_tag_color)
         for robot in robots:
+            if robot.is_dead:
+                continue
             if robot.player_name != "":
                 text_width = self.name_tag_font_metrics.width(robot.player_name)
                 pos = Vector(0, 0)

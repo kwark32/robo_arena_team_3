@@ -11,6 +11,8 @@ from camera import CameraState
 from constants import DEBUG_MODE
 from ui_overlay import UIOverlay
 from util import painter_transform_with_rot, Vector
+from sound_manager import SoundManager, music_names
+from animation import Animation
 
 
 class WorldScene(QOpenGLWidget):
@@ -22,13 +24,25 @@ class WorldScene(QOpenGLWidget):
         self.size = size.copy()
 
         self.world_sim = sim_class()
+        self.world_sim.world_scene = self
+
+        self.animations = []
+        Animation.world_scene = self
 
         self.ui_overlay = UIOverlay()
 
+        self.mouse_pos = Vector(0, 0)
+        self.mouse_clicked = False
+        self.space_pressed = False
+
         self.init_ui()
+
+        SoundManager.instance.play_music(music_names[1], once=True)
+        SoundManager.instance.play_random_music = True
 
     def init_ui(self):
         self.setGeometry(0, 0, self.size.x, self.size.y)
+        self.setMouseTracking(True)
         self.show()
 
     def clean_mem(self):
@@ -46,6 +60,7 @@ class WorldScene(QOpenGLWidget):
         elif event.key() == Qt.Key_D:
             self.world_sim.player_input.right = True
         elif event.key() == Qt.Key_Space:
+            self.space_pressed = True
             self.world_sim.player_input.shoot = True
             self.world_sim.player_input.shoot_pressed = True
         elif event.key() == Qt.Key_Escape:
@@ -66,12 +81,35 @@ class WorldScene(QOpenGLWidget):
         elif event.key() == Qt.Key_D:
             self.world_sim.player_input.right = False
         elif event.key() == Qt.Key_Space:
-            self.world_sim.player_input.shoot = False
+            self.space_pressed = False
+            if not self.mouse_clicked:
+                self.world_sim.player_input.shoot = False
         else:
             return
         event.accept()
 
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.mouse_clicked = True
+            self.world_sim.player_input.shoot = True
+            self.world_sim.player_input.shoot_pressed = True
+            event.accept()
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.mouse_clicked = False
+            if not self.space_pressed:
+                self.world_sim.player_input.shoot = False
+            event.accept()
+
+    def mouseMoveEvent(self, event):
+        self.mouse_pos.x = event.x() / CameraState.scale.x
+        self.mouse_pos.y = event.y() / CameraState.scale.y
+        event.accept()
+
     def paintEvent(self, event):
+        self.set_turret_rotation()
+
         self.world_sim.update_world()
 
         qp = QPainter(self)
@@ -91,8 +129,15 @@ class WorldScene(QOpenGLWidget):
         for robot in self.world_sim.robots:
             robot.draw(qp, self.world_sim.extrapolation_delta_time)
 
+        ended_anims = []
+        for anim in self.animations:
+            if not anim.draw(qp, self.world_sim.physics_frame_count):
+                ended_anims.append(anim)
+        for ended in ended_anims:
+            self.animations.remove(ended)
+
         self.ui_overlay.draw_name_tags(qp, self.world_sim.robots)
-        if self.world_sim.local_player_robot is not None:
+        if self.world_sim.local_player_robot is not None and not self.world_sim.local_player_robot.is_dead:
             self.ui_overlay.draw_health_bar(qp, self.world_sim.local_player_robot)
 
         # debugging physics shapes
@@ -118,6 +163,19 @@ class WorldScene(QOpenGLWidget):
         qp.end()
 
         self.world_sim.frame_times_since_ms += (time.time_ns() - self.world_sim.curr_time_ns) / 1000000
+
+    def set_turret_rotation(self):
+        if self.world_sim.player_input is not None and self.world_sim.local_player_robot is not None:
+            robot_pos = self.world_sim.local_player_robot.sim_body.position.copy()
+            mouse_pos = self.mouse_pos.copy()
+            half_screen = GameInfo.window_reference_size.copy()
+            half_screen.div(2)
+            mouse_pos.sub(half_screen)
+            if CameraState.position is not None:
+                mouse_pos.add(CameraState.position)
+            robot_mouse_diff = robot_pos.diff(mouse_pos)
+            turret_rot = robot_mouse_diff.signed_angle()
+            self.world_sim.player_input.turret_rot = turret_rot
 
 
 class SPWorldScene(WorldScene):

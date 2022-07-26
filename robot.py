@@ -1,16 +1,22 @@
+import math
+
 from transform import SimBody
 from weapons import TankCannon
-from util import Vector, get_main_path, draw_img_with_rot
+from util import Vector, get_main_path, draw_img_with_rot, painter_transform_with_rot
 from globals import GameInfo, Fonts
-from constants import FIXED_DELTA_TIME, MAX_ROBOT_HEALTH, DEBUG_MODE
+from constants import FIXED_DELTA_TIME, MAX_ROBOT_HEALTH, DEBUG_MODE, ROBOT_COLLISION_SOUND_SPEED_FACTOR
+from constants import MIN_SOUND_DELAY_FRAMES, RESPAWN_DELAY
 from robot_AI import RobotAI
+from sound_manager import SoundManager
+from arena import TileType
+from animation import Animation
 
 if not GameInfo.is_headless:
     from PyQt5.QtGui import QPixmap, QPolygon
     from PyQt5.QtCore import QPoint
 
 
-robot_texture_path = get_main_path() + "/textures/moving/"
+robot_texture_path = get_main_path() + "/textures/moving/tanks/"
 
 
 class RobotInfo:
@@ -49,6 +55,8 @@ class RobotInfo:
         robot.weapon.last_shot_frame = self.last_shot_frame
         robot.last_position = Vector(self.last_position[0], self.last_position[1])
         robot.forward_velocity_goal = 0
+        if robot.physics_body is None:
+            robot.create_physics_body()
         robot.set_physics_body()
         if not robot.has_ai:
             robot.input = self.input
@@ -57,9 +65,16 @@ class RobotInfo:
 
 
 class Robot:
+    max_velocity = 120
+    max_ang_velocity = 4
+    max_accel = 200
+    max_ang_accel = 12
+
+    size = Vector(32, 32)
+    turret_texture_center_offset = Vector(0, 10)
+
     def __init__(self, world_sim, robot_id=-1, is_player=False, has_ai=True,
-                 size=Vector(40, 40), position=Vector(0, 0), rotation=0,
-                 max_velocity=120, max_ang_velocity=4, max_accel=200, max_ang_accel=12, player_name=""):
+                 position=Vector(0, 0), rotation=0, player_name=""):
         self.creation_frame = world_sim.physics_frame_count
 
         self.robot_id = robot_id
@@ -73,13 +88,14 @@ class Robot:
 
         self.player_name = player_name
 
-        self.max_velocity = max_velocity
-        self.max_ang_velocity = max_ang_velocity
-        self.max_accel = max_accel
-        self.max_ang_accel = max_ang_accel
+        self.max_velocity = Robot.max_velocity
+        self.max_ang_velocity = Robot.max_ang_velocity
+        self.max_accel = Robot.max_accel
+        self.max_ang_accel = Robot.max_ang_accel
 
-        self.sim_body = SimBody(position=position, rotation=rotation, max_velocity=max_velocity,
-                                max_ang_velocity=max_ang_velocity, max_accel=max_accel, max_ang_accel=max_ang_accel)
+        self.sim_body = SimBody(position=position, rotation=rotation,
+                                max_velocity=self.max_velocity, max_ang_velocity=self.max_ang_velocity,
+                                max_accel=self.max_accel, max_ang_accel=self.max_ang_accel)
         self.extrapolation_body = self.sim_body.copy()
 
         self.effects = []
@@ -90,21 +106,24 @@ class Robot:
 
         self.input = None
 
-        self.size = size
+        self.size = Robot.size.copy()
 
         self.real_velocity = Vector(0, 0)
+        self.collider_push = Vector(0, 0)
 
         self.last_position = position.copy()
         self.forward_velocity_goal = 0
 
+        self.last_collision_sound_frame = 0
+
         self._body_texture = None
-        self._texture_size = None
+        self._turret_texture = None
 
         self.world_sim = world_sim
         self.physics_world = world_sim.physics_world
 
-        self.physics_body = self.physics_world.add_rect(Vector(position.x, position.y), self.size.x, self.size.y,
-                                                        rotation=rotation, static=False, user_data=self)
+        self.physics_body = None
+        self.create_physics_body()
 
         self.weapon = TankCannon(self.world_sim)
         self.damage_factor = 1
@@ -130,19 +149,44 @@ class Robot:
     @property
     def body_texture(self):
         if self._body_texture is None:
-            self._body_texture = QPixmap(robot_texture_path + "tank_red_40.png")
+            self._body_texture = QPixmap(robot_texture_path + "tank_red_body.png")
             if self.is_player:
-                self._body_texture = QPixmap(robot_texture_path + "tank_blue_40.png")
-            if self._body_texture.width() != self.size.x or self._body_texture.height() != self.size.y:
-                print("WARN: Robot texture size is not equal to robot (collider) size!")
+                self._body_texture = QPixmap(robot_texture_path + "tank_blue_body.png")
         return self._body_texture
 
+    @property
+    def turret_texture(self):
+        if self._turret_texture is None:
+            self._turret_texture = QPixmap(robot_texture_path + "tank_red_turret.png")
+            if self.is_player:
+                self._turret_texture = QPixmap(robot_texture_path + "tank_blue_turret.png")
+        return self._turret_texture
+
     def draw(self, qp, delta_time):
+        if self.is_dead:
+            return
+
         self.extrapolation_body.step(delta_time)
-        draw_img_with_rot(qp, self.body_texture, self.size.x, self.size.y,
+
+        body_texture = self.body_texture
+        turret_texture = self.turret_texture
+        if self.input is None:
+            turret_rot = 0
+        else:
+            turret_rot = self.input.turret_rot
+
+        draw_img_with_rot(qp, body_texture, body_texture.width(), body_texture.height(),
                           self.extrapolation_body.position, self.extrapolation_body.rotation)
 
+        turret_pos = self.extrapolation_body.position.copy()
+        turret_offset = Robot.turret_texture_center_offset.copy()
+        turret_offset.rotate(turret_rot)
+        turret_pos.add(turret_offset)
+
+        draw_img_with_rot(qp, turret_texture, turret_texture.width(), turret_texture.height(), turret_pos, turret_rot)
+
         if DEBUG_MODE and self.robot_ai is not None and self.robot_ai.shortest_path is not None:
+            painter_transform_with_rot(qp, Vector(0, 0), 0)
             qp.setPen(Fonts.fps_color)
             poly = QPolygon()
             tile_size = GameInfo.arena_tile_size
@@ -156,16 +200,21 @@ class Robot:
                     poly.append(QPoint(int(self.sim_body.position.x), int(self.sim_body.position.y)))
                 else:
                     poly.append(QPoint(int(p[0] * tile_size + tile_size / 2), int(p[1] * tile_size + tile_size / 2)))
+
             qp.drawPolygon(poly)
+            qp.restore()
 
     def update(self, delta_time):
+        if self.is_dead:
+            if self.world_sim.physics_frame_count >= self.last_death_frame + RESPAWN_DELAY:
+                self.respawn()
+            else:
+                return
+
         if int(self.health) <= 0:
             self.health = 0
             self.die()
-            if not self.should_respawn:
-                return
-            elif self.health > self.max_health:
-                self.health = self.max_health
+            return
         elif self.health > self.max_health:
             self.health = self.max_health
 
@@ -214,8 +263,13 @@ class Robot:
             if self.input.shoot or self.input.shoot_pressed:
                 self.input.shoot_pressed = False
                 if self.weapon is not None:
+                    if self.input is None:
+                        turret_rot = 0
+                    else:
+                        turret_rot = self.input.turret_rot
                     self.weapon.shoot(self.robot_id, self.get_next_bullet_id,
-                                      self.sim_body.position, self.sim_body.rotation, self.damage_factor)
+                                      self.sim_body.position, turret_rot, self.damage_factor)
+                        self.next_bullet_id -= 1
 
             # if ((self.forward_velocity_goal == 0 and last_forward_velocity_goal != 0)
             #         or (self.forward_velocity_goal == 1 and self.sim_body.local_velocity.y < 0)
@@ -235,6 +289,12 @@ class Robot:
 
         self.set_physics_body()
 
+    def create_physics_body(self):
+        if self.physics_body is None:
+            self.physics_body = self.physics_world.add_rect(self.sim_body.position, self.size.x, self.size.y,
+                                                            rotation=self.sim_body.rotation, static=False,
+                                                            user_data=self)
+
     def get_center_tile(self):
         tile_size = GameInfo.arena_tile_size
         tile_count = self.world_sim.arena.tile_count
@@ -246,11 +306,17 @@ class Robot:
 
     def set_physics_body(self):
         self.physics_body.transform = ((self.sim_body.position.x, self.sim_body.position.y), self.sim_body.rotation)
+        self.collider_push = self.sim_body.position.copy()
 
     def refresh_from_physics(self):
         if self.physics_body is not None:
-            self.sim_body.position.x = self.physics_body.position[0]
-            self.sim_body.position.y = self.physics_body.position[1]
+            new_pos = Vector(self.physics_body.position[0], self.physics_body.position[1])
+            self.collider_push = self.collider_push.diff(new_pos)
+            self.sim_body.position = new_pos
+
+            push_vel = self.collider_push.copy()
+            push_vel.mult(FIXED_DELTA_TIME)
+            self.real_velocity.add(push_vel)
 
     def apply_effects(self, delta_time):
         for effect in self.effects:
@@ -274,15 +340,22 @@ class Robot:
         self.change_health(-damage / self.bullet_resistance_factor)
 
     def die(self):
-        print("<cool tank explode animation> or something... (for robot ID " + str(self.robot_id) + ")")
+        explosion_path = "vfx/"
+        if self.is_player:
+            explosion_path += "tank_blue_explosion"
+        else:
+            explosion_path += "tank_red_explosion"
+        Animation(explosion_path, self.sim_body.position, rotation=self.sim_body.rotation)
         self.is_dead = True
         self.last_death_frame = self.world_sim.physics_frame_count
         if self.should_respawn:
-            self.respawn()
+            self.physics_world.world.DestroyBody(self.physics_body)
+            self.physics_body = None
         else:
             self.remove()
 
     def respawn(self):
+        self.create_physics_body()
         self.revert_effects()
         self.effects.clear()
         self.health = self.max_health
@@ -321,6 +394,7 @@ class PlayerInput:
         self.right = False
         self.shoot = False
         self.shoot_pressed = False
+        self.turret_rot = 0
 
     def copy(self):
         player_input = PlayerInput()
@@ -330,9 +404,38 @@ class PlayerInput:
         player_input.right = self.right
         player_input.shoot = self.shoot
         player_input.shoot_pressed = self.shoot_pressed
+        player_input.turret_rot = self.turret_rot
         return player_input
 
     def to_string(self):
         return ("PlayerInput {\n  Up: " + str(self.up) + "\n  Down: " + str(self.down) + "\n  Left: "
                 + str(self.left) + "\n  Right: " + str(self.right) + "\n  Shoot: " + str(self.shoot)
-                + "\n  Shoot Pressed: " + str(self.shoot_pressed) + "\n}")
+                + "\n  Shoot Pressed: " + str(self.shoot_pressed) + "\n Turret rotation: "
+                + str(round(self.turret_rot, 2)) + "\n}")
+
+
+def collide_robot(robot, other):
+
+    normal = robot.collider_push.copy()
+    pos = robot.sim_body.position.copy()
+
+    if isinstance(other, Robot):
+        normal = robot.collider_push.diff(other.collider_push)
+        velocity = robot.real_velocity.diff(other.real_velocity)
+        if normal.equal(Vector(0, 0)) or velocity.equal(Vector(0, 0)):
+            return
+        angle = velocity.angle(normal)
+        mag = velocity.magnitude() * math.cos(angle)
+        if (robot.world_sim.physics_frame_count > robot.last_collision_sound_frame + MIN_SOUND_DELAY_FRAMES
+                and abs(mag) > robot.max_velocity * ROBOT_COLLISION_SOUND_SPEED_FACTOR):
+            robot.last_collision_sound_frame = robot.world_sim.physics_frame_count
+            SoundManager.instance.play_sfx("collision_tank_tank", pos=pos)
+    elif isinstance(other, TileType) and other.has_collision:
+        if normal.equal(Vector(0, 0) or robot.real_velocity.equal(Vector(0, 0))):
+            return
+        angle = robot.real_velocity.angle(normal)
+        mag = robot.real_velocity.magnitude() * math.cos(angle)
+        if (robot.world_sim.physics_frame_count > robot.last_collision_sound_frame + MIN_SOUND_DELAY_FRAMES
+                and abs(mag) > robot.max_velocity * ROBOT_COLLISION_SOUND_SPEED_FACTOR):
+            robot.last_collision_sound_frame = robot.world_sim.physics_frame_count
+            SoundManager.instance.play_sfx("collision_tank_wall", pos=pos)

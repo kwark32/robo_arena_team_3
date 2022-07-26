@@ -1,4 +1,5 @@
 import math
+import random
 import threading
 
 from util import Vector
@@ -14,6 +15,7 @@ class RobotAI:
         self.walkable_check = DrivableTileCheck(self.world_sim.arena, self.robot)
         self.last_target_position = Vector(-1000000, -1000000)
         self.calculating_astar = False
+        self.target_robot = None
 
     def calc_astar(self, start, end, arena_size):
         self.calculating_astar = True
@@ -22,26 +24,36 @@ class RobotAI:
         self.calculating_astar = False
 
     def update(self, delta_time):
-        # keep shooting
-        self.robot.input.shoot = True
+        # keep shooting if has target
+        self.robot.input.shoot = self.target_robot is not None
+
         # find the closest player
-        shortest_distance = 1000000
-        closest_player = None
-        for other_robot in self.world_sim.robots:
-            if not other_robot.has_ai:
-                current_distance = self.robot.sim_body.position.dist(other_robot.sim_body.position)
-                if current_distance < shortest_distance:
-                    closest_player = other_robot
-                    shortest_distance = current_distance
+        if self.target_robot is None or self.target_robot.is_dead:
+            shortest_distance = 1000000
+            closest_player = None
+            for other_robot in self.world_sim.robots:
+                if other_robot.is_dead:
+                    continue
+                if not other_robot.has_ai:
+                    current_distance = self.robot.sim_body.position.dist(other_robot.sim_body.position)
+                    if current_distance < shortest_distance:
+                        closest_player = other_robot
+                        shortest_distance = current_distance
+            self.target_robot = closest_player
+
         # get the shortest path to the closest player
-        if closest_player is not None:
+        if self.target_robot is not None:
+            pos_diff = self.robot.sim_body.position.diff(self.target_robot.sim_body.position)
+            self.robot.input.turret_rot = pos_diff.signed_angle() + (random.random() - 0.5) * 0.5
+
             arena_size = self.world_sim.arena.tile_count.as_tuple()
             start = self.robot.sim_body.position.copy()
             start.div(GameInfo.arena_tile_size)
             start.floor()
-            end = closest_player.sim_body.position.copy()
+            end = self.target_robot.sim_body.position.copy()
             end.div(GameInfo.arena_tile_size)
             end.floor()
+
             if self.shortest_path is None or not end.equal(self.last_target_position):
                 if not self.calculating_astar:
                     self.last_target_position = end.copy()
@@ -49,6 +61,7 @@ class RobotAI:
             elif (len(self.shortest_path) >= 2
                   and start.equal(Vector(self.shortest_path[1][0], self.shortest_path[1][1]))):
                 self.shortest_path.pop(0)
+
             index = 0
             while self.shortest_path is not None and index + 2 < len(self.shortest_path):
                 tuple_vecs = self.shortest_path[index:index + 3]
@@ -61,35 +74,42 @@ class RobotAI:
                     continue
                 inner = start.copy()
                 inner.add(corner.diff(end))
-                if 0 <= self.walkable_check.get_walkable(inner.x, inner.y) <= 4:  # 4 = cut corner cost threshold
+                if 0 <= self.walkable_check.get_walkable(inner.x, inner.y) <= 2:  # 2 = cut corner cost threshold
                     self.shortest_path.pop(index + 1)
                 index += 1
-        # take the shortest path to the closest player
-        bearing = 0
-        if self.shortest_path is not None:
-            target = closest_player.sim_body.position.copy()
-            if len(self.shortest_path) >= 2:
-                target = Vector(self.shortest_path[1][0], self.shortest_path[1][1])
-                target.mult(GameInfo.arena_tile_size)
-                target.add_scalar(GameInfo.arena_tile_size / 2)
-            diff = self.robot.sim_body.position.diff(target)
-            bearing = diff.signed_angle() - self.robot.sim_body.rotation
-            if bearing <= -math.pi:
-                bearing += 2 * math.pi
-            robot_stop_dist = ((self.robot.sim_body.ang_velocity ** 2) / self.robot.sim_body.max_ang_accel) / 2
-            should_rotate_right = bearing >= 0
-            rotating_correctly = should_rotate_right == (self.robot.sim_body.ang_velocity >= 0)
-            if not rotating_correctly or robot_stop_dist < abs(bearing):
-                self.robot.input.right = should_rotate_right
-                self.robot.input.left = not should_rotate_right
-            else:
-                self.robot.input.right = not should_rotate_right
-                self.robot.input.left = should_rotate_right
 
-        if bearing < 0.25:
-            self.robot.input.up = True
+            # take the shortest path to the closest player
+            bearing = 0
+            if self.shortest_path is not None:
+                target = self.target_robot.sim_body.position.copy()
+                if len(self.shortest_path) >= 2:
+                    target = Vector(self.shortest_path[1][0], self.shortest_path[1][1])
+                    target.mult(GameInfo.arena_tile_size)
+                    target.add_scalar(GameInfo.arena_tile_size / 2)
+                diff = self.robot.sim_body.position.diff(target)
+                bearing = diff.signed_angle() - self.robot.sim_body.rotation
+                if bearing <= -math.pi:
+                    bearing += 2 * math.pi
+                robot_stop_dist = ((self.robot.sim_body.ang_velocity ** 2) / self.robot.sim_body.max_ang_accel) / 2
+                should_rotate_right = bearing >= 0
+                rotating_correctly = should_rotate_right == (self.robot.sim_body.ang_velocity >= 0)
+
+                if not rotating_correctly or robot_stop_dist < abs(bearing):
+                    self.robot.input.right = should_rotate_right
+                    self.robot.input.left = not should_rotate_right
+                else:
+                    self.robot.input.right = not should_rotate_right
+                    self.robot.input.left = should_rotate_right
+
+            if abs(bearing) < 0.25:
+                self.robot.input.up = True
+            else:
+                self.robot.input.up = False
+
         else:
             self.robot.input.up = False
+            self.robot.input.right = False
+            self.robot.input.left = False
 
 
 class WalkableTerrainCheck:

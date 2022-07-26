@@ -1,3 +1,8 @@
+try:
+    import simplejson as json
+except ImportError:
+    import json
+
 from enum import IntEnum
 
 
@@ -16,6 +21,8 @@ class Menus(IntEnum):
 
 class GameInfo:
     is_headless = False
+
+    main_path = ""
 
     window_reference_size = None
     window_size = None
@@ -43,16 +50,52 @@ class GameInfo:
 
 class Settings:
     instance = None
+    protocol_version = "1.1"
 
     def __init__(self):
-        Settings.instance = self
-        self.master_volume = 0.25
+        self.master_volume = 0.1
+        self.sfx_volume = 1
+        self.music_volume = 1
+        self.player_name = ""
+        self.ip_address = ""
+
+        self.filename = GameInfo.main_path + "/settings.json"
+
+        self.load()
 
     def load(self):
-        pass
+        try:
+            with open(self.filename, "r") as f:
+                settings_text = f.read()
+        except FileNotFoundError:
+            print("INFO: No settings file existing")
+            self.save()
+            return
+
+        settings = json.loads(settings_text)
+        if settings.get("version") != Settings.protocol_version or settings.get("version") is None:
+            print("WARN: Deleting settings with older protocol version!")
+            self.save()
+            return
+
+        self.master_volume = settings["master_volume"]
+        self.sfx_volume = settings["sfx_volume"]
+        self.music_volume = settings["music_volume"]
+        self.player_name = settings["player_name"]
+        self.ip_address = settings["ip_address"]
 
     def save(self):
-        pass
+        settings = {
+            "version": Settings.protocol_version,
+            "master_volume": self.master_volume,
+            "sfx_volume": self.sfx_volume,
+            "music_volume": self.music_volume,
+            "player_name": self.player_name,
+            "ip_address": self.ip_address
+        }
+
+        with open(self.filename, 'w', encoding='utf-8') as f:
+            json.dump(settings, f, ensure_ascii=False, indent=4)
 
 
 class Fonts:

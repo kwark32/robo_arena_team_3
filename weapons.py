@@ -2,6 +2,7 @@ from transform import SimpleBody
 from util import Vector, get_main_path, draw_img_with_rot, limit_rot
 from globals import GameInfo
 from constants import FIXED_FPS, FIXED_DELTA_TIME
+from sound_manager import SoundManager
 
 if not GameInfo.is_headless:
     from PyQt5.QtGui import QPixmap
@@ -137,18 +138,23 @@ class Weapon:
             spawn_pos.add(position)
             self.weapon_type.bullet_type(self.world_sim, source_id=source_id, bullet_id=bullet_id,
                                          position=spawn_pos, rotation=total_rot, damage_factor=damage_factor)
+            SoundManager.instance.play_sfx(self.weapon_type.shot_sound_name, pos=position)
+            return True
+
+        return False
 
 
 class CannonShell(Bullet):
-    speed = 2000
+    speed = 1000
     damage = 250
-    size = Vector(12, 36)
+    size = Vector(8, 20)
     texture = None
-    texture_name = "cannon-shell_12x36.png"
+    texture_name = "cannon-shell.png"
 
 
 class TankCannon(Weapon):
-    pos_offset = Vector(0, 18)
+    pos_offset = Vector(0, 24)
     rot_offset = 0
     fire_rate = 1
     bullet_type = CannonShell
+    shot_sound_name = "tank-cannon_shot"

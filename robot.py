@@ -267,8 +267,8 @@ class Robot:
                         turret_rot = 0
                     else:
                         turret_rot = self.input.turret_rot
-                    self.weapon.shoot(self.robot_id, self.get_next_bullet_id,
-                                      self.sim_body.position, turret_rot, self.damage_factor)
+                    if not self.weapon.shoot(self.robot_id, self.get_next_bullet_id,
+                                             self.sim_body.position, turret_rot, self.damage_factor):
                         self.next_bullet_id -= 1
 
             # if ((self.forward_velocity_goal == 0 and last_forward_velocity_goal != 0)

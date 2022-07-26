@@ -1,10 +1,13 @@
-import numpy as np
+import random
 import effects
+import powerups
+
+import numpy as np
 
 from globals import GameInfo
 from camera import CameraState
 from util import Vector, get_main_path, painter_transform_with_rot, is_object_on_screen
-from constants import TILE_ANIM_GROUP_SIZE
+from constants import MAX_POWER_UP_ITER, TILES_PER_POWER_UP, TILE_ANIM_GROUP_SIZE
 
 if not GameInfo.is_headless:
     from PyQt5.QtGui import QPixmap, QPainter
@@ -65,6 +68,8 @@ class Arena:
         self.size = Vector(self.tile_count.x, self.tile_count.y)
         self.size.mult(GameInfo.arena_tile_size)
         self.tiles = self.get_empty_tiles()
+        self.power_ups = self.get_empty_power_ups()
+        self.power_up_list = []
 
         self.tile_animations = []
         self._tile_anim_groups = None
@@ -92,6 +97,10 @@ class Arena:
         # get array of empty tiles with correct dimensions
         return np.empty((self.tile_count.y, self.tile_count.x), dtype=TileType)
 
+    def get_empty_power_ups(self):
+        # get array of power_ups with correct dimensions
+        return np.empty((self.tile_count.y, self.tile_count.x), dtype=powerups.PowerUp)
+
     # get different portal tiles for portal tile effects
     def get_portal_tiles(self):
         self._portal_tiles = [[], []]
@@ -103,6 +112,29 @@ class Arena:
                 if tile_type.name == "portal_2":
                     self._portal_tiles[1].append(Vector(x, y))
         return self._portal_tiles
+
+    # place power ups in the arena
+    def place_power_up(self, delta_time):
+        if len(self.power_up_list) * TILES_PER_POWER_UP >= self.tile_count.x * self.tile_count.y:
+            return
+
+        # pick random tile
+        for i in range(MAX_POWER_UP_ITER):
+            y = random.randrange(self.tile_count.y)
+            x = random.randrange(self.tile_count.x)
+            tile_type = self.tiles[y][x]
+            power_up = self.power_ups[y][x]
+            # make sure tile is of type ground
+            if tile_type.name == "ground" and power_up is None:
+                position = Vector(x, y)
+                position.mult(GameInfo.arena_tile_size)
+                position.add_scalar(GameInfo.arena_tile_size / 2)
+                # decide which type of power up to place
+                power_up_types = [powerups.HealthPowerUp, powerups.SpeedPowerUp,
+                                  powerups.DamagePowerUp, powerups.BulletResistancePowerUp]
+                power_up_type = random.choice(power_up_types)
+                self.power_ups[y][x] = power_up_type(self, Vector(x, y), position)
+                break
 
     def draw(self, qp):
         if self.background_pixmap is None:
@@ -148,6 +180,9 @@ class Arena:
                           self.background_pixmap, round(paint_cutoff.x), round(paint_cutoff.y),
                           round(size.x), round(size.y))
         qp.restore()
+
+        for power_up in self.power_up_list:
+            power_up.draw(qp)
 
         if self.world_sim is not None:
             half_tile_size = Vector(GameInfo.arena_tile_size, GameInfo.arena_tile_size)

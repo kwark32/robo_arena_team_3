@@ -30,7 +30,7 @@ class BulletInfo:
 
 # base class
 class Bullet:
-    def __init__(self, world_sim, source_id=-1, bullet_id=-1, position=Vector(0, 0), rotation=0):
+    def __init__(self, world_sim, source_id=-1, bullet_id=-1, position=Vector(0, 0), rotation=0, damage_factor=1):
         self.bullet_type = type(self)
         if self.bullet_type is Bullet:
             print("ERROR: Bullet base class should not be instantiated!")
@@ -49,7 +49,7 @@ class Bullet:
         pos.add(position)
 
         self.speed = self.bullet_type.speed
-        self.damage = self.bullet_type.damage
+        self.damage = self.bullet_type.damage * damage_factor
 
         self.sim_body = SimpleBody(position=pos, rotation=rotation)
         self.sim_body.local_velocity.y = self.speed
@@ -96,7 +96,7 @@ class Bullet:
         pass
 
     def hit_robot(self, robot):
-        robot.change_health(-self.damage)
+        robot.hit_bullet(self.damage, self.source_id)
         self.apply_effect(robot)
 
     def update(self, delta_time):
@@ -129,7 +129,7 @@ class Weapon:
         fire_delay = round(FIXED_FPS / self.weapon_type.fire_rate)
         return self.world_sim.physics_frame_count - fire_delay >= self.last_shot_frame
 
-    def shoot(self, source_id, bullet_id, position, rotation):
+    def shoot(self, source_id, bullet_id, position, rotation, damage_factor=1):
         if self.is_shot_ready():
             self.last_shot_frame = self.world_sim.physics_frame_count
             total_rot = rotation + self.weapon_type.rot_offset
@@ -137,7 +137,7 @@ class Weapon:
             spawn_pos.rotate(total_rot)
             spawn_pos.add(position)
             self.weapon_type.bullet_type(self.world_sim, source_id=source_id, bullet_id=bullet_id,
-                                         position=spawn_pos, rotation=total_rot)
+                                         position=spawn_pos, rotation=total_rot, damage_factor=damage_factor)
             SoundManager.instance.play_sfx(self.weapon_type.shot_sound_name, pos=position)
             return True
 

@@ -6,7 +6,7 @@ from arena_converter import load_map
 from physics import PhysicsWorld
 from util import Vector, get_delta_time_s
 from globals import GameInfo
-from constants import FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_FIXED_TIMESTEPS
+from constants import FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_FIXED_TIMESTEPS, POWER_UPS_PER_S
 from camera import CameraState
 from sound_manager import SoundManager
 
@@ -89,6 +89,9 @@ class WorldSim:
     def fixed_update(self, delta_time):
         random.seed(GameInfo.current_frame_seed)
 
+        if self.physics_frame_count % POWER_UPS_PER_S == 0:
+            self.arena.place_power_up(delta_time)
+
         for bullet in self.bullets:
             bullet.update(delta_time)
 
@@ -166,10 +169,11 @@ class SPWorldSim(WorldSim):
 
         self.local_player_robot = self.create_player(player_name="")
         self.local_player_robot.input = self.player_input
-        self.create_enemy_robot(position=Vector(self.arena.size.x / 2 - 800, self.arena.size.y / 2 - 800))
-        self.create_enemy_robot(position=Vector(self.arena.size.x / 2 + 800, self.arena.size.y / 2 - 800))
-        self.create_enemy_robot(position=Vector(self.arena.size.x / 2 - 800, self.arena.size.y / 2 + 800))
-        self.create_enemy_robot(position=Vector(self.arena.size.x / 2 + 800, self.arena.size.y / 2 + 800))
+
+        # self.create_enemy_robot(position=Vector(self.arena.size.x / 2 - 800, self.arena.size.y / 2 - 800))
+        # self.create_enemy_robot(position=Vector(self.arena.size.x / 2 + 800, self.arena.size.y / 2 - 800))
+        # self.create_enemy_robot(position=Vector(self.arena.size.x / 2 - 800, self.arena.size.y / 2 + 800))
+        # self.create_enemy_robot(position=Vector(self.arena.size.x / 2 + 800, self.arena.size.y / 2 + 800))
 
     def fixed_update(self, delta_time):
         GameInfo.current_frame_seed = self.world_start_time_ns + self.physics_frame_count

@@ -126,6 +126,8 @@ class Robot:
         self.create_physics_body()
 
         self.weapon = TankCannon(self.world_sim)
+        self.damage_factor = 1
+        self.bullet_resistance_factor = 1
 
         self.max_health = MAX_ROBOT_HEALTH
         self.health = self.max_health
@@ -218,6 +220,12 @@ class Robot:
 
         self.revert_effects()
 
+        tile_position = self.sim_body.position.copy()
+        tile_position.div(GameInfo.arena_tile_size)
+        tile_position.round()
+        if self.world_sim.arena.power_ups[tile_position.y][tile_position.x] is not None:
+            self.world_sim.arena.power_ups[tile_position.y][tile_position.x].apply(self)
+
         current_tile = self.get_center_tile()
         if current_tile.effect_class is not None:
             effect = current_tile.effect_class(FIXED_DELTA_TIME / 2)
@@ -260,7 +268,7 @@ class Robot:
                     else:
                         turret_rot = self.input.turret_rot
                     if not self.weapon.shoot(self.robot_id, self.get_next_bullet_id,
-                                             self.sim_body.position, turret_rot):
+                                             self.sim_body.position, turret_rot, self.damage_factor):
                         self.next_bullet_id -= 1
 
             # if ((self.forward_velocity_goal == 0 and last_forward_velocity_goal != 0)
@@ -325,8 +333,11 @@ class Robot:
             self.effects.remove(expired)
         expired_effects.clear()
 
-    def change_health(self, delta_healh):
-        self.health += delta_healh
+    def change_health(self, delta_health):
+        self.health += delta_health
+
+    def hit_bullet(self, damage, source_id):
+        self.change_health(-damage / self.bullet_resistance_factor)
 
     def die(self):
         explosion_path = "vfx/"

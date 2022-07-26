@@ -77,7 +77,7 @@ class SpeedPowerUp(PowerUp):
 
 class DamagePowerUp(PowerUp):
     name = "damage"
-    duration = 5
+    duration = 10
     damage_factor = 2
 
     def __init__(self, arena, index, position):

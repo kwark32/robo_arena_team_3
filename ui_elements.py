@@ -351,6 +351,52 @@ class UIText(UIElement):
         qp.drawText(self.position.x - (text_width / 2) + CameraState.x_offset, self.position.y, self.text)
 
 
+# base class
+class Checkbox(UIElement):
+    header_offset_y = -60
+
+    def __init__(self, main_widget, position, menu):
+        super().__init__(main_widget, position, menu)
+
+        self.checkbox_type = type(self)
+        if self.checkbox_type is Checkbox:
+            print("ERROR: Checkbox base class should not be instantiated!")
+
+        self.draw_selected = False
+
+        self.fill_texture = None
+
+        self.font = Fonts.text_field_font
+        self.font_color = Fonts.text_field_color
+        self.font_metrics = QFontMetricsF(self.font)
+
+        if self.checkbox_type.left_align:
+            self.header_offset_x = 0
+        else:
+            self.header_offset_x = -(self.font_metrics.width(self.checkbox_type.header_text) / 2)
+
+        self.checked = False
+
+    def draw(self, qp):
+        qp.setFont(self.font)
+        qp.setPen(QPen(self.font_color, 6))
+        qp.drawText(self.position.x + self.header_offset_x + CameraState.x_offset,
+                    self.position.y + Checkbox.header_offset_y, self.checkbox_type.header_text)
+        qp.drawPixmap(round(self.top_left_corner.x + CameraState.x_offset), round(self.top_left_corner.y), self.texture)
+        if self.checked:
+            qp.drawPixmap(round(self.top_left_corner.x + CameraState.x_offset),
+                          round(self.top_left_corner.y), self.fill_texture)
+
+    def load_image(self, name=None):
+        self._texture, self._texture_size = super().load_image(name="checkbox")
+        self.fill_texture, size = super().load_image(name="checkbox_fill")
+        if not self._texture_size.equal(size):
+            print("ERROR: Fill texture has different size as empty checkbox texture!")
+
+    def click(self):
+        self.checked = not self.checked
+
+
 class Menu:
     def __init__(self, main_widget, size, main_menu_scene, bg_texture_name):
         self.main_widget = main_widget

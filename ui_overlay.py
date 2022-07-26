@@ -189,13 +189,12 @@ Menus.menus["game_over_menu"] = GameOverMenu
 
 
 class OverlayWidget(QOpenGLWidget):
-    def __init__(self, parent, size):
+    def __init__(self, parent):
         super().__init__(parent)
 
         self.first = True
 
         self.main_widget = parent
-        self.size = size.copy()
 
         self.mouse_position = Vector(0, 0)
 
@@ -211,9 +210,12 @@ class OverlayWidget(QOpenGLWidget):
         self.init_ui()
 
     def init_ui(self):
-        self.setGeometry(0, 0, self.size.x, self.size.y)
+        self.setGeometry(0, 0, GameInfo.window_size.x, GameInfo.window_size.y)
         self.setMouseTracking(True)
         self.show()
+
+    def resizeGL(self, w, h):
+        self.setGeometry(0, 0, GameInfo.window_size.x, GameInfo.window_size.y)
 
     def switch_menu(self, menu_name):
         self.active_menu = None

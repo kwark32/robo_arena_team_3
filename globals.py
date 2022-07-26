@@ -53,12 +53,13 @@ class GameInfo:
 
 class Settings:
     instance = None
-    protocol_version = "1.2"
+    protocol_version = "1.3"
 
     def __init__(self):
         self.master_volume = 0.1
         self.sfx_volume = 1
         self.music_volume = 1
+        self.fullscreen = True
 
         self.highscore = 0
 
@@ -87,6 +88,7 @@ class Settings:
         self.master_volume = settings["master_volume"]
         self.sfx_volume = settings["sfx_volume"]
         self.music_volume = settings["music_volume"]
+        self.fullscreen = settings["fullscreen"]
         self.highscore = hs
 
     def save(self):
@@ -98,6 +100,7 @@ class Settings:
             "master_volume": self.master_volume,
             "sfx_volume": self.sfx_volume,
             "music_volume": self.music_volume,
+            "fullscreen": self.fullscreen,
             hs_key: hs
         }
 
@@ -137,6 +140,7 @@ def scramble_int(num):
     for i in b:
         s += chr(i)
     return s
+
 
 def unscramble_int(string):
     b = bytes([ord(s) for s in string])

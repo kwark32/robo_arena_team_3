@@ -17,8 +17,8 @@ if not GameInfo.is_headless:
 
 
 class WorldScene(OverlayWidget):
-    def __init__(self, parent, size):
-        super().__init__(parent, size)
+    def __init__(self, parent):
+        super().__init__(parent)
 
         sim_class = type(self).sim_class
         self.world_sim = sim_class()
@@ -194,8 +194,8 @@ class SPWorldScene(WorldScene):
 class OnlineWorldScene(WorldScene):
     sim_class = OnlineWorldSim
 
-    def __init__(self, parent, size):
-        super().__init__(parent, size)
+    def __init__(self, parent):
+        super().__init__(parent)
 
         self.score_board = Scoreboard()
 
@@ -203,8 +203,8 @@ class OnlineWorldScene(WorldScene):
 class ServerWorldScene(WorldScene):
     sim_class = ServerWorldSim
 
-    def __init__(self, parent, size):
-        super().__init__(parent, size)
+    def __init__(self, parent):
+        super().__init__(parent)
 
         self.world_sim.local_player_robot = self.world_sim.create_player(robot_id=GameInfo.local_player_id,
                                                                          should_respawn=True)

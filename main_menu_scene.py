@@ -1,6 +1,4 @@
-import time
-
-from ui_elements import Button, Menu, TextField, UIImage, Slider
+from ui_elements import Button, Menu, TextField, UIImage, Slider, Checkbox
 from util import Vector, ns_to_s
 from globals import GameInfo, Scene, Menus, Fonts, Settings
 from camera import CameraState
@@ -265,6 +263,24 @@ class SettingsMenu(Menu):
         def click(self):
             self.menu.main_menu_scene.switch_menu("main_menu")
 
+    class FullscreenCheckbox(Checkbox):
+        name = "fullscreen"
+        header_text = "Fullscreen"
+        left_align = False
+
+        def __init__(self, main_widget, position, menu):
+            super().__init__(main_widget, position, menu)
+
+            self.checked = Settings.instance.fullscreen
+
+        def click(self):
+            super().click()
+
+            Settings.instance.fullscreen = self.checked
+            Settings.instance.save()
+
+            self.main_widget.update_fullscreen()
+
     class MasterVolumeSlider(Slider):
         name = "master_volume"
         header_text = "Master Volume"
@@ -319,18 +335,23 @@ class SettingsMenu(Menu):
     def __init__(self, main_widget, size, main_menu_scene):
         super().__init__(main_widget, size, main_menu_scene, "black_bg")
 
+        self.elements.append(SettingsMenu.FullscreenCheckbox(main_widget,
+                                                             Vector(GameInfo.window_size.x / 2 / CameraState.scale.x,
+                                                                    GameInfo.window_size.y / 2
+                                                                    / CameraState.scale.y - 335), self))
+
         self.elements.append(SettingsMenu.MasterVolumeSlider(main_widget,
                                                              Vector(GameInfo.window_size.x / 2 / CameraState.scale.x,
                                                                     GameInfo.window_size.y / 2
-                                                                    / CameraState.scale.y - 385), self))
+                                                                    / CameraState.scale.y - 185), self))
         self.elements.append(SettingsMenu.SFXVolumeSlider(main_widget,
                                                           Vector(GameInfo.window_size.x / 2 / CameraState.scale.x,
                                                                  GameInfo.window_size.y / 2
-                                                                 / CameraState.scale.y - 235), self))
+                                                                 / CameraState.scale.y - 35), self))
         self.elements.append(SettingsMenu.MusicVolumeSlider(main_widget,
                                                             Vector(GameInfo.window_size.x / 2 / CameraState.scale.x,
                                                                    GameInfo.window_size.y / 2
-                                                                   / CameraState.scale.y - 55), self))
+                                                                   / CameraState.scale.y + 115), self))
         self.elements.append(SettingsMenu.BackButton(main_widget,
                                                      Vector(GameInfo.window_size.x / 2 / CameraState.scale.x,
                                                             GameInfo.window_size.y / 2
@@ -346,8 +367,8 @@ Menus.menus["settings"] = SettingsMenu
 
 
 class MainMenuScene(OverlayWidget):
-    def __init__(self, parent, size):
-        super().__init__(parent, size)
+    def __init__(self, parent):
+        super().__init__(parent)
 
         CameraState.position = None
 

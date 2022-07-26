@@ -332,15 +332,22 @@ class UIText(UIElement):
         self.is_selectable = False
         self.draw_selected = False
 
+        self.left_align = False
+
+        self.font_color = Fonts.text_field_color
+
         self.font_metrics = QFontMetricsF(Fonts.ui_text_font)
 
         self.text = ""
 
     def draw(self, qp):
-        text_width = self.font_metrics.width(self.text)
+        if self.left_align:
+            text_width = 0
+        else:
+            text_width = self.font_metrics.width(self.text)
 
         qp.setFont(Fonts.ui_text_font)
-        qp.setPen(QPen(Fonts.score_color, 6))
+        qp.setPen(QPen(self.font_color, 6))
         qp.drawText(QPoint(self.position.x - (text_width / 2), self.position.y), self.text)
 
 

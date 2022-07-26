@@ -327,7 +327,8 @@ class Robot:
 
     def hit_bullet(self, damage, source_id):
         self.change_health(-damage)
-        if source_id == self.world_sim.local_player_robot.robot_id and self.robot_id != source_id:
+        if (self.world_sim.local_player_robot is not None
+                and source_id == self.world_sim.local_player_robot.robot_id and self.robot_id != source_id):
             GameInfo.local_player_score += GameInfo.score_per_kill
 
     def die(self):

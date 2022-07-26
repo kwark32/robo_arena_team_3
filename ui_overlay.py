@@ -62,6 +62,15 @@ class GameOverMenu(Menu):
     class Score(UIText):
         name = "score"
 
+        def __init__(self, main_widget, position, menu, left_align=False, Highscore=False):
+            super().__init__(main_widget, position, menu)
+
+            self.left_align = left_align
+            if Highscore:
+                self.font_color = Fonts.highscore_color
+            else:
+                self.font_color = Fonts.score_color
+
     class Restart(Button):
         name = "singleplayer"
 
@@ -85,19 +94,40 @@ class GameOverMenu(Menu):
         self.elements.append(GameOverMenu.Image(main_widget, pos, self))
 
         pos = center_pos.copy()
-        pos.y -= 0
-        self.player_score = GameOverMenu.Score(main_widget, pos, self)
+        pos.x -= 500
+        pos.y -= 20
+        self.player_score = GameOverMenu.Score(main_widget, pos, self, left_align=True, Highscore=False)
+        self.player_score.text = "Score:"
         self.elements.append(self.player_score)
 
         pos = center_pos.copy()
-        pos.y += 178
+        pos.x += 125
+        pos.y -= 20
+        self.player_score = GameOverMenu.Score(main_widget, pos, self, left_align=True, Highscore=False)
+        self.player_score.text = str(GameInfo.local_player_score)
+        self.elements.append(self.player_score)
+
+        pos = center_pos.copy()
+        pos.x -= 500
+        pos.y += 100
+        self.player_score = GameOverMenu.Score(main_widget, pos, self, left_align=True, Highscore=True)
+        self.player_score.text = "Highscore:"
+        self.elements.append(self.player_score)
+
+        pos = center_pos.copy()
+        pos.x += 125
+        pos.y += 100
+        self.player_score = GameOverMenu.Score(main_widget, pos, self, left_align=True, Highscore=True)
+        self.player_score.text = "0"
+        self.elements.append(self.player_score)
+
+        pos = center_pos.copy()
+        pos.y += 260
         self.elements.append(GameOverMenu.Restart(main_widget, pos, self))
 
         pos = center_pos.copy()
         pos.y += 425
         self.elements.append(GameOverMenu.ExitButton(main_widget, pos, self))
-
-        self.player_score.text = "Score: " + str(GameInfo.local_player_score)
 
 
 Menus.menus["game_over_menu"] = GameOverMenu

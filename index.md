@@ -9,7 +9,7 @@ The player controls a tank with a turret on top. The tank is moved with the WASD
 
 There are several different tiles scattered across the map, with the most common being the basic metal tile and the tires. 
 
-![Summary](/Summary/gameplay.png)
+![Summary](/Summary/gameplay.gif)
 
 The metal tile has no effect on the player and can be driven over. 
 

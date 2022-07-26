@@ -2,7 +2,8 @@
 
 Idea:
 
-Our game was inspired by retro pixelated games. The sprites and tiles are all pixel art and the soundtrack and sound effects are also 8-bit. 
+Our game was inspired by retro pixelated games.<br>
+The sprites and tiles are all pixel art and the soundtrack and sound effects are also 8-bit. 
 
 
 
@@ -12,7 +13,7 @@ The main menu has our Robo Arena logo and 5 buttons: Single Player, Online, Loca
 
 ![Summary](/Summary/main_menu.png)
 
-The single player, online and local buttons start an offline, online and local game respectively. 
+The single player, online and local buttons start an offline, online and local game respectively.<br>
 The settings include sliders for the master, sound effects and music volume.
 
 ![Summary](/Summary/settings.png)
@@ -21,7 +22,13 @@ The settings include sliders for the master, sound effects and music volume.
 
 Gameplay:
 
-The player controls a tank with a turret on top. The tank is moved with the WASD keys and the mouse is used to aim and shoot the turrets. On the map there are several enemy tanks which will find and shoot the player. The enemies use an A*-algorithm to locate and follow the player and avoid different tiles based on their priority. All robots in the arena (players and AI robots) have 1000HP maximum health and deal 250dmg with a bullet from their tank cannon so it usually takes 4 hits to destroy a robot. However the health and damage of the robots in the arena can not only be influenced by other robots, but by the tile effects and the power up effects of the arena as well. The current health of a player is always visually availible to them by the healthbar displayed over their robot.
+The player controls a tank with a turret on top.<br>
+The tank is moved with the WASD keys and the mouse is used to aim and shoot the turrets.<br>
+On the map there are several enemy tanks which will find and shoot the player.<br>
+The enemies use an A*-algorithm to locate and follow the player and avoid different tiles based on their priority.<br>
+All robots in the arena (players and AI robots) have 1000HP maximum health and deal 250dmg with a bullet from their tank cannon so it usually takes 4 hits to destroy a robot.<br>
+However the health and damage of the robots in the arena can not only be influenced by other robots, but by the tile effects and the power up effects of the arena as well.<br>
+The current health of a player is always visually availible to them by the healthbar displayed over their robot.
 
 ![Summary](/Summary/gameplay_healthbar.png)
 
@@ -67,23 +74,31 @@ The portal tile teleports the robots to a random portal of the other colour and 
 
 Arena -> Power ups:
 
-In the arena 4 diffrent types of collectable power ups spawn that apply the following effects to a robot when picked up.
+In the arena 4 different types of collectable power ups spawn that apply the following effects to a robot when picked up.
 
 ![Main menu](/power_ups_in_arena.png)
 
-The speed power up (lightning) increases the robots movement speed by 100% for 5 seconds (additive).
-The health power up (heart) restores 250HP.
-The damage reduction power up (shield) makes the robot take 50% less damage for 10 seconds (multipicative).
-The increased damage power up (Bullet) makes the robot inflict 100% more damage for 10 seconds (multiplicative).
+The speed power up (lightning) increases the robots movement speed by 100% for 5 seconds (additive).<br>
+The health power up (heart) restores 250HP.<br>
+The damage reduction power up (shield) makes the robot take 50% less damage for 10 seconds (multipicative).<br>
+The increased damage power up (Bullet) makes the robot inflict 100% more damage for 10 seconds (multiplicative).<br>
 Power ups will only spawn on ground tiles and their effects are stackable.
 
-Arena -> Animations
+Arena -> Animations:
 
 When a robot loses all its health, it explodes (short animation). In singleplayer mode this means game over, the score is saved. In multiplayer mode the players respawn after a few seconds.
 
 ![Summary](/Summary/explosion.gif)
 
 As seen further up in the report fire and portal tiles have constant animations.
+
+Arena -> Generation:
+
+The arena was generated using our png-to-arena converter.<br>
+It allowed us to easily design arenas in image editors like gimp and have them translated to actual arenas.<br>
+The png file we used to generate the latest version of the arena for example looks like this:
+
+![Main menu](/latest_arena_png.png)
 
 General Class Diagram:
 

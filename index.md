@@ -98,7 +98,7 @@ The arena was generated using our png-to-arena converter.<br>
 It allowed us to easily design arenas in image editors like gimp and have them translated to actual arenas.<br>
 The png file we used to generate the latest version of the arena for example looks like this:
 
-![Main menu](/latest_arena_png.png)
+![Main menu](/latest_arena_png_2.png)
 
 General Class Diagram:
 

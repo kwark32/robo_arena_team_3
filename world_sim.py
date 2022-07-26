@@ -6,7 +6,7 @@ from arena_converter import load_map
 from physics import PhysicsWorld
 from util import Vector, get_delta_time_s
 from globals import GameInfo, Settings
-from constants import FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_FIXED_TIMESTEPS, FIXED_FPS, RESPAWN_DELAY
+from constants import FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_FIXED_TIMESTEPS, FIXED_FPS, RESPAWN_DELAY, POWER_UPS_PER_S
 from camera import CameraState
 from sound_manager import SoundManager
 
@@ -92,6 +92,9 @@ class WorldSim:
         self.catchup_frame = catchup_frame
 
         random.seed(GameInfo.current_frame_seed)
+
+        if self.physics_frame_count % POWER_UPS_PER_S == 0:
+            self.arena.place_power_up(delta_time)
 
         for bullet in self.bullets:
             bullet.update(delta_time)

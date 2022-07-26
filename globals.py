@@ -31,7 +31,10 @@ class GameInfo:
     # test_map.json
     # arena_1.png
     # arena_1_big-100.png
-    active_arena = "arena_1_big-100.png"
+    # LuftigeKwarkschafeMitUIDisigner.png
+    # semi_divided_arena.png
+    # arena_for_better_pathfinding.png
+    active_arena = "arena_for_better_pathfinding.png"
 
     current_frame_seed = 0
 
@@ -53,13 +56,15 @@ class GameInfo:
 
 class Settings:
     instance = None
-    protocol_version = "1.3"
+    protocol_version = "1.4"
 
     def __init__(self):
         self.master_volume = 0.1
         self.sfx_volume = 1
         self.music_volume = 1
         self.fullscreen = True
+        self.player_name = ""
+        self.ip_address = ""
 
         self.highscore = 0
 
@@ -88,6 +93,8 @@ class Settings:
         self.master_volume = settings["master_volume"]
         self.sfx_volume = settings["sfx_volume"]
         self.music_volume = settings["music_volume"]
+        self.player_name = settings["player_name"]
+        self.ip_address = settings["ip_address"]
         self.fullscreen = settings["fullscreen"]
         self.highscore = hs
 
@@ -100,6 +107,8 @@ class Settings:
             "master_volume": self.master_volume,
             "sfx_volume": self.sfx_volume,
             "music_volume": self.music_volume,
+            "player_name": self.player_name,
+            "ip_address": self.ip_address,
             "fullscreen": self.fullscreen,
             hs_key: hs
         }

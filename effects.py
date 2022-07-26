@@ -1,5 +1,6 @@
 import random
 
+from constants import FIXED_DELTA_TIME
 from globals import GameInfo
 
 
@@ -28,11 +29,22 @@ class SpeedEffect(RobotEffect):
     speed_gain = 0
     ang_speed_gain = 0
 
+    def __init__(self, duration, speed_gain=None, ang_speed_gain=None):
+        super().__init__(duration)
+
+        self.speed_gain = speed_gain
+        self.ang_speed_gain = ang_speed_gain
+
+        if self.speed_gain is None:
+            self.speed_gain = self.effect_class.speed_gain
+        if self.ang_speed_gain is None:
+            self.ang_speed_gain = self.effect_class.ang_speed_gain
+
     def apply(self, robot, delta_time=0):
         super().apply(robot, delta_time=delta_time)
 
-        robot.sim_body.max_velocity += self.effect_class.speed_gain
-        robot.sim_body.max_ang_velocity += self.effect_class.ang_speed_gain
+        robot.sim_body.max_velocity += self.speed_gain
+        robot.sim_body.max_ang_velocity += self.ang_speed_gain
 
     def revert(self, robot):
         robot.sim_body.max_velocity = robot.max_velocity
@@ -167,3 +179,48 @@ def apply_portal_effect(world_sim, robot, portal_type_1=True):
         robot.effect_data[("PortalTileEffect", "last_tp_type")] = portal_type
 
     robot.effect_data[("PortalTileEffect", "last_tp_frame")] = world_sim.physics_frame_count
+
+
+class HealthEffect(RobotEffect):
+    def __init__(self, duration=(FIXED_DELTA_TIME / 2), change_per_second=0, instant_change=0):
+        super().__init__(duration)
+
+        self.change_per_second = change_per_second
+        self.instant_change = instant_change
+
+    def apply(self, robot, delta_time=0):
+        super().apply(robot, delta_time)
+
+        robot.change_health(self.instant_change)
+        self.instant_change = 0
+        robot.change_health(self.change_per_second * delta_time)
+
+
+class DamageEffect(RobotEffect):
+    def __init__(self, duration=(FIXED_DELTA_TIME / 2), damage_factor=1):
+        super().__init__(duration)
+
+        self.damage_factor = damage_factor
+
+    def apply(self, robot, delta_time=0):
+        super().apply(robot, delta_time)
+
+        robot.damage_factor *= self.damage_factor
+
+    def revert(self, robot):
+        robot.damage_factor = 1
+
+
+class BulletResistanceEffect(RobotEffect):
+    def __init__(self, duration=(FIXED_DELTA_TIME / 2), bullet_resistance_factor=1):
+        super().__init__(duration)
+
+        self.bullet_resistance_factor = bullet_resistance_factor
+
+    def apply(self, robot, delta_time=0):
+        super().apply(robot, delta_time)
+
+        robot.bullet_resistance_factor *= self.bullet_resistance_factor
+
+    def revert(self, robot):
+        robot.bullet_resistance_factor = 1

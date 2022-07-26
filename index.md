@@ -25,6 +25,8 @@ The player controls a tank with a turret on top. The tank is moved with the WASD
 
 ![Summary](/Summary/gameplay_healthbar.png)
 
+Arena -> Tiles:
+
 There are several different tiles scattered across the map, with the most common being the basic metal ground tile and the wall tile (tires). 
 
 ![Summary](/Summary/gameplay.gif)
@@ -63,10 +65,25 @@ The portal tile teleports the robots to a random portal of the other colour and 
 
 ![Summary](/Summary/portal_purple.gif)
 
+Arena -> Power ups:
+
+In the arena 4 diffrent types of collectable power ups spawn that apply the following effects to a robot when picked up.
+
+![Main menu](/power_ups_in_arena.png)
+
+The speed power up (lightning) increases the robots movement speed by 100% for 5 seconds (additive).
+The health power up (heart) restores 250HP.
+The damage reduction power up (shield) makes the robot take 50% less damage for 10 seconds (multipicative).
+The increased damage power up (Bullet) makes the robot inflict 100% more damage for 10 seconds (multiplicative).
+Power ups will only spawn on ground tiles and their effects are stackable.
+
+Arena -> Animations
+
 When a robot loses all its health, it explodes (short animation). In singleplayer mode this means game over, the score is saved. In multiplayer mode the players respawn after a few seconds.
 
 ![Summary](/Summary/explosion.gif)
 
+As seen further up in the report fire and portal tiles have constant animations.
 
 General Class Diagram:
 

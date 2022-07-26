@@ -17,19 +17,33 @@ The metal tile has no effect on the player and can be driven over.
 
 The tires block the player from passing over it, which gives the map a border that the tanks cannot pass through and also some cover to hide behind. Bullets cannot pass through the tires and they cannot be destroyed. 
 
+![Summary](/Summary/tires.png)
+
 There are 6 special tiles on the map. The fire tile gives the tanks high damage and increases the movement speed. 
 
 ![Summary](/Summary/fire.gif)
 
 The water tile gives the tanks more short circuit damage with lower health. It also decreases movement speed. 
 
+![Summary](/Summary/water_tile.png)
+
 The lava tiles causes low fire damage and decreases movement speed. 
+
+![Summary](/Summary/lava_tile.png)
 
 The earth tile decreases movement speed. 
 
+![Summary](/Summary/dirt_tile.png)
+
 The hole tile gives the tanks fall damage and immobilises the tank for a few seconds. 
 
+![Summary](/Summary/hole_tile.png)
+
 The portal tile teleports the tanks to a random portal of the other colour and gives tank either health or damage. 
+
+![Summary](/Summary/portal_blue.gif)
+
+![Summary](/Summary/portal_purple.gif)
 
 If a tank loses all its health, the tank explodes. If the player explodes, it gets respawned after a couple of seconds.
 

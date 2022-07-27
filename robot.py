@@ -365,6 +365,7 @@ class Robot:
         self.create_physics_body()
         self.revert_effects()
         self.effects.clear()
+        self.effect_data.clear()
         self.health = self.max_health
         self.sim_body.reset(position=Vector(self.world_sim.arena.size.x / 2, self.world_sim.arena.size.y / 2),
                             rotation=0)

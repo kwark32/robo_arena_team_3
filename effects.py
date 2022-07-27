@@ -1,6 +1,6 @@
 import random
 
-from constants import FIXED_DELTA_TIME
+from constants import FIXED_DELTA_TIME, FIXED_FPS
 from globals import GameInfo
 
 
@@ -137,51 +137,36 @@ class FireTileEffect(SpeedEffect):
 
 class HoleTileEffect(StunEffect):
     id = 6
-    rotation = 8
-
-    def __init__(self, duration):
-        super().__init__(4)
-
-        self.start_rotation = None
+    spin_duration = 4 * FIXED_FPS
+    spin_speed = 0.075
 
     def apply(self, robot, delta_time=0):
         super().apply(robot, delta_time=delta_time)
 
-        if self.start_rotation is None:
-            self.start_rotation = robot.sim_body.rotation
+        robot.effect_data[("HoleTileEffect", "start_rotation")] = robot.sim_body.rotation
 
-        robot.sim_body.rotation += self.effect_class.rotation * delta_time * delta_time
+        duration = robot.effect_data.get(("HoleTileEffect", "duration"))
 
-        if self.duration <= 0:
-            robot.change_health(-1000)
+        if duration is None:
+            duration = HoleTileEffect.spin_duration
+
+        if duration <= 0:
+            robot.effect_data[("HoleTileEffect", "duration")] = HoleTileEffect.spin_duration
+            robot.change_health(-1000000)
+            return
+
+        duration -= 1
+        robot.effect_data[("HoleTileEffect", "duration")] = duration
+
+        rot = HoleTileEffect.spin_duration - duration
+        robot.sim_body.rotation += rot * rot * delta_time * HoleTileEffect.spin_speed
 
     def revert(self, robot):
         super().revert(robot)
-        if self.start_rotation is not None:
-            robot.sim_body.rotation = self.start_rotation
 
-    def copy(self):
-        copy = super().copy()
-
-        copy.start_rotation = self.start_rotation
-        return copy
-
-    def get_data_list(self, sub_list=None):
-        sub_list = super().get_data_list(sub_list=sub_list)
-
-        if sub_list is None:
-            sub_list = []
-
-        sub_list.append(self.start_rotation)
-
-        return sub_list
-
-    def set_from_data_list(self, data_list):
-        if data_list is None or len(data_list) < 1:
-            print("ERROR: Cannot set effect data from " + str(data_list))
-            return None
-
-        self.start_rotation = data_list.pop(0)
+        start_rotation = robot.effect_data.get(("HoleTileEffect", "start_rotation"))
+        if start_rotation is not None:
+            robot.sim_body.rotation = start_rotation
 
 
 class LavaTileEffect(SpeedEffect):

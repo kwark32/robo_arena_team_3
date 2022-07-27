@@ -125,19 +125,18 @@ def main():
     if not GameInfo.is_headless:
         GameInfo.window_reference_size = Vector(1920, 1080)
         GameInfo.window_size = GameInfo.window_reference_size.copy()
-        GameInfo.main_path = get_main_path()
 
         app = QApplication(sys.argv)
 
-        QResource.registerResource(get_main_path() + "/resources.rcc")
+        QResource.registerResource(get_main_path() + "resources.rcc")
 
-        Settings.instance = Settings()
+        Settings.instance = Settings(get_main_path())
         SoundManager.instance = SoundManager()
 
         window = ArenaWindow()
 
         press_start_font_id = QFontDatabase.addApplicationFont(get_main_path()
-                                                               + "/fonts/press_start_2p/PressStart2P-Regular.ttf")
+                                                               + "fonts/press_start_2p/PressStart2P-Regular.ttf")
         press_start_font_str = QFontDatabase.applicationFontFamilies(press_start_font_id)[0]
 
         Fonts.fps_font = QFont(press_start_font_str)

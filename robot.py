@@ -1,8 +1,10 @@
 import math
 
+import pixmap_resource_manager as prm
+
 from transform import SimBody
 from weapons import TankCannonWeapon, weapon_classes
-from util import Vector, get_main_path, draw_img_with_rot, painter_transform_with_rot
+from util import Vector, draw_img_with_rot, painter_transform_with_rot
 from globals import GameInfo, Fonts
 from constants import FIXED_DELTA_TIME, MAX_ROBOT_HEALTH, DEBUG_MODE, ROBOT_COLLISION_SOUND_SPEED_FACTOR
 from constants import MIN_SOUND_DELAY_FRAMES, RESPAWN_DELAY
@@ -13,11 +15,11 @@ from animation import Animation
 from effects import get_effect_from_data_list
 
 if not GameInfo.is_headless:
-    from PyQt5.QtGui import QPixmap, QPolygon
+    from PyQt5.QtGui import QPolygon
     from PyQt5.QtCore import QPoint
 
 
-robot_texture_path = get_main_path() + "/textures/moving/tanks/"
+robot_texture_path = "textures/moving/tanks/"
 
 
 class RobotInfo:
@@ -68,9 +70,9 @@ class RobotInfo:
 
 class Robot:
     max_velocity = 120
-    max_ang_velocity = 4
-    max_accel = 200
-    max_ang_accel = 12
+    max_ang_velocity = math.pi
+    max_accel = max_velocity * 2
+    max_ang_accel = max_ang_velocity * 8
 
     size = Vector(32, 32)
     turret_texture_center_offset = Vector(0, 10)
@@ -152,17 +154,17 @@ class Robot:
     @property
     def body_texture(self):
         if self._body_texture is None:
-            self._body_texture = QPixmap(robot_texture_path + "tank_red_body.png")
+            self._body_texture = prm.get_pixmap(robot_texture_path + "tank_red_body")
             if self.is_player:
-                self._body_texture = QPixmap(robot_texture_path + "tank_blue_body.png")
+                self._body_texture = prm.get_pixmap(robot_texture_path + "tank_blue_body")
         return self._body_texture
 
     @property
     def turret_texture(self):
         if self._turret_texture is None:
-            self._turret_texture = QPixmap(robot_texture_path + "tank_red_turret.png")
+            self._turret_texture = prm.get_pixmap(robot_texture_path + "tank_red_turret")
             if self.is_player:
-                self._turret_texture = QPixmap(robot_texture_path + "tank_blue_turret.png")
+                self._turret_texture = prm.get_pixmap(robot_texture_path + "tank_blue_turret")
         return self._turret_texture
 
     def draw(self, qp, delta_time):

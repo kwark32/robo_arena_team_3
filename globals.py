@@ -21,8 +21,6 @@ class Menus:
 class GameInfo:
     is_headless = False
 
-    main_path = ""
-
     window_reference_size = None
     window_size = None
     arena_tile_size = 40
@@ -58,7 +56,7 @@ class Settings:
     instance = None
     protocol_version = "1.4"
 
-    def __init__(self):
+    def __init__(self, main_path):
         self.master_volume = 0.1
         self.sfx_volume = 1
         self.music_volume = 1
@@ -68,7 +66,7 @@ class Settings:
 
         self.highscore = 0
 
-        self.filename = GameInfo.main_path + "/settings.json"
+        self.filename = main_path + "settings.json"
 
         self.load()
 

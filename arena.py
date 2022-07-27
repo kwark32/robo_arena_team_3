@@ -3,18 +3,19 @@ import effects
 import powerups
 
 import numpy as np
+import pixmap_resource_manager as prm
 
 from globals import GameInfo
 from camera import CameraState
-from util import Vector, get_main_path, painter_transform_with_rot, is_object_on_screen
+from util import Vector, painter_transform_with_rot, is_object_on_screen
 from constants import MAX_POWER_UP_ITER, TILES_PER_POWER_UP, TILE_ANIM_GROUP_SIZE
 
 if not GameInfo.is_headless:
     from PyQt5.QtGui import QPixmap, QPainter
 
 
-tile_texture_path = get_main_path() + "/textures/static_tiles/"
-animated_tiles_texture_path = get_main_path() + "/textures/animated_tiles/"
+tile_texture_path = "textures/static_tiles/"
+animated_tiles_texture_path = "textures/animated_tiles/"
 
 
 class TileType:
@@ -39,12 +40,12 @@ class TileType:
         return self._texture_size
 
     def load_image(self):
-        filename = tile_texture_path + self.name + ".png"
-        self._texture = QPixmap(filename)
+        filename = tile_texture_path + self.name
+        self._texture = prm.get_pixmap(filename)
         self._texture_size = Vector(self._texture.width(), self._texture.height())
         if self._texture_size.x == 0 or self._texture_size.y == 0:
             print("ERROR: texture for " + self.name
-                  + " has 0 size or is missing at " + filename + "!")
+                  + " has 0 size or is missing at " + filename + ".png!")
 
 
 tile_type_dict = {

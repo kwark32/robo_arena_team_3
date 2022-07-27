@@ -1,7 +1,9 @@
 import os
-import numpy as np
 
-from util import get_main_path, draw_img_with_rot
+import numpy as np
+import pixmap_resource_manager as prm
+
+from util import draw_img_with_rot
 from globals import GameInfo
 from constants import FIXED_DELTA_TIME
 
@@ -9,7 +11,7 @@ if not GameInfo.is_headless:
     from PyQt5.QtGui import QPixmap
 
 
-animation_path = get_main_path() + "/textures/"
+animation_path = "textures/"
 
 animations_fps = {
     "animated_tiles/fire": 10,
@@ -47,7 +49,7 @@ class Animation:
             file_list = sorted(file_list)
             self._frames = np.empty(len(file_list), dtype=QPixmap)
             for i, name in enumerate(file_list):
-                self._frames[i] = QPixmap(path + name)
+                self._frames[i] = prm.get_pixmap(path + name[:-4])
             self._frame_count = len(file_list)
 
         if single_vfx and Animation.world_scene is not None and not Animation.world_scene.world_sim.catchup_frame:

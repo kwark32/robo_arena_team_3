@@ -1,14 +1,12 @@
+import pixmap_resource_manager as prm
+
 from transform import SimpleBody
-from util import Vector, get_main_path, draw_img_with_rot, limit_rot
-from globals import GameInfo
+from util import Vector, draw_img_with_rot, limit_rot
 from constants import FIXED_FPS, FIXED_DELTA_TIME
 from sound_manager import SoundManager
 
-if not GameInfo.is_headless:
-    from PyQt5.QtGui import QPixmap
 
-
-bullet_texture_path = get_main_path() + "/textures/moving/bullets/"
+bullet_texture_path = "textures/moving/bullets/"
 
 
 class BulletInfo:
@@ -74,7 +72,7 @@ class Bullet:
     @property
     def type_texture(self):
         if self.bullet_type.texture is None:
-            self.bullet_type.texture = QPixmap(bullet_texture_path + self.bullet_type.texture_name)
+            self.bullet_type.texture = prm.get_pixmap(bullet_texture_path + self.bullet_type.texture_name)
             if self.bullet_type.texture.width() != self.size.x or self.bullet_type.texture.height() != self.size.y:
                 print("WARN: Bullet texture size is not equal to bullet (collider) size!")
         return self.bullet_type.texture
@@ -156,7 +154,7 @@ class CannonShellBullet(Bullet):
     damage = 250
     size = Vector(8, 20)
     texture = None
-    texture_name = "cannon-shell.png"
+    texture_name = "cannon-shell"
 
 
 class TankCannonWeapon(Weapon):

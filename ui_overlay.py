@@ -1,27 +1,29 @@
 import time
 
-from util import get_main_path, Vector, painter_transform_with_rot, is_object_on_screen
+import pixmap_resource_manager as prm
+
+from util import Vector, painter_transform_with_rot, is_object_on_screen
 from globals import Fonts, GameInfo, Scene, Menus, Settings
 from constants import PLAYER_NAME_OFFSET, HEALTH_BAR_OFFSET
 from ui_elements import Menu, Button, UIImage, UIText
 from camera import CameraState
 
 if not GameInfo.is_headless:
-    from PyQt5.QtGui import QPixmap, QFontMetricsF, QPen, QColor
+    from PyQt5.QtGui import QFontMetricsF, QPen, QColor
     from PyQt5.QtCore import Qt
     from PyQt5.QtWidgets import QOpenGLWidget
 
 
-overlay_texture_path = get_main_path() + "/textures/ui/overlay/"
+overlay_texture_path = "textures/ui/overlay/"
 
 
 class UIOverlay:
     def __init__(self):
         self.name_tag_font_metrics = QFontMetricsF(Fonts.name_tag_font)
 
-        self.health_bar = QPixmap(overlay_texture_path + "health-bar.png")
+        self.health_bar = prm.get_pixmap(overlay_texture_path + "health-bar")
         self.health_bar_size = Vector(self.health_bar.width(), self.health_bar.height())
-        self.health_bar_bg = QPixmap(overlay_texture_path + "health-bar-bg.png")
+        self.health_bar_bg = prm.get_pixmap(overlay_texture_path + "health-bar-bg")
         self.health_bar_bg_size = Vector(self.health_bar_bg.width(), self.health_bar_bg.height())
 
     def draw_name_tags(self, qp, robots):

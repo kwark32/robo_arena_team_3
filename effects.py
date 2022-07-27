@@ -41,15 +41,23 @@ class RobotEffect:
 
 class SpeedEffect(RobotEffect):
     id = 1
+    speed_factor = 1
+    ang_speed_factor = 1
     speed_gain = 0
     ang_speed_gain = 0
 
-    def __init__(self, duration, speed_gain=None, ang_speed_gain=None):
+    def __init__(self, duration, speed_factor=None, ang_speed_factor=None, speed_gain=None, ang_speed_gain=None):
         super().__init__(duration)
 
+        self.speed_factor = speed_factor
+        self.ang_speed_factor = ang_speed_factor
         self.speed_gain = speed_gain
         self.ang_speed_gain = ang_speed_gain
 
+        if self.speed_factor is None:
+            self.speed_factor = self.effect_class.speed_factor
+        if self.ang_speed_factor is None:
+            self.ang_speed_factor = self.effect_class.ang_speed_factor
         if self.speed_gain is None:
             self.speed_gain = self.effect_class.speed_gain
         if self.ang_speed_gain is None:
@@ -58,6 +66,8 @@ class SpeedEffect(RobotEffect):
     def apply(self, robot, delta_time=0):
         super().apply(robot, delta_time=delta_time)
 
+        robot.sim_body.max_velocity *= self.speed_factor
+        robot.sim_body.max_ang_velocity *= self.ang_speed_factor
         robot.sim_body.max_velocity += self.speed_gain
         robot.sim_body.max_ang_velocity += self.ang_speed_gain
 
@@ -71,36 +81,40 @@ class SpeedEffect(RobotEffect):
         if sub_list is None:
             sub_list = []
 
+        sub_list.append(self.speed_factor)
+        sub_list.append(self.ang_speed_factor)
         sub_list.append(self.speed_gain)
         sub_list.append(self.ang_speed_gain)
 
         return sub_list
 
     def set_from_data_list(self, data_list):
-        if data_list is None or len(data_list) < 2:
+        if data_list is None or len(data_list) < 4:
             print("ERROR: Cannot set effect data from " + str(data_list))
             return None
 
+        self.speed_factor = data_list.pop(0)
+        self.ang_speed_factor = data_list.pop(0)
         self.speed_gain = data_list.pop(0)
         self.ang_speed_gain = data_list.pop(0)
 
 
 class StunEffect(SpeedEffect):
     id = 2
-    speed_gain = -1000000
-    ang_speed_gain = -1000000
+    speed_factor = 0
+    ang_speed_factor = 0
 
 
 class EarthTileEffect(SpeedEffect):
     id = 3
-    speed_gain = -30
-    ang_speed_gain = -1
+    speed_factor = 0.75
+    ang_speed_factor = 0.75
 
 
 class WaterTileEffect(SpeedEffect):
     id = 4
-    speed_gain = -60
-    ang_speed_gain = -2
+    speed_factor = 0.5
+    ang_speed_factor = 0.5
     damage_per_second = 200
 
     def apply(self, robot, delta_time=0):
@@ -112,8 +126,7 @@ class WaterTileEffect(SpeedEffect):
 
 class FireTileEffect(SpeedEffect):
     id = 5
-    speed_gain = 60
-    ang_speed_gain = 2
+    speed_factor = 1.5
     damage_per_second = 100
 
     def apply(self, robot, delta_time=0):
@@ -173,8 +186,8 @@ class HoleTileEffect(StunEffect):
 
 class LavaTileEffect(SpeedEffect):
     id = 7
-    speed_gain = -90
-    ang_speed_gain = -3
+    speed_factor = 0.25
+    ang_speed_factor = 0.25
     damage_per_second = 400
 
     def apply(self, robot, delta_time=0):

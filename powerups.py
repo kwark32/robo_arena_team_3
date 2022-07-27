@@ -1,13 +1,12 @@
 import effects
 
+import pixmap_resource_manager as prm
+
 from globals import GameInfo
-from util import Vector, get_main_path, draw_img_with_rot
-
-if not GameInfo.is_headless:
-    from PyQt5.QtGui import QPixmap
+from util import Vector, draw_img_with_rot
 
 
-power_up_texture_path = get_main_path() + "/textures/power_ups/"
+power_up_texture_path = "textures/power_ups/"
 
 
 class PowerUp:
@@ -36,13 +35,13 @@ class PowerUp:
         return self._texture_size
 
     def load_image(self):
-        filename = power_up_texture_path + self.power_up_type.name + ".png"
+        filename = power_up_texture_path + self.power_up_type.name
 
-        self._texture = QPixmap(filename)
+        self._texture = prm.get_pixmap(filename)
         self._texture_size = Vector(self._texture.width(), self._texture.height())
         if self._texture_size.x == 0 or self._texture_size.y == 0:
             print("ERROR: texture for " + self.power_up_type.name
-                  + " power up has 0 size or is missing at " + filename + "!")
+                  + " power up has 0 size or is missing at " + filename + ".png!")
 
     def apply(self, robot):
         robot.effects.append(self.effect)
@@ -66,12 +65,10 @@ class SpeedPowerUp(PowerUp):
     name = "speed"
     id = 2
     duration = 5
-    speed_gain = 120
-    ang_speed_gain = 2
+    speed_factor = 2
 
     def __init__(self, arena, index, position):
-        effect = effects.SpeedEffect(SpeedPowerUp.duration, speed_gain=SpeedPowerUp.speed_gain,
-                                     ang_speed_gain=SpeedPowerUp.ang_speed_gain)
+        effect = effects.SpeedEffect(SpeedPowerUp.duration, speed_factor=SpeedPowerUp.speed_factor)
         super().__init__(arena, effect, index, position)
 
 

@@ -1,17 +1,19 @@
 import math
 
-from util import Vector, get_main_path, is_point_inside_rect, rad_to_deg, limit
+import pixmap_resource_manager as prm
+
+from util import Vector, is_point_inside_rect, rad_to_deg, limit
 from globals import Fonts, GameInfo
 from constants import CARET_BLINK_RATE_NS
 from camera import CameraState
 
 if not GameInfo.is_headless:
     from PyQt5.QtCore import QPoint, Qt
-    from PyQt5.QtGui import QPixmap, QFontMetricsF, QPen
+    from PyQt5.QtGui import QFontMetricsF, QPen
     from PyQt5.QtWidgets import QApplication
 
 
-ui_element_texture_path = get_main_path() + "/textures/ui/menu/"
+ui_element_texture_path = "textures/ui/menu/"
 
 
 # absolute base class
@@ -82,14 +84,14 @@ class UIElement:
 
     def load_image(self, name=None):
         if name is None:
-            filename = ui_element_texture_path + self.element_class.name + ".png"
+            filename = ui_element_texture_path + self.element_class.name
         else:
-            filename = ui_element_texture_path + name + ".png"
-        texture = QPixmap(filename)
+            filename = ui_element_texture_path + name
+        texture = prm.get_pixmap(filename)
         size = Vector(texture.width(), texture.height())
         if size.x == 0 or size.y == 0:
             print("ERROR: texture for " + self.element_class.name
-                  + " has 0 size or is missing at " + filename + "!")
+                  + " has 0 size or is missing at " + filename + ".png!")
         if name is None:
             self._texture = texture
             self._texture_size = size
@@ -410,7 +412,7 @@ class Menu:
 
         self.bg_pixmap = None
         if bg_texture_name is not None:
-            self.bg_pixmap = QPixmap(ui_element_texture_path + bg_texture_name + ".png")
+            self.bg_pixmap = prm.get_pixmap(ui_element_texture_path + bg_texture_name)
 
         self.shift_key_pressed = False
         self.ctrl_key_pressed = False

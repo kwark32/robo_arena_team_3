@@ -3,18 +3,19 @@ import effects
 import powerups
 
 import numpy as np
+import pixmap_resource_manager as prm
 
 from globals import GameInfo
 from camera import CameraState
-from util import Vector, get_main_path, painter_transform_with_rot, is_object_on_screen
+from util import Vector, painter_transform_with_rot, is_object_on_screen
 from constants import MAX_POWER_UP_ITER, TILES_PER_POWER_UP, TILE_ANIM_GROUP_SIZE
 
 if not GameInfo.is_headless:
     from PyQt5.QtGui import QPixmap, QPainter
 
 
-tile_texture_path = get_main_path() + "/textures/static_tiles/"
-animated_tiles_texture_path = get_main_path() + "/textures/animated_tiles/"
+tile_texture_path = "textures/static_tiles/"
+animated_tiles_texture_path = "textures/animated_tiles/"
 
 
 class TileType:
@@ -39,12 +40,12 @@ class TileType:
         return self._texture_size
 
     def load_image(self):
-        filename = tile_texture_path + self.name + ".png"
-        self._texture = QPixmap(filename)
+        filename = tile_texture_path + self.name
+        self._texture = prm.get_pixmap(filename)
         self._texture_size = Vector(self._texture.width(), self._texture.height())
         if self._texture_size.x == 0 or self._texture_size.y == 0:
             print("ERROR: texture for " + self.name
-                  + " has 0 size or is missing at " + filename + "!")
+                  + " has 0 size or is missing at " + filename + ".png!")
 
 
 tile_type_dict = {
@@ -68,8 +69,7 @@ class Arena:
         self.size = Vector(self.tile_count.x, self.tile_count.y)
         self.size.mult(GameInfo.arena_tile_size)
         self.tiles = self.get_empty_tiles()
-        self.power_ups = self.get_empty_power_ups()
-        self.power_up_list = []
+        self.power_ups = {}
 
         self.tile_animations = []
         self._tile_anim_groups = None
@@ -97,10 +97,6 @@ class Arena:
         # get array of empty tiles with correct dimensions
         return np.empty((self.tile_count.y, self.tile_count.x), dtype=TileType)
 
-    def get_empty_power_ups(self):
-        # get array of power_ups with correct dimensions
-        return np.empty((self.tile_count.y, self.tile_count.x), dtype=powerups.PowerUp)
-
     # get different portal tiles for portal tile effects
     def get_portal_tiles(self):
         self._portal_tiles = [[], []]
@@ -115,7 +111,7 @@ class Arena:
 
     # place power ups in the arena
     def place_power_up(self, delta_time):
-        if len(self.power_up_list) * TILES_PER_POWER_UP >= self.tile_count.x * self.tile_count.y:
+        if len(self.power_ups) * TILES_PER_POWER_UP >= self.tile_count.x * self.tile_count.y:
             return
 
         # pick random tile
@@ -123,17 +119,15 @@ class Arena:
             y = random.randrange(self.tile_count.y)
             x = random.randrange(self.tile_count.x)
             tile_type = self.tiles[y][x]
-            power_up = self.power_ups[y][x]
-            # make sure tile is of type ground
+            power_up = self.power_ups.get((x, y))
+            # make sure tile is ground
             if tile_type.name == "ground" and power_up is None:
                 position = Vector(x, y)
                 position.mult(GameInfo.arena_tile_size)
                 position.add_scalar(GameInfo.arena_tile_size / 2)
                 # decide which type of power up to place
-                power_up_types = [powerups.HealthPowerUp, powerups.SpeedPowerUp,
-                                  powerups.DamagePowerUp, powerups.BulletResistancePowerUp]
-                power_up_type = random.choice(power_up_types)
-                self.power_ups[y][x] = power_up_type(self, Vector(x, y), position)
+                power_up_type = random.choice(powerups.power_ups)
+                self.power_ups[(x, y)] = power_up_type(self, Vector(x, y), position)
                 break
 
     def draw(self, qp):
@@ -181,7 +175,7 @@ class Arena:
                           round(size.x), round(size.y))
         qp.restore()
 
-        for power_up in self.power_up_list:
+        for power_up in self.power_ups.values():
             power_up.draw(qp)
 
         if self.world_sim is not None:

@@ -11,8 +11,8 @@ from globals import GameInfo
 from animation import Animation
 
 
-json_map_path = get_main_path() + "/arenas/json/"
-png_map_path = get_main_path() + "/arenas/png/"
+json_map_path = get_main_path() + "arenas/json/"
+png_map_path = get_main_path() + "arenas/png/"
 
 
 def add_physics(arena, physics_world):

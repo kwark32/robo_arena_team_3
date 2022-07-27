@@ -147,8 +147,11 @@ def limit(value, lower, upper):
     return value
 
 
+_main_path = dirname(abspath(__file__)) + "/"
+
+
 def get_main_path():
-    return dirname(abspath(__file__))
+    return _main_path
 
 
 def rad_to_deg(value):

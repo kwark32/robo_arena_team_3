@@ -4,6 +4,7 @@ from util import limit, lerp
 from networking import UDPClient, ClientPacket
 from globals import GameInfo
 from constants import FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_EXTRAPOLATION_STEPS, TIME_SYNC_LERP_AMOUNT
+from powerups import decompress_power_ups
 
 
 class OnlineWorldSim(WorldSim):
@@ -193,6 +194,7 @@ class OnlineWorldSim(WorldSim):
             GameInfo.local_player_id = last_packet.player_id
             self.set_robots(last_packet.robots)
             self.set_bullets(last_packet.bullets)
+            decompress_power_ups(last_packet.power_ups, self.arena)
 
             self.extrapolate(self.last_packet_physics_frame, physics_frames_ahead + 1)
 
@@ -201,3 +203,6 @@ class OnlineWorldSim(WorldSim):
         else:
             # print("no packet")
             super().fixed_update(delta_time)
+
+    def set_seed(self):
+        GameInfo.current_frame_seed = self.server_world_start_time_ns + self.physics_frame_count

@@ -62,7 +62,7 @@ class ServerWorldSim(WorldSim):
 
         state_packet = StatePacket(creation_time=self.curr_time_ns, world_start_time=self.world_start_time_ns,
                                    physics_frame=self.physics_frame_count, robots=robot_info_list,
-                                   bullets=bullet_info_list)
+                                   bullets=bullet_info_list, power_ups=self.arena.power_ups)
 
         for client in self.udp_socket.clients.values():
             if client.last_rx_packet is not None:

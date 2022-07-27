@@ -30,6 +30,8 @@ class SoundManager:
 
         self.sfx_start_threads = 0
 
+        self.catchup_frame = False
+
     def update_sound(self, listener_pos=None):
         self.listener_pos = listener_pos
         self.set_sound_volumes()
@@ -41,6 +43,9 @@ class SoundManager:
             random.setstate(random_state)
 
     def play_sfx(self, name, pos=None):
+        if self.catchup_frame:
+            return
+
         if pos is not None:
             pos = pos.copy()
 

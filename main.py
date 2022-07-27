@@ -21,7 +21,7 @@ if not GameInfo.is_headless:
     from world_scene import SPWorldScene, OnlineWorldScene, ServerWorldScene
     from PyQt5.QtGui import QFont, QColor, QFontDatabase
     from PyQt5.QtWidgets import QOpenGLWidget, QApplication, QDesktopWidget
-    from PyQt5.QtCore import Qt, QResource, QSize
+    from PyQt5.QtCore import Qt, QResource
 
     class ArenaWindow(QOpenGLWidget):
         def __init__(self):

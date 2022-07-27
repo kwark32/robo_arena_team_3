@@ -10,6 +10,7 @@ from robot_AI import RobotAI
 from sound_manager import SoundManager
 from arena import TileType
 from animation import Animation
+from effects import get_effect_from_data_list
 
 if not GameInfo.is_headless:
     from PyQt5.QtGui import QPixmap, QPolygon
@@ -29,9 +30,7 @@ class RobotInfo:
         self.last_shot_frame = robot.weapon.last_shot_frame
         self.player_name = robot.player_name
         self.last_position = robot.last_position.as_tuple()
-        self.effects = []
-        for effect in robot.effects:
-            self.effects.append(effect.copy())
+        self.effects = [e.get_data_list() for e in robot.effects]
         self.effect_data = robot.effect_data
         self.input = robot.input
         self.kills = robot.kills
@@ -45,7 +44,7 @@ class RobotInfo:
         robot.sim_body.set_tuples(self.robot_body)
         robot.extrapolation_body.set(robot.sim_body)
         robot.revert_effects()
-        robot.effects = self.effects
+        robot.effects = [get_effect_from_data_list(e, robot.world_sim) for e in self.effects]
         robot.effect_data = self.effect_data
         robot.health = self.health
         robot.kills = self.kills
@@ -225,9 +224,10 @@ class Robot:
 
         tile_position = self.sim_body.position.copy()
         tile_position.div(GameInfo.arena_tile_size)
-        tile_position.round()
-        if self.world_sim.arena.power_ups[tile_position.y][tile_position.x] is not None:
-            self.world_sim.arena.power_ups[tile_position.y][tile_position.x].apply(self)
+        tile_position.floor()
+        power_up = self.world_sim.arena.power_ups.get((tile_position.x, tile_position.y))
+        if power_up is not None:
+            power_up.apply(self)
 
         current_tile = self.get_center_tile()
         if current_tile.effect_class is not None:

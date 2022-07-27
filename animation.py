@@ -3,7 +3,7 @@ import os
 import numpy as np
 import pixmap_resource_manager as prm
 
-from util import draw_img_with_rot
+from util import draw_img_with_rot, get_main_path
 from globals import GameInfo
 from constants import FIXED_DELTA_TIME
 
@@ -45,11 +45,11 @@ class Animation:
         if not GameInfo.is_headless:
             self._frames = []
             path = animation_path + name + "/"
-            file_list = os.listdir(path)
+            file_list = os.listdir(get_main_path() + path)
             file_list = sorted(file_list)
             self._frames = np.empty(len(file_list), dtype=QPixmap)
-            for i, name in enumerate(file_list):
-                self._frames[i] = prm.get_pixmap(path + name[:-4])
+            for i, file_name in enumerate(file_list):
+                self._frames[i] = prm.get_pixmap(path + file_name[:-4])
             self._frame_count = len(file_list)
 
         if single_vfx and Animation.world_scene is not None and not Animation.world_scene.world_sim.catchup_frame:

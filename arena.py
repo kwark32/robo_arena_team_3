@@ -39,6 +39,7 @@ class TileType:
         return self._texture_size
 
     def load_image(self):
+        """Loads tile textures into the arena."""
         filename = tile_texture_path + self.name + ".png"
         self._texture = QPixmap(filename)
         self._texture_size = Vector(self._texture.width(), self._texture.height())
@@ -94,15 +95,18 @@ class Arena:
         return self._portal_tiles[1]
 
     def get_empty_tiles(self):
+        """Creates empty arena."""
         # get array of empty tiles with correct dimensions
         return np.empty((self.tile_count.y, self.tile_count.x), dtype=TileType)
 
     def get_empty_power_ups(self):
+        """Creates empty dictionary for power ups."""
         # get array of power_ups with correct dimensions
         return np.empty((self.tile_count.y, self.tile_count.x), dtype=powerups.PowerUp)
 
     # get different portal tiles for portal tile effects
     def get_portal_tiles(self):
+        """Creates list of two lists with portal_1 and portal_2 tiles."""
         self._portal_tiles = [[], []]
         for y in range(self.tile_count.y):
             for x in range(self.tile_count.x):
@@ -133,10 +137,12 @@ class Arena:
                 power_up_types = [powerups.HealthPowerUp, powerups.SpeedPowerUp,
                                   powerups.DamagePowerUp, powerups.BulletResistancePowerUp]
                 power_up_type = random.choice(power_up_types)
+                # place power up
                 self.power_ups[y][x] = power_up_type(self, Vector(x, y), position)
                 break
 
     def draw(self, qp):
+        """Draws the arena with tiles and power ups."""
         if self.background_pixmap is None:
             self.background_pixmap = QPixmap(self.size.x, self.size.y)
             painter = QPainter(self.background_pixmap)
@@ -222,6 +228,7 @@ class Arena:
             qp.restore()
 
     def calc_tile_anim_groups(self):
+        """Used for performance improvements."""
         count = self.tile_count.copy()
         count.div(TILE_ANIM_GROUP_SIZE)
         count.floor()

@@ -5,6 +5,7 @@ from networking import UDPClient, ClientPacket
 from globals import GameInfo
 from constants import FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_EXTRAPOLATION_STEPS, TIME_SYNC_LERP_AMOUNT
 from powerups import decompress_power_ups
+from weapons import bullet_classes
 
 
 class OnlineWorldSim(WorldSim):
@@ -72,7 +73,8 @@ class OnlineWorldSim(WorldSim):
                     break
 
             if existing_bullet is None:
-                existing_bullet = new_bullet_info.bullet_class(self)
+                bullet_class = bullet_classes[new_bullet_info.bullet_class_id]
+                existing_bullet = bullet_class(self)
 
             new_bullet_info.set_bullet_values(existing_bullet)
 

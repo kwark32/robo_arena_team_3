@@ -15,7 +15,7 @@ class BulletInfo:
     def __init__(self, bullet):
         self.bullet_id = bullet.bullet_id
         self.bullet_body = bullet.sim_body.as_tuples()
-        self.bullet_class = bullet.bullet_type
+        self.bullet_class_id = bullet.bullet_type.id
         self.source_id = bullet.source_id
         self.creation_frame = bullet.creation_frame
 
@@ -23,13 +23,15 @@ class BulletInfo:
         bullet.bullet_id = self.bullet_id
         bullet.sim_body.set_tuples(self.bullet_body)
         bullet.extrapolation_body.set(bullet.sim_body)
-        bullet.bullet_type = self.bullet_class
+        bullet.bullet_type = bullet_classes[self.bullet_class_id]
         bullet.source_id = self.source_id
         bullet.creation_frame = self.creation_frame
 
 
 # base class
 class Bullet:
+    id = 0
+
     def __init__(self, world_sim, robot=None, source_id=-1, bullet_id=-1,
                  position=Vector(0, 0), rotation=0, damage_factor=1):
         self.bullet_type = type(self)
@@ -117,6 +119,8 @@ class Bullet:
 
 # base class
 class Weapon:
+    id = 0
+
     def __init__(self, world_sim):
         self.weapon_type = type(self)
         if self.weapon_type is Weapon:
@@ -146,7 +150,8 @@ class Weapon:
         return False
 
 
-class CannonShell(Bullet):
+class CannonShellBullet(Bullet):
+    id = 1
     speed = 1000
     damage = 250
     size = Vector(8, 20)
@@ -154,9 +159,21 @@ class CannonShell(Bullet):
     texture_name = "cannon-shell.png"
 
 
-class TankCannon(Weapon):
+class TankCannonWeapon(Weapon):
+    id = 1
     pos_offset = Vector(0, 24)
     rot_offset = 0
     fire_rate = 1
-    bullet_type = CannonShell
+    bullet_type = CannonShellBullet
     shot_sound_name = "tank-cannon_shot"
+
+
+weapon_classes = {}
+for name, obj in globals().copy().items():
+    if name.endswith("Weapon") and hasattr(obj, "id"):
+        weapon_classes[obj.id] = obj
+
+bullet_classes = {}
+for name, obj in globals().copy().items():
+    if name.endswith("Bullet") and hasattr(obj, "id"):
+        bullet_classes[obj.id] = obj

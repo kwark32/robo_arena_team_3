@@ -1,7 +1,7 @@
 import math
 
 from transform import SimBody
-from weapons import TankCannon
+from weapons import TankCannonWeapon, weapon_classes
 from util import Vector, get_main_path, draw_img_with_rot, painter_transform_with_rot
 from globals import GameInfo, Fonts
 from constants import FIXED_DELTA_TIME, MAX_ROBOT_HEALTH, DEBUG_MODE, ROBOT_COLLISION_SOUND_SPEED_FACTOR
@@ -26,7 +26,7 @@ class RobotInfo:
         self.player_id = robot.robot_id
         self.next_bullet_id = robot.next_bullet_id
         self.health = robot.health
-        self.weapon_class = robot.weapon.weapon_type
+        self.weapon_class_id = robot.weapon.weapon_type.id
         self.last_shot_frame = robot.weapon.last_shot_frame
         self.player_name = robot.player_name
         self.last_position = robot.last_position.as_tuple()
@@ -48,8 +48,9 @@ class RobotInfo:
         robot.effect_data = self.effect_data
         robot.health = self.health
         robot.kills = self.kills
-        if robot.weapon is None or robot.weapon.weapon_type is not self.weapon_class:
-            robot.weapon = self.weapon_class()
+        if robot.weapon is None or robot.weapon.weapon_type.id != self.weapon_class_id:
+            weapon_class = weapon_classes[self.weapon_class_id]
+            robot.weapon = weapon_class()
         robot.weapon.last_shot_frame = self.last_shot_frame
         robot.last_position = Vector(self.last_position[0], self.last_position[1])
         robot.forward_velocity_goal = 0
@@ -126,7 +127,7 @@ class Robot:
         self.physics_body = None
         self.create_physics_body()
 
-        self.weapon = TankCannon(self.world_sim)
+        self.weapon = TankCannonWeapon(self.world_sim)
         self.damage_factor = 1
         self.bullet_resistance_factor = 1
 

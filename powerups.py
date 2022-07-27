@@ -65,10 +65,10 @@ class SpeedPowerUp(PowerUp):
     name = "speed"
     id = 2
     duration = 5
-    speed_factor = 2
+    speed_gain = GameInfo.robot_max_velocity
 
     def __init__(self, arena, index, position):
-        effect = effects.SpeedEffect(SpeedPowerUp.duration, speed_factor=SpeedPowerUp.speed_factor)
+        effect = effects.SpeedEffect(SpeedPowerUp.duration, speed_gain=SpeedPowerUp.speed_gain)
         super().__init__(arena, effect, index, position)
 
 

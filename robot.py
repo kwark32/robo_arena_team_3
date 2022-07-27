@@ -69,11 +69,6 @@ class RobotInfo:
 
 
 class Robot:
-    max_velocity = 120
-    max_ang_velocity = math.pi
-    max_accel = max_velocity * 2
-    max_ang_accel = max_ang_velocity * 8
-
     size = Vector(32, 32)
     turret_texture_center_offset = Vector(0, 10)
 
@@ -92,10 +87,10 @@ class Robot:
 
         self.player_name = player_name
 
-        self.max_velocity = Robot.max_velocity
-        self.max_ang_velocity = Robot.max_ang_velocity
-        self.max_accel = Robot.max_accel
-        self.max_ang_accel = Robot.max_ang_accel
+        self.max_velocity = GameInfo.robot_max_velocity
+        self.max_ang_velocity = GameInfo.robot_max_ang_velocity
+        self.max_accel = GameInfo.robot_max_accel
+        self.max_ang_accel = GameInfo.robot_max_ang_accel
 
         self.sim_body = SimBody(position=position, rotation=rotation,
                                 max_velocity=self.max_velocity, max_ang_velocity=self.max_ang_velocity,

@@ -1,3 +1,5 @@
+import math
+
 try:
     import simplejson as json
 except ImportError:
@@ -33,6 +35,11 @@ class GameInfo:
     # semi_divided_arena.png
     # arena_for_better_pathfinding.png
     active_arena = "arena_for_better_pathfinding.png"
+
+    robot_max_velocity = 120
+    robot_max_ang_velocity = math.pi
+    robot_max_accel = robot_max_velocity * 2
+    robot_max_ang_accel = robot_max_ang_velocity * 8
 
     current_frame_seed = 0
 

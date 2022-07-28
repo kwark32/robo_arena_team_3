@@ -28,7 +28,7 @@ On the map there are several enemy tanks which will find and shoot the player.<b
 The enemies use an A*-algorithm to locate and follow the player and avoid different tiles based on their priority.<br>
 All robots in the arena (players and AI robots) have 1000HP maximum health and deal 250dmg with a bullet from their tank cannon so it usually takes 4 hits to destroy a robot.<br>
 However the health and damage of the robots in the arena can not only be influenced by other robots, but by the tile effects and the power up effects of the arena as well.<br>
-The current health of a player is always visually availible to them by the healthbar displayed over their robot.
+The current health of a player is always visually displayed as a health bar above the robot.
 
 ![Summary](/Summary/gameplay_healthbar.png)
 
@@ -66,7 +66,7 @@ The hole tile gives the tanks fall damage wich results in immobilisation and an 
 
 ![Summary](/Summary/hole_tile.png)
 
-The portal tile teleports the robots to a random portal of the other colour and inflicts rather low damage of 100 so the player cant just keep teleporting around to get away and survive. 
+The portal tile teleports the robots to a random portal of the other colour and inflicts random damage between 50 and 150 so the player cannot keep teleporting around to get away and survive. 
 
 ![Summary](/Summary/portal_blue.gif)
 

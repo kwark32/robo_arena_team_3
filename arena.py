@@ -119,6 +119,7 @@ class Arena:
 
     # place power ups in the arena
     def place_power_up(self, delta_time):
+        """Places random types of power ups on random ground tiles of the arena."""
         if len(self.power_up_list) * TILES_PER_POWER_UP >= self.tile_count.x * self.tile_count.y:
             return
 

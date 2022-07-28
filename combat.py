@@ -5,6 +5,7 @@ from arena import TileType
 
 
 def hit_shell(bullet, other):
+    """Manages bullet hits."""
     other_is_bullet = False
     other_is_robot = False
 

@@ -11,6 +11,7 @@ power_up_texture_path = get_main_path() + "/textures/power_ups/"
 
 
 class PowerUp:
+    """Base class for power ups."""
     def __init__(self, arena, effect, index, position):
         self.power_up_type = type(self)
         if self.power_up_type is PowerUp:

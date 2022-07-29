@@ -234,12 +234,12 @@ class TextField(UIElement):
 
         if len(self.text) > 0 or self.is_selected:
             qp.setPen(QPen(Fonts.text_field_color, 6))
-            qp.drawText(QPoint(self.top_left_corner.x + CameraState.x_offset + self.text_offset.x,
-                               self.top_left_corner.y + self.text_offset.y), draw_text)
+            qp.drawText(QPoint(round(self.top_left_corner.x + CameraState.x_offset + self.text_offset.x),
+                               round(self.top_left_corner.y + self.text_offset.y)), draw_text)
         else:
             qp.setPen(QPen(Fonts.text_field_default_color, 6))
-            qp.drawText(QPoint(self.top_left_corner.x + CameraState.x_offset + self.text_offset.x,
-                               self.top_left_corner.y + self.text_offset.y), self.placeholder_text)
+            qp.drawText(QPoint(round(self.top_left_corner.x + CameraState.x_offset + self.text_offset.x),
+                               round(self.top_left_corner.y + self.text_offset.y)), self.placeholder_text)
 
     def key_press(self, key):
         character = chr(0)

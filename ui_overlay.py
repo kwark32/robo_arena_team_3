@@ -78,15 +78,20 @@ class Scoreboard:
         if self.score_list is None:
             return
 
-        max_width = 0
+        char_width = self.font_metrics.width("A")
         max_name_width = 0
+        max_width = 0
+        max_score_width_chars = 0
         for name, score in self.score_list:
-            name_width = self.font_metrics.width(name)
-            width = name_width + self.font_metrics.width(score)
+            name_width = len(name) * char_width
+            score_width = len(score) * char_width
+            width = name_width + score_width
             if width > max_width:
                 max_width = width
             if name_width > max_name_width:
                 max_name_width = name_width
+            if len(score) > max_score_width_chars:
+                max_score_width_chars = len(score)
 
         if max_width <= 1:  # Leave some room for imprecision errors
             return
@@ -104,7 +109,7 @@ class Scoreboard:
                     round(len(self.score_list) * height_per_name), QColor(0, 0, 0, 150))
         for i, (name, score) in enumerate(self.score_list):
             name_x = outer_margin
-            score_x = outer_margin + inner_space + max_name_width
+            score_x = outer_margin + inner_space + max_name_width + (max_score_width_chars - len(score)) * char_width
             y = top_margin + i * height_per_name + font_height / 2 + height_per_name / 2
             qp.drawText(round(name_x), round(y), name)
             qp.drawText(round(score_x), round(y), score)

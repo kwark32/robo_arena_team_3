@@ -350,7 +350,7 @@ class UIText(UIElement):
 
         qp.setFont(self.font)
         qp.setPen(QPen(self.font_color, 6))
-        qp.drawText(self.position.x - (text_width / 2) + CameraState.x_offset, self.position.y, self.text)
+        qp.drawText(round(self.position.x - (text_width / 2) + CameraState.x_offset), round(self.position.y), self.text)
 
 
 # base class

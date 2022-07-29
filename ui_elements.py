@@ -382,8 +382,8 @@ class Checkbox(UIElement):
     def draw(self, qp):
         qp.setFont(self.font)
         qp.setPen(QPen(self.font_color, 6))
-        qp.drawText(self.position.x + self.header_offset_x + CameraState.x_offset,
-                    self.position.y + Checkbox.header_offset_y, self.checkbox_type.header_text)
+        qp.drawText(round(self.position.x + self.header_offset_x + CameraState.x_offset),
+                    round(self.position.y + Checkbox.header_offset_y), self.checkbox_type.header_text)
         qp.drawPixmap(round(self.top_left_corner.x + CameraState.x_offset), round(self.top_left_corner.y), self.texture)
         if self.checked:
             qp.drawPixmap(round(self.top_left_corner.x + CameraState.x_offset),

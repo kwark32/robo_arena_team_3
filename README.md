@@ -55,3 +55,21 @@ Tasks are assigned and decisions tracked via the Task Project under "Projects"
 ### Upcoming tasks & Decisions:
 
 See our Task Project page.
+
+
+Contributions:
+
+airzocker (Felix):
+
+kwark32 (Matts):
+
+kweiss1 (Kevin):
+- Soundtrack
+- Sound Effects
+- Main Menu & Settings Graphics
+- Tiles and Sprites Graphics
+- Animations
+- UML Diagram
+
+
+

@@ -43,6 +43,8 @@ class WorldSim:
         self.frame_times_since_ms = 0
         self.frame_time_ms = 0
 
+        self.did_fixed_update = False
+
     def clean_mem(self):
         CameraState.position = None
 
@@ -90,6 +92,8 @@ class WorldSim:
         dead_robots.clear()
 
     def fixed_update(self, delta_time, catchup_frame=False):
+        self.did_fixed_update = True
+
         self.catchup_frame = catchup_frame
         SoundManager.instance.catchup_frame = catchup_frame
 
@@ -150,6 +154,8 @@ class WorldSim:
             self._last_fps_show_time = self.curr_time_ns
 
     def update_world(self):
+        self.did_fixed_update = False
+
         self.update_times()
 
         iterations = 0

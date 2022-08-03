@@ -167,7 +167,7 @@ class WorldScene(OverlayWidget):
         qp.setFont(Fonts.fps_font)
         qp.setPen(Fonts.fps_color)
         qp.drawText(QPoint(5, 20), str(round(self.world_sim.fps)) + "fps")
-        qp.drawText(QPoint(95, 20), str(self.world_sim.frame_time_ms) + "ms")
+        qp.drawText(QPoint(105, 20), str(self.world_sim.frame_time_ms) + "ms")
 
         qp.end()
 

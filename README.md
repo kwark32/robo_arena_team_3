@@ -3,7 +3,7 @@
 Python 3.9 + PyQt5 project
 
 #### Requirements:
-  - Python3.9 (so far 3.8 & 3.10 work too)
+  - Python3.8+ (maybe lower can work too)
   - PyQt5
   - PyBox2D: `pip3 install box2d-py`
 
@@ -59,17 +59,29 @@ See our Task Project page.
 
 Contributions:
 
-airzocker (Felix):
-
 kwark32 (Matts):
 
 kweiss1 (Kevin):
 - Soundtrack
 - Sound Effects
 - Main Menu & Settings Graphics
+- Menu Layout
 - Tiles and Sprites Graphics
 - Animations
-- UML Diagram
+- UML Class Diagram
 
-
-
+airzocker (Felix):
+- The Rest (general aspects:)
+- Code design/model
+- Arena loading
+- Robots, Weapons, Bullets
+- Physics
+- Most drawing
+- UI code (not using QT elements)
+- Multiplayer (all networking) & Headless server
+- Settings with save & load
+- Singleplayer game mode ("survival mode", score/highcore etc)
+- Health/Name overlay & Multiplayer scoreboard
+- Sounds
+- Animation code
+- Big/Scrolling arena, follow cam & fullscreen/dynamic resolution

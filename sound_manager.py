@@ -1,12 +1,8 @@
+import time
 import random
-import threading
 
 from globals import Settings, GameInfo
 from constants import HALF_FALLOFF_DIST, MAX_AUDIO_DIST, SFX_AUDIO_SOURCES
-
-if not GameInfo.is_headless:
-    from PyQt5.QtCore import QUrl
-    from PyQt5.QtMultimedia import QSoundEffect
 
 
 sfx_path = "qrc:" + "/sounds/sfx/"
@@ -16,22 +12,66 @@ music_names = ["soundtrack-1_normal", "soundtrack-2_boss"]
 music_volume_factors = {"soundtrack-1_normal": 0.36, "soundtrack-2_boss": 0.75}
 
 
+if not GameInfo.is_headless:
+    from PyQt5.QtCore import QUrl, QObject, QThread, QMutex, pyqtSignal, pyqtSlot
+    from PyQt5.QtMultimedia import QSoundEffect
+
+    class SFXLoaderWorker(QObject):
+        wake_worker = pyqtSignal()
+
+        @pyqtSlot()
+        def update(self):
+            while len(SoundManager.instance.sfx_start_list) > 0:
+                SoundManager.instance.sfx_start_list_mutex.lock()
+                sound, name, pos = SoundManager.instance.sfx_start_list.pop(0)
+                SoundManager.instance.sfx_start_list_mutex.unlock()
+
+                sound.setSource(QUrl(sfx_path + name + ".wav"))
+                sound.setVolume(SoundManager.instance.get_sound_volume(pos=pos))
+                sound.play()
+
+                SoundManager.instance.ready_sounds_mutex.lock()
+                SoundManager.instance.ready_sounds.append((sound, pos))
+                SoundManager.instance.ready_sounds_mutex.unlock()
+
+        def run(self):
+            pass
+
+
 class SoundManager:
     instance = None
 
     def __init__(self):
         self.sounds = []
+        self.ready_sounds = []
+        self.ready_sounds_mutex = None
+        self.sfx_start_list = []
+        self.sfx_start_list_mutex = None
+
         self.listener_pos = None
 
         self.music = None
         self.play_random_music = False
         self.playing_music_name = ""
 
-        self.sfx_start_threads = 0
-
         self.catchup_frame = False
 
+        if not GameInfo.is_headless:
+            self.ready_sounds_mutex = QMutex()
+            self.sfx_start_list_mutex = QMutex()
+            self.sfx_loader_thread = QThread()
+            self.sfx_loader_worker = SFXLoaderWorker()
+            self.sfx_loader_worker.moveToThread(self.sfx_loader_thread)
+            self.sfx_loader_worker.wake_worker.connect(self.sfx_loader_worker.update)
+            self.sfx_loader_thread.start()
+
     def update_sound(self, listener_pos=None):
+        self.ready_sounds_mutex.lock()
+        for i in range(len(self.ready_sounds)):
+            sound = self.ready_sounds.pop(0)
+            self.sounds.append(sound)
+        self.ready_sounds_mutex.unlock()
+
         self.listener_pos = listener_pos
         self.set_sound_volumes()
 
@@ -48,12 +88,16 @@ class SoundManager:
         if pos is not None:
             pos = pos.copy()
 
-        if len(self.sounds) + self.sfx_start_threads >= SFX_AUDIO_SOURCES:
+        if len(self.sounds) + len(self.sfx_start_list) >= SFX_AUDIO_SOURCES:
             return
 
-        self.sfx_start_threads += 1
         sound = QSoundEffect()
-        threading.Thread(target=self._set_sound, args=(sound, pos, name)).start()
+
+        self.sfx_start_list_mutex.lock()
+        self.sfx_start_list.append((sound, name, pos))
+        self.sfx_start_list_mutex.unlock()
+
+        self.sfx_loader_worker.wake_worker.emit()
 
     def play_music(self, name, once=True):
         self.playing_music_name = name
@@ -112,13 +156,6 @@ class SoundManager:
             return 0
 
         return volume_setting * volume
-
-    def _set_sound(self, sound, pos, name):
-        sound.setSource(QUrl(sfx_path + name + ".wav"))
-        sound.setVolume(self.get_sound_volume(pos=pos))
-        sound.play()
-        self.sounds.append((sound, pos))
-        self.sfx_start_threads -= 1
 
 
 class HeadlessSound(SoundManager):

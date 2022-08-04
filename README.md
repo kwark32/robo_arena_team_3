@@ -2,19 +2,29 @@
 
 Python 3.9 + PyQt5 project
 
-#### Requirements:
-  - Python3.8+ (maybe lower can work too)
-  - PyQt5
-  - PyBox2D: `pip3 install box2d-py`
+#### Setup:
+  - Install pipenv:
+  - - `pip3 install pipenv` or
+  - - `sudo apt-get install pipenv` (on Linux)
+  - Clone git repository:
+  - - SSH: `git clone git@github.com:kwark32/robo_arena_team_3.git`
+  - - HTTPS (not recommended): `git clone https://github.com/kwark32/robo_arena_team_3.git`
+  - In project root, setup pipenv:
+  - - `pipenv install`
+  - Run the game:
+  - - `pipenv shell` + `python main.py` or
+  - - `pipenv run python main.py` or
+  - - PyCharm: Add pipenv as python interpreter (if you have to select a pipenv exe,<br>
+      on Linux & Mac the pip installed one is at `/home/.local/bin/pipenv`). Then select this<br>
+      interpreter for the project run configuration.
 
 #### Project agreements:
 
 We have a maximum line length of 120 chars.<br>
-To test your current files on flake8, type<br>
+To test your current files on flake8 (on Linux & Mac):<br>
 `flake8 . --count --max-line-length=120`<br>
-(on Linux & Mac).
 
-Commit messages start with a big letter and are in past tense.
+Commit messages start with capital letter and are in past tense.
 
 Tasks are assigned and decisions tracked via the Task Project under "Projects"
 

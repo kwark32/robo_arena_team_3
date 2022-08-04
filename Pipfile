@@ -9,9 +9,12 @@ pyqt5 = "*"
 pyqt5-sip = "*"
 pillow = "*"
 numpy = "*"
+wheel = "*"
+setuptools = "*"
 
 [dev-packages]
 flake8 = "*"
+pipenv-setup = "*"
 
 [requires]
 python_version = "3.9"

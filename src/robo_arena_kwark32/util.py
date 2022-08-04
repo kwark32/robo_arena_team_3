@@ -147,7 +147,7 @@ def limit(value, lower, upper):
     return value
 
 
-_main_path = dirname(abspath(__file__)) + "/"
+_main_path = dirname(abspath(__file__)[:-len(__name__ + ".py")] + "../../") + "/"
 
 
 def get_main_path():

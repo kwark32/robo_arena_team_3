@@ -1,7 +1,5 @@
 # Robo Arena Team 3 (Die luftigen Kwarkbällchen und der UI Designer)
 
-Python 3.9 + PyQt5 project
-
 #### Setup:
   - Install pipenv:
   - - `pip3 install pipenv` or

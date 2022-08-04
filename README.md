@@ -68,6 +68,13 @@ See our Task Project page.
 Contributions:
 
 kwark32 (Matts):
+- Robot Effects
+- Tile Effects
+- Power Up Effects
+- Power Up Textures
+- PNG to Arena Converter
+- Arena Design
+- Robot AI
 
 kweiss1 (Kevin):
 - Soundtrack

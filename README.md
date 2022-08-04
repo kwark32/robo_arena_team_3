@@ -88,7 +88,7 @@ kweiss1 (Kevin):
 airzocker (Felix):
 - The Rest (general aspects:)
 - Code design/model
-- Arena loading
+- JSON Arena loader
 - Robots, Weapons, Bullets
 - Physics
 - Most drawing

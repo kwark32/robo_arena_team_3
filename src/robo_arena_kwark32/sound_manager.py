@@ -1,4 +1,3 @@
-import time
 import random
 
 from globals import Settings, GameInfo

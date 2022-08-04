@@ -27,7 +27,6 @@ if not GameInfo.is_headless:
     from PyQt5.QtWidgets import QOpenGLWidget, QApplication, QDesktopWidget
     from PyQt5.QtCore import Qt, QResource
 
-
     class ArenaWindow(QOpenGLWidget):
         def __init__(self):
             super().__init__()

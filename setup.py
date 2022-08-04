@@ -6,7 +6,7 @@ Modified by Madoshakalaka@Github (dependency links added)
 """
 
 # Always prefer setuptools over distutils
-from setuptools import setup, find_packages
+from setuptools import setup  # , find_packages
 from os import path
 
 # io.open is needed for projects that support Python 2.7
@@ -110,9 +110,9 @@ setup(
     # the `py_modules` argument instead as follows, which will expect a file
     # called `my_module.py` to exist:
     #
-    #   py_modules=["my_module"],
+    py_modules=["src/robo_arena_kwark32/main.py"],
     #
-    packages=find_packages(exclude=["contrib", "docs", "tests"]),  # Required
+    # packages=find_packages(exclude=["contrib", "docs", "tests"]),  # Required
     # Specify which Python versions you support. In contrast to the
     # 'Programming Language' classifiers above, 'pip install' will check this
     # and refuse to install the project if the version does not match. If you
@@ -125,7 +125,8 @@ setup(
     #
     # For an analysis of "install_requires" vs pip's requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=['box2d-py==2.3.8', 'numpy==1.23.1', 'pillow==9.2.0', 'pyqt5==5.15.7', 'pyqt5-qt5==5.15.2', 'pyqt5-sip==12.11.0', 'setuptools==63.4.1', 'wheel==0.37.1'],  # Optional
+    install_requires=['box2d-py==2.3.8', 'numpy==1.23.1', 'pillow==9.2.0', 'pyqt5==5.15.7', 'pyqt5-qt5==5.15.2',
+                      'pyqt5-sip==12.11.0', 'setuptools==63.4.1', 'wheel==0.37.1'],  # Optional
     # List additional groups of dependencies here (e.g. development
     # dependencies). Users will be able to install these using the "extras"
     # syntax, for example:
@@ -134,7 +135,35 @@ setup(
     #
     # Similar to `install_requires` above, these must be valid existing
     # projects.
-    extras_require={"dev": ["attrs==22.1.0; python_version >= '3.5'", 'box2d-py==2.3.8', 'build==0.8.0', 'cached-property==1.5.2', 'cerberus==1.3.4', "certifi==2022.6.15; python_full_version >= '3.6.0'", "chardet==5.0.0; python_full_version >= '3.6.0'", "charset-normalizer==2.1.0; python_full_version >= '3.6.0'", "colorama==0.4.5; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4'", 'distlib==0.3.5', 'flake8==5.0.4', "idna==3.3; python_version >= '3.5'", "mccabe==0.7.0; python_full_version >= '3.6.0'", 'numpy==1.23.1', 'orderedmultidict==1.0.1', "packaging==20.9; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'", "pep517==0.13.0; python_full_version >= '3.6.0'", 'pillow==9.2.0', "pip==22.2.2; python_version >= '3.7'", "pip-shims==0.7.3; python_full_version >= '3.6.0'", 'pipenv-setup==3.2.0', 'pipfile==0.0.2', "platformdirs==2.5.2; python_version >= '3.7'", "plette[validation]==0.2.3; python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2, 3.3'", "pycodestyle==2.9.1; python_full_version >= '3.6.0'", "pyflakes==2.5.0; python_full_version >= '3.6.0'", "pyparsing==2.4.7; python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2, 3.3'", 'pyqt5==5.15.7', 'pyqt5-qt5==5.15.2', 'pyqt5-sip==12.11.0', "python-dateutil==2.8.2; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'", "requests==2.28.1; python_version >= '3.7' and python_version < '4'", "requirementslib==1.6.9; python_version >= '3.7'", 'setuptools==63.4.1', "six==1.16.0; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'", "toml==0.10.2; python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2, 3.3'", "tomli==2.0.1; python_version < '3.11'", "tomlkit==0.11.1; python_version < '4' and python_full_version >= '3.6.0'", "urllib3==1.26.11; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4, 3.5' and python_version < '4'", "vistir==0.5.6; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'", 'wheel==0.37.1',]},  # Optional
+    extras_require={
+        "dev":
+        ["attrs==22.1.0; python_version >= '3.5'", 'box2d-py==2.3.8', 'build==0.8.0',
+         'cached-property==1.5.2', 'cerberus==1.3.4',
+         "certifi==2022.6.15; python_full_version >= '3.6.0'",
+         "chardet==5.0.0; python_full_version >= '3.6.0'",
+         "charset-normalizer==2.1.0; python_full_version >= '3.6.0'",
+         "colorama==0.4.5; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4'",
+         'distlib==0.3.5', 'flake8==5.0.4', "idna==3.3; python_version >= '3.5'",
+         "mccabe==0.7.0; python_full_version >= '3.6.0'", 'numpy==1.23.1', 'orderedmultidict==1.0.1',
+         "packaging==20.9; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
+         "pep517==0.13.0; python_full_version >= '3.6.0'", 'pillow==9.2.0',
+         "pip==22.2.2; python_version >= '3.7'", "pip-shims==0.7.3; python_full_version >= '3.6.0'",
+         'pipenv-setup==3.2.0', 'pipfile==0.0.2', "platformdirs==2.5.2; python_version >= '3.7'",
+         "plette[validation]==0.2.3; python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2, 3.3'",
+         "pycodestyle==2.9.1; python_full_version >= '3.6.0'", "pyflakes==2.5.0; python_full_version >= '3.6.0'",
+         "pyparsing==2.4.7; python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2, 3.3'", 'pyqt5==5.15.7',
+         'pyqt5-qt5==5.15.2', 'pyqt5-sip==12.11.0',
+         "python-dateutil==2.8.2; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
+         "requests==2.28.1; python_version >= '3.7' and python_version < '4'",
+         "requirementslib==1.6.9; python_version >= '3.7'", 'setuptools==63.4.1',
+         "six==1.16.0; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
+         "toml==0.10.2; python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2, 3.3'",
+         "tomli==2.0.1; python_version < '3.11'",
+         "tomlkit==0.11.1; python_version < '4' and python_full_version >= '3.6.0'",
+         "urllib3==1.26.11; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3, 3.4, 3.5'\
+         and python_version < '4'",
+         "vistir==0.5.6; python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'", 'wheel==0.37.1']
+     },  # Optional
     # If there are data files included in your packages that need to be
     # installed, specify them here.
     #

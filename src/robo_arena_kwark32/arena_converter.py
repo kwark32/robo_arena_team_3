@@ -3,16 +3,17 @@ try:
 except ImportError:
     import json
 
+from os import path
 from PIL import Image
 from arena import Arena, tile_type_dict
-from util import Vector, get_main_path
+from util import Vector, get_data_path
 from constants import MAP_FORMAT_VERSION
 from globals import GameInfo
 from animation import Animation
 
 
-json_map_path = get_main_path() + "arenas/json/"
-png_map_path = get_main_path() + "arenas/png/"
+json_map_path = path.join(get_data_path(), "arenas", "json")
+png_map_path = path.join(get_data_path(), "arenas", "png")
 
 
 def add_physics(arena, physics_world):
@@ -57,9 +58,9 @@ def add_physics(arena, physics_world):
 
 def load_map(file, physics_world=None):
     if file.endswith("json"):
-        arena = load_map_json(json_map_path + file)
+        arena = load_map_json(path.join(json_map_path, file))
     elif file.endswith("png"):
-        arena = load_map_png(png_map_path + file)
+        arena = load_map_png(path.join(png_map_path, file))
     else:
         return None
 
@@ -73,7 +74,7 @@ def load_map(file, physics_world=None):
                     pos.mult(GameInfo.arena_tile_size)
                     pos.add_scalar(GameInfo.arena_tile_size / 2)
                     pos.round()
-                    anim = Animation("animated_tiles/" + tile.name, pos, single_vfx=False)
+                    anim = Animation(path.join("animated_tiles", tile.name), pos, single_vfx=False)
                     anim.play(True, 0)
                     arena.tile_animations.append(anim)
         arena.calc_tile_anim_groups()

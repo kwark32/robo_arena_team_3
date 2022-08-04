@@ -1,6 +1,6 @@
 import math
 
-from os.path import dirname, abspath
+from os.path import dirname, abspath, join
 from camera import CameraState
 from globals import GameInfo
 
@@ -147,11 +147,11 @@ def limit(value, lower, upper):
     return value
 
 
-_main_path = dirname(abspath(__file__)[:-len(__name__ + ".py")] + "../../") + "/"
+_data_path = join(dirname(dirname(dirname(abspath(__file__)[:-len(__name__ + ".py")]))), "data", "robo_arena_kwark32")
 
 
-def get_main_path():
-    return _main_path
+def get_data_path():
+    return _data_path
 
 
 def rad_to_deg(value):

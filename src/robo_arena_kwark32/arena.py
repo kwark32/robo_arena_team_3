@@ -5,6 +5,7 @@ import powerups
 import numpy as np
 import pixmap_resource_manager as prm
 
+from os import path
 from globals import GameInfo
 from camera import CameraState
 from util import Vector, painter_transform_with_rot, is_object_on_screen
@@ -14,8 +15,8 @@ if not GameInfo.is_headless:
     from PyQt5.QtGui import QPixmap, QPainter
 
 
-tile_texture_path = "textures/static_tiles/"
-animated_tiles_texture_path = "textures/animated_tiles/"
+tile_texture_path = path.join("textures", "static_tiles")
+animated_tiles_texture_path = path.join("textures", "animated_tiles")
 
 
 class TileType:
@@ -40,7 +41,7 @@ class TileType:
         return self._texture_size
 
     def load_image(self):
-        filename = tile_texture_path + self.name
+        filename = path.join(tile_texture_path, self.name)
         self._texture = prm.get_pixmap(filename)
         self._texture_size = Vector(self._texture.width(), self._texture.height())
         if self._texture_size.x == 0 or self._texture_size.y == 0:

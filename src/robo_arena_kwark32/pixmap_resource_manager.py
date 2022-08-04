@@ -1,5 +1,6 @@
+from os import path
 from globals import GameInfo
-from util import get_main_path
+from util import get_data_path
 
 if not GameInfo.is_headless:
     from PyQt5.QtGui import QPixmap
@@ -12,7 +13,7 @@ def get_pixmap(name, copy=False):
     pixmap = loaded_pixmaps.get(name)
 
     if pixmap is None:
-        pixmap = QPixmap(get_main_path() + name + ".png")
+        pixmap = QPixmap(path.join(get_data_path(), name + ".png"))
         loaded_pixmaps[name] = pixmap
 
     if copy:

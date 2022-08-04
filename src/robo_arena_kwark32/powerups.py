@@ -2,11 +2,12 @@ import effects
 
 import pixmap_resource_manager as prm
 
+from os import path
 from globals import GameInfo
 from util import Vector, draw_img_with_rot
 
 
-power_up_texture_path = "textures/power_ups/"
+power_up_texture_path = path.join("textures", "power_ups")
 
 
 class PowerUp:
@@ -35,7 +36,7 @@ class PowerUp:
         return self._texture_size
 
     def load_image(self):
-        filename = power_up_texture_path + self.power_up_type.name
+        filename = path.join(power_up_texture_path, self.power_up_type.name)
 
         self._texture = prm.get_pixmap(filename)
         self._texture_size = Vector(self._texture.width(), self._texture.height())

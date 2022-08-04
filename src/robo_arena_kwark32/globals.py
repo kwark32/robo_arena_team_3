@@ -5,6 +5,7 @@ try:
 except ImportError:
     import json
 
+from os import path
 from enum import IntEnum
 from codecs import encode, decode
 
@@ -73,7 +74,7 @@ class Settings:
 
         self.highscore = 0
 
-        self.filename = main_path + "settings.json"
+        self.filename = path.join(main_path, "settings.json")
 
         self.load()
 

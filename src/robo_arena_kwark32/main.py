@@ -13,8 +13,9 @@ for arg in headless_args:
 headless_args.clear()
 
 if True:
+    from os import path
     from camera import CameraState
-    from util import get_main_path, Vector
+    from util import get_data_path, Vector
     from constants import FIXED_DELTA_TIME_NS
     from sound_manager import SoundManager, HeadlessSound
 
@@ -135,15 +136,15 @@ def main():
 
         app = QApplication(sys.argv)
 
-        QResource.registerResource(get_main_path() + "resources.rcc")
+        QResource.registerResource(path.join(get_data_path(), "resources.rcc"))
 
-        Settings.instance = Settings(get_main_path())
+        Settings.instance = Settings(get_data_path())
         SoundManager.instance = SoundManager()
 
         window = ArenaWindow()
 
-        press_start_font_id = QFontDatabase.addApplicationFont(get_main_path()
-                                                               + "fonts/press_start_2p/PressStart2P-Regular.ttf")
+        press_start_font_id = QFontDatabase.addApplicationFont(path.join(get_data_path(), "fonts",
+                                                                         "press_start_2p", "PressStart2P-Regular.ttf"))
         press_start_font_str = QFontDatabase.applicationFontFamilies(press_start_font_id)[0]
 
         Fonts.fps_font = QFont(press_start_font_str)
@@ -174,7 +175,7 @@ def main():
         sys.exit(0)
 
     else:
-        Settings.instance = Settings(get_main_path())
+        Settings.instance = Settings(get_data_path())
         SoundManager.instance = HeadlessSound()
 
         world_sim = ServerWorldSim()

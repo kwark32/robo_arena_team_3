@@ -2,6 +2,7 @@ import math
 
 import pixmap_resource_manager as prm
 
+from os import path
 from transform import SimBody
 from weapons import TankCannonWeapon, weapon_classes
 from util import Vector, draw_img_with_rot, painter_transform_with_rot
@@ -19,7 +20,7 @@ if not GameInfo.is_headless:
     from PyQt5.QtCore import QPoint
 
 
-robot_texture_path = "textures/moving/tanks/"
+robot_texture_path = path.join("textures", "moving", "tanks")
 
 
 class RobotInfo:
@@ -149,17 +150,17 @@ class Robot:
     @property
     def body_texture(self):
         if self._body_texture is None:
-            self._body_texture = prm.get_pixmap(robot_texture_path + "tank_red_body")
+            self._body_texture = prm.get_pixmap(path.join(robot_texture_path, "tank_red_body"))
             if self.is_player:
-                self._body_texture = prm.get_pixmap(robot_texture_path + "tank_blue_body")
+                self._body_texture = prm.get_pixmap(path.join(robot_texture_path, "tank_blue_body"))
         return self._body_texture
 
     @property
     def turret_texture(self):
         if self._turret_texture is None:
-            self._turret_texture = prm.get_pixmap(robot_texture_path + "tank_red_turret")
+            self._turret_texture = prm.get_pixmap(path.join(robot_texture_path, "tank_red_turret"))
             if self.is_player:
-                self._turret_texture = prm.get_pixmap(robot_texture_path + "tank_blue_turret")
+                self._turret_texture = prm.get_pixmap(path.join(robot_texture_path, "tank_blue_turret"))
         return self._turret_texture
 
     def draw(self, qp, delta_time):
@@ -347,11 +348,11 @@ class Robot:
         if self is self.world_sim.local_player_robot:
             GameInfo.local_player_score += self.kills * GameInfo.score_per_kill
 
-        explosion_path = "vfx/"
+        explosion_path = "vfx"
         if self.is_player:
-            explosion_path += "tank_blue_explosion"
+            explosion_path = path.join(explosion_path, "tank_blue_explosion")
         else:
-            explosion_path += "tank_red_explosion"
+            explosion_path = path.join(explosion_path, "tank_red_explosion")
         Animation(explosion_path, self.sim_body.position, rotation=self.sim_body.rotation)
         self.is_dead = True
         self.last_death_frame = self.world_sim.physics_frame_count

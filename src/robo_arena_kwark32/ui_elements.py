@@ -2,6 +2,7 @@ import math
 
 import pixmap_resource_manager as prm
 
+from os import path
 from util import Vector, is_point_inside_rect, rad_to_deg, limit
 from globals import Fonts, GameInfo
 from constants import CARET_BLINK_RATE_NS
@@ -13,7 +14,7 @@ if not GameInfo.is_headless:
     from PyQt5.QtWidgets import QApplication
 
 
-ui_element_texture_path = "textures/ui/menu/"
+ui_element_texture_path = path.join("textures", "ui", "menu")
 
 
 # absolute base class
@@ -84,9 +85,9 @@ class UIElement:
 
     def load_image(self, name=None):
         if name is None:
-            filename = ui_element_texture_path + self.element_class.name
+            filename = path.join(ui_element_texture_path, self.element_class.name)
         else:
-            filename = ui_element_texture_path + name
+            filename = path.join(ui_element_texture_path, name)
         texture = prm.get_pixmap(filename)
         size = Vector(texture.width(), texture.height())
         if size.x == 0 or size.y == 0:
@@ -412,7 +413,7 @@ class Menu:
 
         self.bg_pixmap = None
         if bg_texture_name is not None:
-            self.bg_pixmap = prm.get_pixmap(ui_element_texture_path + bg_texture_name)
+            self.bg_pixmap = prm.get_pixmap(path.join(ui_element_texture_path, bg_texture_name))
 
         self.shift_key_pressed = False
         self.ctrl_key_pressed = False

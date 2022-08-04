@@ -7,7 +7,7 @@ Modified by Madoshakalaka@Github (dependency links added)
 
 # Always prefer setuptools over distutils
 from setuptools import setup  # , find_packages
-from os import path
+from os import path, walk
 
 # io.open is needed for projects that support Python 2.7
 # It ensures open() defaults to text mode with universal newlines,
@@ -20,6 +20,16 @@ here = path.abspath(path.dirname(__file__))
 # Get the long description from the README file
 with open(path.join(here, "README.md"), encoding="utf-8") as f:
     long_description = f.read()
+
+data_dirs = [path.join("data", "robo_arena_kwark32", "textures"),
+             path.join("data", "robo_arena_kwark32", "sounds"),
+             path.join("data", "robo_arena_kwark32", "arenas"),
+             path.join("data", "robo_arena_kwark32", "fonts")]
+additional_files = [("robo_arena_kwark32", [path.join("data", "robo_arena_kwark32", "resources.rcc")])]
+for d in data_dirs:
+    for (p, directories, filenames) in walk(d):
+        for filename in filenames:
+            additional_files.append((p, [path.join(p, filename)]))
 
 # Arguments marked as "Required" below must be included for upload to PyPI.
 # Fields marked as "Optional" may be commented out.
@@ -110,9 +120,12 @@ setup(
     # the `py_modules` argument instead as follows, which will expect a file
     # called `my_module.py` to exist:
     #
-    py_modules=["src/robo_arena_kwark32/main.py"],
+    # py_modules=["main.py"],
     #
     # packages=find_packages(exclude=["contrib", "docs", "tests"]),  # Required
+    packages=["robo_arena_kwark32"],
+    package_dir={"robo_arena_kwark32": path.join("src", "robo_arena_kwark32")},
+    data_files=additional_files,
     # Specify which Python versions you support. In contrast to the
     # 'Programming Language' classifiers above, 'pip install' will check this
     # and refuse to install the project if the version does not match. If you

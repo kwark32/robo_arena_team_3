@@ -1,11 +1,12 @@
 import random
 
+from os import path
 from globals import Settings, GameInfo
 from constants import HALF_FALLOFF_DIST, MAX_AUDIO_DIST, SFX_AUDIO_SOURCES
 
 
-sfx_path = "qrc:" + "/sounds/sfx/"
-music_path = "qrc:" + "/sounds/music/"
+sfx_path = path.join("qrc:", "sounds", "sfx")
+music_path = path.join("qrc:", "sounds", "music")
 
 music_names = ["soundtrack-1_normal", "soundtrack-2_boss"]
 music_volume_factors = {"soundtrack-1_normal": 0.36, "soundtrack-2_boss": 0.75}
@@ -25,7 +26,7 @@ if not GameInfo.is_headless:
                 sound, name, pos = SoundManager.instance.sfx_start_list.pop(0)
                 SoundManager.instance.sfx_start_list_mutex.unlock()
 
-                sound.setSource(QUrl(sfx_path + name + ".wav"))
+                sound.setSource(QUrl(path.join(sfx_path, name + ".wav")))
                 sound.setVolume(SoundManager.instance.get_sound_volume(pos=pos))
                 sound.play()
 
@@ -106,7 +107,7 @@ class SoundManager:
             self.music = None
 
         self.music = QSoundEffect()
-        self.music.setSource(QUrl(music_path + name + ".wav"))
+        self.music.setSource(QUrl(path.join(music_path, name + ".wav")))
         if once:
             self.music.setLoopCount(1)
         else:

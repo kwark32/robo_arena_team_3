@@ -147,7 +147,7 @@ def limit(value, lower, upper):
     return value
 
 
-_data_path = join(dirname(dirname(dirname(abspath(__file__)[:-len(__name__ + ".py")]))), "data", "robo_arena_kwark32")
+_data_path = join(dirname(abspath(__file__)[:-len(__name__ + ".py")]), "resources")
 
 
 def get_data_path():

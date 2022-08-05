@@ -1,0 +1,3 @@
+recursive-include robo_arena_kwark32/resources *
+recursive-exclude robo_arena_kwark32/resources/resource_gen *
+exclude robo_arena_kwark32/resources/settings.json

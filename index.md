@@ -13,8 +13,8 @@ The main menu has our Robo Arena logo and 5 buttons: Single Player, Online, Loca
 
 ![Summary](/Summary/main_menu.png)
 
-The single player, online and local buttons start an offline, online and local game respectively.<br>
-The settings include sliders for the master, sound effects and music volume.
+The single player, online and local buttons start an offline, online game respectively (local doesn't work so far).<br>
+The settings include sliders for the master, sound effects and music volume and a fullscreen checkbox.
 
 ![Summary](/Summary/settings.png)
 
@@ -23,10 +23,10 @@ The settings include sliders for the master, sound effects and music volume.
 Gameplay:
 
 The player controls a tank with a turret on top.<br>
-The tank is moved with the WASD keys and the mouse is used to aim and shoot the turrets.<br>
+The tank is moved with the WASD keys and the mouse is used to aim and shoot the turret.<br>
 On the map there are several enemy tanks which will find and shoot the player.<br>
 The enemies use an A*-algorithm to locate and follow the player and avoid different tiles based on their priority.<br>
-All robots in the arena (players and AI robots) have 1000HP maximum health and deal 250dmg with a bullet from their tank cannon so it usually takes 4 hits to destroy a robot.<br>
+All robots in the arena (players and AI robots) have 1000HP maximum health and deal 250dmg with a bullet from their tank cannon, so it usually takes 4 hits to destroy a robot.<br>
 However the health and damage of the robots in the arena can not only be influenced by other robots, but by the tile effects and the power up effects of the arena as well.<br>
 The current health of a player is always visually displayed as a health bar above the robot.
 
@@ -104,8 +104,21 @@ General Class Diagram:
 
 ![Summary](/Summary/class.png)
 
+We also have sequence diagrams, but they all are not 100% complete/accurate, because of time, and also it would be even mor complicated.
 
+General Sequence Diagram:
 
+![Summary](/Summary/general_seq-1.png)
+
+![Summary](/Summary/general_seq-2.png)
+
+Server networking Sequence Diagram:
+
+![Summary](/Summary/server_seq.png)
+
+Client networking Sequence Diagram:
+
+![Summary](/Summary/client_seq.png)
 
 ## Weeks 11 & 12
 

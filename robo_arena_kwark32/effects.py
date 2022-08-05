@@ -5,6 +5,7 @@ from globals import GameInfo
 
 
 class RobotEffect:
+    """Base class for robot effects."""
     id = 0
 
     def __init__(self, duration):
@@ -40,6 +41,7 @@ class RobotEffect:
 
 
 class SpeedEffect(RobotEffect):
+    """Parent class for movement speed related effects."""
     id = 1
     speed_factor = 1
     ang_speed_factor = 1
@@ -204,6 +206,7 @@ class Portal2TileEffect(RobotEffect):
 
 
 def apply_portal_effect(world_sim, robot, portal_type_1=True):
+    """Applies portal tile effect for portal_type_1 or portal_type_2."""
     if portal_type_1:
         travel_damage = random.randrange(Portal1TileEffect.travel_damage_min, Portal1TileEffect.travel_damage_max, 1)
     else:
@@ -239,6 +242,7 @@ def apply_portal_effect(world_sim, robot, portal_type_1=True):
 
 
 class HealthEffect(RobotEffect):
+    """Changes health on apply."""
     id = 10
 
     def __init__(self, duration=(FIXED_DELTA_TIME / 2), change_per_second=0, instant_change=0):
@@ -275,6 +279,7 @@ class HealthEffect(RobotEffect):
 
 
 class DamageEffect(RobotEffect):
+    """Causes damage increase on apply."""
     id = 11
 
     def __init__(self, duration=(FIXED_DELTA_TIME / 2), damage_factor=1):

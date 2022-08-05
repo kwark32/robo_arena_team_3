@@ -17,6 +17,7 @@ png_map_path = path.join(get_data_path(), "arenas", "png")
 
 
 def add_physics(arena, physics_world):
+    """Creates colliders for wall tiles in the arena."""
     colliders = []
     for y in range(arena.tile_count.y):
         row = []
@@ -57,6 +58,7 @@ def add_physics(arena, physics_world):
 
 
 def load_map(file, physics_world=None):
+    """Creates arena from json or png file."""
     if file.endswith("json"):
         arena = load_map_json(path.join(json_map_path, file))
     elif file.endswith("png"):
@@ -86,6 +88,7 @@ def load_map(file, physics_world=None):
 
 
 def load_map_json(file):
+    """Creates arena from json file."""
     with open(file, "r") as f:
         map_text = f.read()
     map_json = json.loads(map_text)
@@ -120,6 +123,7 @@ def load_map_json(file):
     return arena
 
 
+# tile type colours for conversion from png file
 tile_type_colors = {
     (150, 150, 150): "ground",
     (0, 0, 0): "wall",
@@ -135,6 +139,7 @@ tile_type_colors = {
 
 
 def load_map_png(file):
+    """Creates arena from png file."""
     im = Image.open(file)
     pix = im.load()
     arena = Arena(Vector(im.size[0], im.size[1]))

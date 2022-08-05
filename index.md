@@ -3,9 +3,7 @@
 Idea:
 
 Our game was inspired by retro pixelated games.<br>
-The sprites and tiles are all pixel art and the soundtrack and sound effects are also 8-bit. 
-
-
+The sprites and tiles are all pixel art and the soundtrack and sound effects are also 8-bit.
 
 Main Menu:
 
@@ -119,6 +117,10 @@ Server networking Sequence Diagram:
 Client networking Sequence Diagram:
 
 ![Summary](/Summary/client_seq.png)
+
+And finally, here is our 2.5min demo video showcasing most of the games content & functionality:
+
+<iframe width="1024" height="576" src="https://www.youtube.com/embed/O7xxX_GBWKM" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 
 ## Weeks 11 & 12
 

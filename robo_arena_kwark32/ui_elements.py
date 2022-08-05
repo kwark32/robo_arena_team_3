@@ -1,17 +1,20 @@
 import math
 
-from util import Vector, get_main_path, is_point_inside_rect, rad_to_deg, limit
+import pixmap_resource_manager as prm
+
+from os import path
+from util import Vector, is_point_inside_rect, rad_to_deg, limit
 from globals import Fonts, GameInfo
 from constants import CARET_BLINK_RATE_NS
 from camera import CameraState
 
 if not GameInfo.is_headless:
     from PyQt5.QtCore import QPoint, Qt
-    from PyQt5.QtGui import QPixmap, QFontMetricsF, QPen
+    from PyQt5.QtGui import QFontMetricsF, QPen
     from PyQt5.QtWidgets import QApplication
 
 
-ui_element_texture_path = get_main_path() + "/textures/ui/menu/"
+ui_element_texture_path = path.join("textures", "ui", "menu")
 
 
 # absolute base class
@@ -82,14 +85,14 @@ class UIElement:
 
     def load_image(self, name=None):
         if name is None:
-            filename = ui_element_texture_path + self.element_class.name + ".png"
+            filename = path.join(ui_element_texture_path, self.element_class.name)
         else:
-            filename = ui_element_texture_path + name + ".png"
-        texture = QPixmap(filename)
+            filename = path.join(ui_element_texture_path, name)
+        texture = prm.get_pixmap(filename)
         size = Vector(texture.width(), texture.height())
         if size.x == 0 or size.y == 0:
             print("ERROR: texture for " + self.element_class.name
-                  + " has 0 size or is missing at " + filename + "!")
+                  + " has 0 size or is missing at " + filename + ".png!")
         if name is None:
             self._texture = texture
             self._texture_size = size
@@ -232,12 +235,12 @@ class TextField(UIElement):
 
         if len(self.text) > 0 or self.is_selected:
             qp.setPen(QPen(Fonts.text_field_color, 6))
-            qp.drawText(QPoint(self.top_left_corner.x + CameraState.x_offset + self.text_offset.x,
-                               self.top_left_corner.y + self.text_offset.y), draw_text)
+            qp.drawText(QPoint(round(self.top_left_corner.x + CameraState.x_offset + self.text_offset.x),
+                               round(self.top_left_corner.y + self.text_offset.y)), draw_text)
         else:
             qp.setPen(QPen(Fonts.text_field_default_color, 6))
-            qp.drawText(QPoint(self.top_left_corner.x + CameraState.x_offset + self.text_offset.x,
-                               self.top_left_corner.y + self.text_offset.y), self.placeholder_text)
+            qp.drawText(QPoint(round(self.top_left_corner.x + CameraState.x_offset + self.text_offset.x),
+                               round(self.top_left_corner.y + self.text_offset.y)), self.placeholder_text)
 
     def key_press(self, key):
         character = chr(0)
@@ -348,7 +351,7 @@ class UIText(UIElement):
 
         qp.setFont(self.font)
         qp.setPen(QPen(self.font_color, 6))
-        qp.drawText(self.position.x - (text_width / 2) + CameraState.x_offset, self.position.y, self.text)
+        qp.drawText(round(self.position.x - (text_width / 2) + CameraState.x_offset), round(self.position.y), self.text)
 
 
 # base class
@@ -380,8 +383,8 @@ class Checkbox(UIElement):
     def draw(self, qp):
         qp.setFont(self.font)
         qp.setPen(QPen(self.font_color, 6))
-        qp.drawText(self.position.x + self.header_offset_x + CameraState.x_offset,
-                    self.position.y + Checkbox.header_offset_y, self.checkbox_type.header_text)
+        qp.drawText(round(self.position.x + self.header_offset_x + CameraState.x_offset),
+                    round(self.position.y + Checkbox.header_offset_y), self.checkbox_type.header_text)
         qp.drawPixmap(round(self.top_left_corner.x + CameraState.x_offset), round(self.top_left_corner.y), self.texture)
         if self.checked:
             qp.drawPixmap(round(self.top_left_corner.x + CameraState.x_offset),
@@ -410,7 +413,7 @@ class Menu:
 
         self.bg_pixmap = None
         if bg_texture_name is not None:
-            self.bg_pixmap = QPixmap(ui_element_texture_path + bg_texture_name + ".png")
+            self.bg_pixmap = prm.get_pixmap(path.join(ui_element_texture_path, bg_texture_name))
 
         self.shift_key_pressed = False
         self.ctrl_key_pressed = False

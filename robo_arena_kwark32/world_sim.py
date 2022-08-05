@@ -6,8 +6,8 @@ from arena_converter import load_map
 from physics import PhysicsWorld
 from util import Vector, get_delta_time_s
 from globals import GameInfo, Settings
-from constants import FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_FIXED_TIMESTEPS, FIXED_FPS, RESPAWN_DELAY
-from constants import POWER_UPS_PER_S
+from constants import FIXED_DELTA_TIME, FIXED_DELTA_TIME_NS, MAX_FIXED_TIMESTEPS, FIXED_FPS, GAME_OVER_DELAY
+from constants import FRAMES_PER_POWER_UP
 from camera import CameraState
 from sound_manager import SoundManager
 
@@ -42,6 +42,8 @@ class WorldSim:
         self.fps = 0
         self.frame_times_since_ms = 0
         self.frame_time_ms = 0
+
+        self.did_fixed_update = False
 
     def clean_mem(self):
         CameraState.position = None
@@ -90,11 +92,14 @@ class WorldSim:
         dead_robots.clear()
 
     def fixed_update(self, delta_time, catchup_frame=False):
+        self.did_fixed_update = True
+
         self.catchup_frame = catchup_frame
+        SoundManager.instance.catchup_frame = catchup_frame
 
         random.seed(GameInfo.current_frame_seed)
 
-        if self.physics_frame_count % POWER_UPS_PER_S == 0:
+        if self.physics_frame_count % FRAMES_PER_POWER_UP == 0:
             self.arena.place_power_up(delta_time)
 
         for bullet in self.bullets:
@@ -127,6 +132,7 @@ class WorldSim:
         self.physics_frame_count += 1
         self.physics_world_time_ns = FIXED_DELTA_TIME_NS * self.physics_frame_count
 
+        SoundManager.instance.catchup_frame = False
         self.catchup_frame = False
 
     def update_times(self):
@@ -148,6 +154,8 @@ class WorldSim:
             self._last_fps_show_time = self.curr_time_ns
 
     def update_world(self):
+        self.did_fixed_update = False
+
         self.update_times()
 
         iterations = 0
@@ -216,7 +224,7 @@ class SPWorldSim(WorldSim):
                 Settings.instance.save()
 
         if (self.player_die_frame is not None and self.world_scene.active_menu is None
-                and self.physics_frame_count > self.player_die_frame + RESPAWN_DELAY):
+                and self.physics_frame_count > self.player_die_frame + GAME_OVER_DELAY):
             self.world_scene.switch_menu("game_over_menu")
 
     def spawn_random_enemy(self):

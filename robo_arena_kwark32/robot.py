@@ -1,8 +1,11 @@
 import math
 
+import pixmap_resource_manager as prm
+
+from os import path
 from transform import SimBody
-from weapons import TankCannon
-from util import Vector, get_main_path, draw_img_with_rot, painter_transform_with_rot
+from weapons import TankCannonWeapon, weapon_classes
+from util import Vector, draw_img_with_rot, painter_transform_with_rot
 from globals import GameInfo, Fonts
 from constants import FIXED_DELTA_TIME, MAX_ROBOT_HEALTH, DEBUG_MODE, ROBOT_COLLISION_SOUND_SPEED_FACTOR
 from constants import MIN_SOUND_DELAY_FRAMES, RESPAWN_DELAY
@@ -10,13 +13,14 @@ from robot_AI import RobotAI
 from sound_manager import SoundManager
 from arena import TileType
 from animation import Animation
+from effects import get_effect_from_data_list
 
 if not GameInfo.is_headless:
-    from PyQt5.QtGui import QPixmap, QPolygon
+    from PyQt5.QtGui import QPolygon
     from PyQt5.QtCore import QPoint
 
 
-robot_texture_path = get_main_path() + "/textures/moving/tanks/"
+robot_texture_path = path.join("textures", "moving", "tanks")
 
 
 class RobotInfo:
@@ -25,13 +29,11 @@ class RobotInfo:
         self.player_id = robot.robot_id
         self.next_bullet_id = robot.next_bullet_id
         self.health = robot.health
-        self.weapon_class = robot.weapon.weapon_type
+        self.weapon_class_id = robot.weapon.weapon_type.id
         self.last_shot_frame = robot.weapon.last_shot_frame
         self.player_name = robot.player_name
         self.last_position = robot.last_position.as_tuple()
-        self.effects = []
-        for effect in robot.effects:
-            self.effects.append(effect.copy())
+        self.effects = [e.get_data_list() for e in robot.effects]
         self.effect_data = robot.effect_data
         self.input = robot.input
         self.kills = robot.kills
@@ -45,12 +47,13 @@ class RobotInfo:
         robot.sim_body.set_tuples(self.robot_body)
         robot.extrapolation_body.set(robot.sim_body)
         robot.revert_effects()
-        robot.effects = self.effects
+        robot.effects = [get_effect_from_data_list(e, robot.world_sim) for e in self.effects]
         robot.effect_data = self.effect_data
         robot.health = self.health
         robot.kills = self.kills
-        if robot.weapon is None or robot.weapon.weapon_type is not self.weapon_class:
-            robot.weapon = self.weapon_class()
+        if robot.weapon is None or robot.weapon.weapon_type.id != self.weapon_class_id:
+            weapon_class = weapon_classes[self.weapon_class_id]
+            robot.weapon = weapon_class()
         robot.weapon.last_shot_frame = self.last_shot_frame
         robot.last_position = Vector(self.last_position[0], self.last_position[1])
         robot.forward_velocity_goal = 0
@@ -67,11 +70,6 @@ class RobotInfo:
 
 
 class Robot:
-    max_velocity = 120
-    max_ang_velocity = 4
-    max_accel = 200
-    max_ang_accel = 12
-
     size = Vector(32, 32)
     turret_texture_center_offset = Vector(0, 10)
 
@@ -90,10 +88,10 @@ class Robot:
 
         self.player_name = player_name
 
-        self.max_velocity = Robot.max_velocity
-        self.max_ang_velocity = Robot.max_ang_velocity
-        self.max_accel = Robot.max_accel
-        self.max_ang_accel = Robot.max_ang_accel
+        self.max_velocity = GameInfo.robot_max_velocity
+        self.max_ang_velocity = GameInfo.robot_max_ang_velocity
+        self.max_accel = GameInfo.robot_max_accel
+        self.max_ang_accel = GameInfo.robot_max_ang_accel
 
         self.sim_body = SimBody(position=position, rotation=rotation,
                                 max_velocity=self.max_velocity, max_ang_velocity=self.max_ang_velocity,
@@ -127,7 +125,7 @@ class Robot:
         self.physics_body = None
         self.create_physics_body()
 
-        self.weapon = TankCannon(self.world_sim)
+        self.weapon = TankCannonWeapon(self.world_sim)
         self.damage_factor = 1
         self.bullet_resistance_factor = 1
 
@@ -152,17 +150,17 @@ class Robot:
     @property
     def body_texture(self):
         if self._body_texture is None:
-            self._body_texture = QPixmap(robot_texture_path + "tank_red_body.png")
+            self._body_texture = prm.get_pixmap(path.join(robot_texture_path, "tank_red_body"))
             if self.is_player:
-                self._body_texture = QPixmap(robot_texture_path + "tank_blue_body.png")
+                self._body_texture = prm.get_pixmap(path.join(robot_texture_path, "tank_blue_body"))
         return self._body_texture
 
     @property
     def turret_texture(self):
         if self._turret_texture is None:
-            self._turret_texture = QPixmap(robot_texture_path + "tank_red_turret.png")
+            self._turret_texture = prm.get_pixmap(path.join(robot_texture_path, "tank_red_turret"))
             if self.is_player:
-                self._turret_texture = QPixmap(robot_texture_path + "tank_blue_turret.png")
+                self._turret_texture = prm.get_pixmap(path.join(robot_texture_path, "tank_blue_turret"))
         return self._turret_texture
 
     def draw(self, qp, delta_time):
@@ -225,9 +223,10 @@ class Robot:
 
         tile_position = self.sim_body.position.copy()
         tile_position.div(GameInfo.arena_tile_size)
-        tile_position.round()
-        if self.world_sim.arena.power_ups[tile_position.y][tile_position.x] is not None:
-            self.world_sim.arena.power_ups[tile_position.y][tile_position.x].apply(self)
+        tile_position.floor()
+        power_up = self.world_sim.arena.power_ups.get((tile_position.x, tile_position.y))
+        if power_up is not None:
+            power_up.apply(self)
 
         current_tile = self.get_center_tile()
         if current_tile.effect_class is not None:
@@ -349,11 +348,11 @@ class Robot:
         if self is self.world_sim.local_player_robot:
             GameInfo.local_player_score += self.kills * GameInfo.score_per_kill
 
-        explosion_path = "vfx/"
+        explosion_path = "vfx"
         if self.is_player:
-            explosion_path += "tank_blue_explosion"
+            explosion_path = path.join(explosion_path, "tank_blue_explosion")
         else:
-            explosion_path += "tank_red_explosion"
+            explosion_path = path.join(explosion_path, "tank_red_explosion")
         Animation(explosion_path, self.sim_body.position, rotation=self.sim_body.rotation)
         self.is_dead = True
         self.last_death_frame = self.world_sim.physics_frame_count
@@ -367,6 +366,7 @@ class Robot:
         self.create_physics_body()
         self.revert_effects()
         self.effects.clear()
+        self.effect_data.clear()
         self.health = self.max_health
         self.sim_body.reset(position=Vector(self.world_sim.arena.size.x / 2, self.world_sim.arena.size.y / 2),
                             rotation=0)

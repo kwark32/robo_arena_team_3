@@ -1,21 +1,20 @@
+import pixmap_resource_manager as prm
+
+from os import path
 from transform import SimpleBody
-from util import Vector, get_main_path, draw_img_with_rot, limit_rot
-from globals import GameInfo
+from util import Vector, draw_img_with_rot, limit_rot
 from constants import FIXED_FPS, FIXED_DELTA_TIME
 from sound_manager import SoundManager
 
-if not GameInfo.is_headless:
-    from PyQt5.QtGui import QPixmap
 
-
-bullet_texture_path = get_main_path() + "/textures/moving/bullets/"
+bullet_texture_path = path.join("textures", "moving", "bullets")
 
 
 class BulletInfo:
     def __init__(self, bullet):
         self.bullet_id = bullet.bullet_id
         self.bullet_body = bullet.sim_body.as_tuples()
-        self.bullet_class = bullet.bullet_type
+        self.bullet_class_id = bullet.bullet_type.id
         self.source_id = bullet.source_id
         self.creation_frame = bullet.creation_frame
 
@@ -23,13 +22,15 @@ class BulletInfo:
         bullet.bullet_id = self.bullet_id
         bullet.sim_body.set_tuples(self.bullet_body)
         bullet.extrapolation_body.set(bullet.sim_body)
-        bullet.bullet_type = self.bullet_class
+        bullet.bullet_type = bullet_classes[self.bullet_class_id]
         bullet.source_id = self.source_id
         bullet.creation_frame = self.creation_frame
 
 
 # base class
 class Bullet:
+    id = 0
+
     def __init__(self, world_sim, robot=None, source_id=-1, bullet_id=-1,
                  position=Vector(0, 0), rotation=0, damage_factor=1):
         self.bullet_type = type(self)
@@ -72,7 +73,7 @@ class Bullet:
     @property
     def type_texture(self):
         if self.bullet_type.texture is None:
-            self.bullet_type.texture = QPixmap(bullet_texture_path + self.bullet_type.texture_name)
+            self.bullet_type.texture = prm.get_pixmap(path.join(bullet_texture_path, self.bullet_type.texture_name))
             if self.bullet_type.texture.width() != self.size.x or self.bullet_type.texture.height() != self.size.y:
                 print("WARN: Bullet texture size is not equal to bullet (collider) size!")
         return self.bullet_type.texture
@@ -117,6 +118,8 @@ class Bullet:
 
 # base class
 class Weapon:
+    id = 0
+
     def __init__(self, world_sim):
         self.weapon_type = type(self)
         if self.weapon_type is Weapon:
@@ -146,17 +149,30 @@ class Weapon:
         return False
 
 
-class CannonShell(Bullet):
+class CannonShellBullet(Bullet):
+    id = 1
     speed = 1000
     damage = 250
     size = Vector(8, 20)
     texture = None
-    texture_name = "cannon-shell.png"
+    texture_name = "cannon-shell"
 
 
-class TankCannon(Weapon):
+class TankCannonWeapon(Weapon):
+    id = 1
     pos_offset = Vector(0, 24)
     rot_offset = 0
     fire_rate = 1
-    bullet_type = CannonShell
+    bullet_type = CannonShellBullet
     shot_sound_name = "tank-cannon_shot"
+
+
+weapon_classes = {}
+for name, obj in globals().copy().items():
+    if name.endswith("Weapon") and hasattr(obj, "id"):
+        weapon_classes[obj.id] = obj
+
+bullet_classes = {}
+for name, obj in globals().copy().items():
+    if name.endswith("Bullet") and hasattr(obj, "id"):
+        bullet_classes[obj.id] = obj

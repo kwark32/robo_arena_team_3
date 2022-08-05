@@ -1,7 +1,10 @@
 import os
-import numpy as np
 
-from util import get_main_path, draw_img_with_rot
+import numpy as np
+import pixmap_resource_manager as prm
+
+from os import path
+from util import draw_img_with_rot, get_data_path
 from globals import GameInfo
 from constants import FIXED_DELTA_TIME
 
@@ -9,14 +12,14 @@ if not GameInfo.is_headless:
     from PyQt5.QtGui import QPixmap
 
 
-animation_path = get_main_path() + "/textures/"
+animation_path = "textures"
 
 animations_fps = {
-    "animated_tiles/fire": 10,
-    "animated_tiles/portal_1": 10,
-    "animated_tiles/portal_2": 10,
-    "vfx/tank_blue_explosion": 10,
-    "vfx/tank_red_explosion": 10
+    path.join("animated_tiles", "fire"): 10,
+    path.join("animated_tiles", "portal_1"): 10,
+    path.join("animated_tiles", "portal_2"): 10,
+    path.join("vfx", "tank_blue_explosion"): 10,
+    path.join("vfx", "tank_red_explosion"): 10
 }
 
 
@@ -42,12 +45,12 @@ class Animation:
 
         if not GameInfo.is_headless:
             self._frames = []
-            path = animation_path + name + "/"
-            file_list = os.listdir(path)
+            anim_path = path.join(animation_path, name)
+            file_list = os.listdir(path.join(get_data_path(), anim_path))
             file_list = sorted(file_list)
             self._frames = np.empty(len(file_list), dtype=QPixmap)
-            for i, name in enumerate(file_list):
-                self._frames[i] = QPixmap(path + name)
+            for i, file_name in enumerate(file_list):
+                self._frames[i] = prm.get_pixmap(path.join(anim_path, file_name[:-4]))
             self._frame_count = len(file_list)
 
         if single_vfx and Animation.world_scene is not None and not Animation.world_scene.world_sim.catchup_frame:

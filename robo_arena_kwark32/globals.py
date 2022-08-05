@@ -1,8 +1,11 @@
+import math
+
 try:
     import simplejson as json
 except ImportError:
     import json
 
+from os import path
 from enum import IntEnum
 from codecs import encode, decode
 
@@ -21,8 +24,6 @@ class Menus:
 class GameInfo:
     is_headless = False
 
-    main_path = ""
-
     window_reference_size = None
     window_size = None
     arena_tile_size = 40
@@ -35,6 +36,11 @@ class GameInfo:
     # semi_divided_arena.png
     # arena_for_better_pathfinding.png
     active_arena = "arena_for_better_pathfinding.png"
+
+    robot_max_velocity = 120
+    robot_max_ang_velocity = math.pi
+    robot_max_accel = robot_max_velocity * 2
+    robot_max_ang_accel = robot_max_ang_velocity * 8
 
     current_frame_seed = 0
 
@@ -58,7 +64,7 @@ class Settings:
     instance = None
     protocol_version = "1.4"
 
-    def __init__(self):
+    def __init__(self, main_path):
         self.master_volume = 0.1
         self.sfx_volume = 1
         self.music_volume = 1
@@ -68,7 +74,7 @@ class Settings:
 
         self.highscore = 0
 
-        self.filename = GameInfo.main_path + "/settings.json"
+        self.filename = path.join(main_path, "settings.json")
 
         self.load()
 

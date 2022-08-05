@@ -1,9 +1,7 @@
 import sys
+import time
 
 from globals import GameInfo, Settings
-from camera import CameraState
-from util import get_main_path, Vector
-from sound_manager import SoundManager, HeadlessSound
 
 headless_args = []
 for arg in sys.argv:
@@ -14,6 +12,13 @@ for arg in headless_args:
     sys.argv.remove(arg)
 headless_args.clear()
 
+if True:
+    from os import path
+    from camera import CameraState
+    from util import get_data_path, Vector
+    from constants import FIXED_DELTA_TIME_NS
+    from sound_manager import SoundManager, HeadlessSound
+
 
 if not GameInfo.is_headless:
     from globals import Scene, Fonts
@@ -21,7 +26,7 @@ if not GameInfo.is_headless:
     from world_scene import SPWorldScene, OnlineWorldScene, ServerWorldScene
     from PyQt5.QtGui import QFont, QColor, QFontDatabase
     from PyQt5.QtWidgets import QOpenGLWidget, QApplication, QDesktopWidget
-    from PyQt5.QtCore import Qt, QResource, QSize
+    from PyQt5.QtCore import Qt, QResource
 
     class ArenaWindow(QOpenGLWidget):
         def __init__(self):
@@ -31,6 +36,7 @@ if not GameInfo.is_headless:
             self.frame_drawn = True
 
             self.active_scene = None
+            self.active_scene_has_world_sim = False
 
             self.window_geometry = None
 
@@ -88,6 +94,8 @@ if not GameInfo.is_headless:
             elif scene == Scene.SERVER_WORLD:
                 self.active_scene = ServerWorldScene(self)
 
+            self.active_scene_has_world_sim = self.active_scene is not None and hasattr(self.active_scene, "world_sim")
+
         def paintEvent(self, event):
             self.frame_drawn = True
             if self.active_scene is not None:
@@ -125,19 +133,18 @@ def main():
     if not GameInfo.is_headless:
         GameInfo.window_reference_size = Vector(1920, 1080)
         GameInfo.window_size = GameInfo.window_reference_size.copy()
-        GameInfo.main_path = get_main_path()
 
         app = QApplication(sys.argv)
 
-        QResource.registerResource(get_main_path() + "/resources.rcc")
+        QResource.registerResource(path.join(get_data_path(), "resources.rcc"))
 
-        Settings.instance = Settings()
+        Settings.instance = Settings(get_data_path())
         SoundManager.instance = SoundManager()
 
         window = ArenaWindow()
 
-        press_start_font_id = QFontDatabase.addApplicationFont(get_main_path()
-                                                               + "/fonts/press_start_2p/PressStart2P-Regular.ttf")
+        press_start_font_id = QFontDatabase.addApplicationFont(path.join(get_data_path(), "fonts",
+                                                                         "press_start_2p", "PressStart2P-Regular.ttf"))
         press_start_font_str = QFontDatabase.applicationFontFamilies(press_start_font_id)[0]
 
         Fonts.fps_font = QFont(press_start_font_str)
@@ -159,22 +166,37 @@ def main():
         Fonts.score_board_color = QColor(200, 200, 200)
 
         while window.running:  # main loop
-            window.update()
-            app.processEvents()
+            update_graphics(app, window)
             if not window.frame_drawn:
-                if hasattr(window.active_scene, "world_sim") and window.active_scene.world_sim is not None:
-                    window.active_scene.world_sim.update_world()
+                if window.active_scene_has_world_sim and window.active_scene.world_sim is not None:
+                    update_headless(window.active_scene.world_sim)
             window.frame_drawn = False
 
         sys.exit(0)
 
     else:
-        Settings.instance = Settings()
+        Settings.instance = Settings(get_data_path())
         SoundManager.instance = HeadlessSound()
 
         world_sim = ServerWorldSim()
         while True:
-            world_sim.update_world()
+            update_headless(world_sim)
+
+
+def update_graphics(app, window):
+    window.update()
+    app.processEvents()
+
+
+def update_headless(world_sim):
+    time_safety_margin = 2000000  # 2ms
+    while time.time_ns() - (FIXED_DELTA_TIME_NS - time_safety_margin) < world_sim.curr_time_ns:
+        time.sleep(0.001)  # sleep 1ms at a time
+
+    while True:
+        world_sim.update_world()
+        if world_sim.did_fixed_update:
+            break
 
 
 if __name__ == '__main__':

@@ -6,6 +6,7 @@ import pickle
 
 from globals import GameInfo
 from constants import SIMULATED_PING_NS
+from powerups import compress_power_ups
 
 
 i = 0
@@ -26,7 +27,8 @@ class Packet:
 
 
 class StatePacket(Packet):
-    def __init__(self, creation_time=0, world_start_time=0, physics_frame=0, player_id=0, robots=None, bullets=None):
+    def __init__(self, creation_time=0, world_start_time=0, physics_frame=0, player_id=0,
+                 robots=None, bullets=None, power_ups=None):
         super().__init__(creation_time=creation_time)
         self.world_start_time = world_start_time
         self.client_rtt_start = 0
@@ -38,6 +40,9 @@ class StatePacket(Packet):
         self.bullets = bullets
         if self.bullets is None:
             self.bullets = []
+        self.power_ups = None
+        if power_ups is not None:
+            self.power_ups = compress_power_ups(power_ups)
 
     def semi_copy(self):
         cp = StatePacket()

@@ -1,27 +1,30 @@
 import time
 
-from util import get_main_path, Vector, painter_transform_with_rot, is_object_on_screen
+import pixmap_resource_manager as prm
+
+from os import path
+from util import Vector, painter_transform_with_rot, is_object_on_screen
 from globals import Fonts, GameInfo, Scene, Menus, Settings
 from constants import PLAYER_NAME_OFFSET, HEALTH_BAR_OFFSET
 from ui_elements import Menu, Button, UIImage, UIText
 from camera import CameraState
 
 if not GameInfo.is_headless:
-    from PyQt5.QtGui import QPixmap, QFontMetricsF, QPen, QColor
+    from PyQt5.QtGui import QFontMetricsF, QPen, QColor
     from PyQt5.QtCore import Qt
     from PyQt5.QtWidgets import QOpenGLWidget
 
 
-overlay_texture_path = get_main_path() + "/textures/ui/overlay/"
+overlay_texture_path = path.join("textures", "ui", "overlay")
 
 
 class UIOverlay:
     def __init__(self):
         self.name_tag_font_metrics = QFontMetricsF(Fonts.name_tag_font)
 
-        self.health_bar = QPixmap(overlay_texture_path + "health-bar.png")
+        self.health_bar = prm.get_pixmap(path.join(overlay_texture_path, "health-bar"))
         self.health_bar_size = Vector(self.health_bar.width(), self.health_bar.height())
-        self.health_bar_bg = QPixmap(overlay_texture_path + "health-bar-bg.png")
+        self.health_bar_bg = prm.get_pixmap(path.join(overlay_texture_path, "health-bar-bg"))
         self.health_bar_bg_size = Vector(self.health_bar_bg.width(), self.health_bar_bg.height())
 
     def draw_name_tags(self, qp, robots):
@@ -76,15 +79,20 @@ class Scoreboard:
         if self.score_list is None:
             return
 
-        max_width = 0
+        char_width = self.font_metrics.width("A")
         max_name_width = 0
+        max_width = 0
+        max_score_width_chars = 0
         for name, score in self.score_list:
-            name_width = self.font_metrics.width(name)
-            width = name_width + self.font_metrics.width(score)
+            name_width = len(name) * char_width
+            score_width = len(score) * char_width
+            width = name_width + score_width
             if width > max_width:
                 max_width = width
             if name_width > max_name_width:
                 max_name_width = name_width
+            if len(score) > max_score_width_chars:
+                max_score_width_chars = len(score)
 
         if max_width <= 1:  # Leave some room for imprecision errors
             return
@@ -102,7 +110,7 @@ class Scoreboard:
                     round(len(self.score_list) * height_per_name), QColor(0, 0, 0, 150))
         for i, (name, score) in enumerate(self.score_list):
             name_x = outer_margin
-            score_x = outer_margin + inner_space + max_name_width
+            score_x = outer_margin + inner_space + max_name_width + (max_score_width_chars - len(score)) * char_width
             y = top_margin + i * height_per_name + font_height / 2 + height_per_name / 2
             qp.drawText(round(name_x), round(y), name)
             qp.drawText(round(score_x), round(y), score)

@@ -9,6 +9,7 @@ from weapons import bullet_classes
 
 
 class OnlineWorldSim(WorldSim):
+    """Additions/overrides for multiplayer client world sim."""
     def __init__(self):
         super().__init__()
 
@@ -29,6 +30,7 @@ class OnlineWorldSim(WorldSim):
                 creation_time=(self.curr_time_ns + 1000000000), disconnect=True))
 
     def set_robots(self, robots):
+        """Sets all robots to the newest server packet info."""
         for new_robot_info in robots:
             existing_robot = None
             for robot in self.robots:
@@ -65,6 +67,7 @@ class OnlineWorldSim(WorldSim):
             dead_robots.clear()
 
     def set_bullets(self, bullets):
+        """Sets all bullets to the newest server packet info."""
         for new_bullet_info in bullets:
             existing_bullet = None
             for bullet in self.bullets:
@@ -95,6 +98,7 @@ class OnlineWorldSim(WorldSim):
             dead_bullets.clear()
 
     def extrapolate(self, packet_frame, extrapolation_count):
+        """Extrapolates the full physics simulation to sync with the server."""
         if self.local_player_robot is not None:
             extrapolation_count = limit(extrapolation_count, 0, MAX_EXTRAPOLATION_STEPS)
 

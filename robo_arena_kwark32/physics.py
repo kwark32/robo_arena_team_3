@@ -5,12 +5,14 @@ from robot import Robot, collide_robot
 
 
 class ContactListener(b2ContactListener):
+    """Listens to contact while simulating physics"""
     def __init__(self, physics_world):
         super(ContactListener, self).__init__()
 
         self.physics_world = physics_world
 
     def BeginContact(self, contact):
+        """Adds touching contacts to a list for later usage."""
         if contact.touching:
             self.physics_world.new_contacts.append(contact)
 
@@ -25,6 +27,7 @@ class ContactListener(b2ContactListener):
 
 
 class PhysicsWorld:
+    """Contains all info about the physics world and useful methods."""
     def __init__(self):
         self.contact_listener = ContactListener(self)
         self.world = b2World(gravity=(0, 0), doSleep=False, contactListener=self.contact_listener)
@@ -33,6 +36,7 @@ class PhysicsWorld:
         self.new_contacts = []
 
     def add_rect(self, position, width, height, rotation=0, static=True, sensor=False, user_data=None):
+        """Adds a rectangle with specified dimensions & properties to the physics world and returns it."""
         if static:
             return self.world.CreateStaticBody(
                 position=(position.x, position.y),
@@ -54,6 +58,7 @@ class PhysicsWorld:
         return dynamic
 
     def do_collisions(self):
+        """Checks all touching contacts after the physics step."""
         for contact in self.new_contacts:
             data_a = contact.fixtureA.body.userData
             data_b = contact.fixtureB.body.userData

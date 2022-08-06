@@ -24,6 +24,7 @@ robot_texture_path = path.join("textures", "moving", "tanks")
 
 
 class RobotInfo:
+    """Holds all robot info required for full state synchronization of a robot."""
     def __init__(self, robot):
         self.robot_body = robot.sim_body.as_tuples()
         self.player_id = robot.robot_id
@@ -41,6 +42,7 @@ class RobotInfo:
         self.last_death_frame = robot.last_death_frame
 
     def set_robot_values(self, robot, physics_frame=0):
+        """Set robot values to robot state info values."""
         robot.robot_id = self.player_id
         robot.next_bullet_id = self.next_bullet_id
         robot.player_name = self.player_name
@@ -70,6 +72,7 @@ class RobotInfo:
 
 
 class Robot:
+    """Controllable, physics affected & visually paintable robot."""
     size = Vector(32, 32)
     turret_texture_center_offset = Vector(0, 10)
 
@@ -164,6 +167,7 @@ class Robot:
         return self._turret_texture
 
     def draw(self, qp, delta_time):
+        """Draw the tank body & turret with rotation, and its current path if it has AI and debug mode is on."""
         if self.is_dead:
             return
 
@@ -206,6 +210,7 @@ class Robot:
             qp.restore()
 
     def update(self, delta_time):
+        """Update the robot position, velocity, weapon, AI if it has one etc."""
         if self.is_dead:
             if self.world_sim.physics_frame_count >= self.last_death_frame + RESPAWN_DELAY:
                 self.respawn()
@@ -298,6 +303,7 @@ class Robot:
                                                             user_data=self)
 
     def get_center_tile(self):
+        """Gets the TileType instance currently under the robot."""
         tile_size = GameInfo.arena_tile_size
         tile_count = self.world_sim.arena.tile_count
         tile_position = self.sim_body.position.copy()
@@ -307,10 +313,12 @@ class Robot:
         return self.world_sim.arena.tiles[tile_position.y][tile_position.x]
 
     def set_physics_body(self):
+        """Sync position & rotation from robot to physics body."""
         self.physics_body.transform = ((self.sim_body.position.x, self.sim_body.position.y), self.sim_body.rotation)
         self.collider_push = self.sim_body.position.copy()
 
     def refresh_from_physics(self):
+        """Sync the new position & rotation from the physics body to the robot."""
         if self.physics_body is not None:
             new_pos = Vector(self.physics_body.position[0], self.physics_body.position[1])
             self.collider_push = self.collider_push.diff(new_pos)
@@ -325,6 +333,7 @@ class Robot:
             effect.apply(self, delta_time)
 
     def revert_effects(self):
+        """Revert non-permanent effect changes."""
         expired_effects = []
         for effect in self.effects:
             effect.revert(self)
@@ -339,12 +348,14 @@ class Robot:
         self.health += delta_health
 
     def hit_bullet(self, damage, source_robot):
+        """Change health & check kill count on bullet hit."""
         self.change_health(-damage / self.bullet_resistance_factor)
         if int(self.health) <= 0 and source_robot is not self:
             if source_robot is not None:
                 source_robot.kills += 1
 
     def die(self):
+        """Disables the robot (but not deleting it)."""
         if self is self.world_sim.local_player_robot:
             GameInfo.local_player_score += self.kills * GameInfo.score_per_kill
 
@@ -363,6 +374,7 @@ class Robot:
             self.remove()
 
     def respawn(self):
+        """Reset robot values as if it was new."""
         self.create_physics_body()
         self.revert_effects()
         self.effects.clear()
@@ -383,6 +395,7 @@ class Robot:
             self.physics_body = None
 
     def set_position(self, position, stop_robot=False, stop_robot_rotation=False):
+        """Changes the robot's position with optional velocity reset & changes last_pos to prevent glitches."""
         self.last_position = position.copy()
         last_pos_change = self.real_velocity.copy()
         last_pos_change.mult(FIXED_DELTA_TIME)
@@ -399,6 +412,7 @@ class Robot:
 
 
 class PlayerInput:
+    """Holds a representation of the states of all possible input keys/buttons."""
     def __init__(self):
         self.up = False
         self.down = False
@@ -427,7 +441,7 @@ class PlayerInput:
 
 
 def collide_robot(robot, other):
-
+    """Calculates collision of a robot with anything else."""
     normal = robot.collider_push.copy()
     pos = robot.sim_body.position.copy()
 

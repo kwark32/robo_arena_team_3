@@ -13,6 +13,7 @@ if not GameInfo.is_headless:
 
 
 class MainMenu(Menu):
+    """Holds all UI elements & special functionality for the main menu."""
     class ExitButton(Button):
         name = "exit"
 
@@ -82,6 +83,7 @@ class MainMenu(Menu):
 
 
 class OnlineOptions(Menu):
+    """Holds all UI elements & special functionality for the online options menu."""
     class BackButton(Button):
         name = "back"
 
@@ -109,10 +111,12 @@ class OnlineOptions(Menu):
                 self.text = Settings.instance.player_name
 
         def add_character(self, character, use_shift=True):
-            super().add_character(character, use_shift=use_shift)
+            ret = super().add_character(character, use_shift=use_shift)
 
             Settings.instance.player_name = self.text
             Settings.instance.save()
+
+            return ret
 
     class ServerIPField(TextField):
         name = "server_ip"
@@ -274,6 +278,7 @@ class OnlineOptions(Menu):
 
 
 class SettingsMenu(Menu):
+    """Holds all UI elements & special functionality for the settings menu."""
     class BackButton(Button):
         name = "back"
 
@@ -384,6 +389,7 @@ Menus.menus["settings"] = SettingsMenu
 
 
 class MainMenuScene(OverlayWidget):
+    """Scene for the main menu, holding the current menu and interacting with it."""
     def __init__(self, parent):
         super().__init__(parent)
 

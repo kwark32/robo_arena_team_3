@@ -11,6 +11,7 @@ bullet_texture_path = path.join("textures", "moving", "bullets")
 
 
 class BulletInfo:
+    """Holds all bullet info required for full state synchronization of a bullet."""
     def __init__(self, bullet):
         self.bullet_id = bullet.bullet_id
         self.bullet_body = bullet.sim_body.as_tuples()
@@ -19,6 +20,7 @@ class BulletInfo:
         self.creation_frame = bullet.creation_frame
 
     def set_bullet_values(self, bullet):
+        """Set bullet values to bullet state info values."""
         bullet.bullet_id = self.bullet_id
         bullet.sim_body.set_tuples(self.bullet_body)
         bullet.extrapolation_body.set(bullet.sim_body)
@@ -29,6 +31,7 @@ class BulletInfo:
 
 # base class
 class Bullet:
+    """Base class for all bullet types."""
     id = 0
 
     def __init__(self, world_sim, robot=None, source_id=-1, bullet_id=-1,
@@ -79,6 +82,7 @@ class Bullet:
         return self.bullet_type.texture
 
     def set_collider(self):
+        """Makes the bullet collider size larger for higher speeds to prevent tunneling."""
         frame_dist = self.bullet_type.speed * FIXED_DELTA_TIME
         if frame_dist > self.size.y:
             self.collider_size.y = frame_dist
@@ -118,6 +122,7 @@ class Bullet:
 
 # base class
 class Weapon:
+    """Base class for all weapon types."""
     id = 0
 
     def __init__(self, world_sim):
@@ -135,6 +140,7 @@ class Weapon:
         return self.world_sim.physics_frame_count - fire_delay >= self.last_shot_frame
 
     def shoot(self, robot, source_id, bullet_id, position, rotation, damage_factor=1):
+        """Creates instance of current bullet type with given values if the shot is ready."""
         if self.is_shot_ready():
             self.last_shot_frame = self.world_sim.physics_frame_count
             total_rot = rotation + self.weapon_type.rot_offset

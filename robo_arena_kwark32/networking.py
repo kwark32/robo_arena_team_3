@@ -19,6 +19,7 @@ for arg in sys.argv:
 
 
 class Packet:
+    """Base class for all network packets."""
     def __init__(self, creation_time=0):
         self.creation_time = creation_time
         if self.creation_time == 0:
@@ -27,6 +28,7 @@ class Packet:
 
 
 class StatePacket(Packet):
+    """Network packet sent by the server with all the relevant world state info."""
     def __init__(self, creation_time=0, world_start_time=0, physics_frame=0, player_id=0,
                  robots=None, bullets=None, power_ups=None):
         super().__init__(creation_time=creation_time)
@@ -45,6 +47,7 @@ class StatePacket(Packet):
             self.power_ups = compress_power_ups(power_ups)
 
     def semi_copy(self):
+        """Special copy method to just copy what the server changes between client sends."""
         cp = StatePacket()
         cp.world_start_time = self.world_start_time
         cp.physics_frame = self.physics_frame
@@ -69,6 +72,7 @@ class StatePacket(Packet):
 
 
 class ClientPacket(Packet):
+    """Network packet sent by the client wit the input and player info."""
     def __init__(self, creation_time=0, player_input=None, player_name="", disconnect=False):
         super().__init__(creation_time=creation_time)
         self.player_input = player_input
@@ -84,6 +88,7 @@ class ClientPacket(Packet):
 
 
 class Client:
+    """Holds info of a single client."""
     def __init__(self, address, player_id=-1, player_name=""):
         self.address = address
         self.player_id = player_id
@@ -97,6 +102,7 @@ class Client:
 
 
 class UDPSocket:
+    """Base class for server & client UDP sockets."""
     def __init__(self):
         self.udp_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
         self._udp_socket_list = [self.udp_socket]
@@ -110,6 +116,7 @@ class UDPSocket:
         return len(read_sockets) > 0 or self._buffered_message_address is not None
 
     def get_packet(self):
+        """Gets available packets and combines & buffers them for split packets."""
         if self._buffered_message_address is not None:
             bytes_address_tuple = self._buffered_message_address
             self._buffered_message_address = None
@@ -135,6 +142,7 @@ class UDPSocket:
         return address, message
 
     def send_packet(self, address, packet):
+        """Sends a packet to the specified address."""
         dump = pickle.dumps(packet)
         size = len(dump)
         header_size = 2
@@ -158,6 +166,7 @@ class UDPSocket:
 
 
 class UDPServer(UDPSocket):
+    """UDP socket for the server."""
     def __init__(self):
         super().__init__()
         self.packets_in = []
@@ -167,6 +176,7 @@ class UDPServer(UDPSocket):
         self.clients = {}  # client dict: address (str) -> client
 
     def update_socket(self):
+        """Sends and receives packets from/to buffer when they are due, simulating ping if necessary."""
         # Check get list
         address, packet = None, None
         # TODO: < should be <=, but that causes stuttering
@@ -192,6 +202,7 @@ class UDPServer(UDPSocket):
             super().send_packet(pkt[0], pkt[1])
 
     def get_client_packets(self):
+        """Gets all packets from all clients, setting the corresponding clients' info."""
         while self.get_packet_available():
             address, message = self.get_packet()
             packet = pickle.loads(message)
@@ -202,6 +213,7 @@ class UDPServer(UDPSocket):
             self.update_socket()
 
     def send_packet(self, client, state_packet):
+        """Send packet to the clients' address."""
         self.packets_out.append((client.address, state_packet))
         self.update_socket()
 
@@ -211,10 +223,12 @@ class UDPClient(UDPSocket):
         super().__init__()
 
     def get_packet(self):
+        """Gets the newest packet from the server."""
         server_address, message = super().get_packet()
         state_packet = pickle.loads(message)
         state_packet.receive_time = self.curr_time_ns
         return state_packet
 
     def send_packet(self, server, client_packet):
+        """Sends the packet to the server."""
         super().send_packet((GameInfo.server_ip, GameInfo.port), client_packet)

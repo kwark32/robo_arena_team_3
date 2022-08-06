@@ -11,6 +11,7 @@ from codecs import encode, decode
 
 
 class Scene(IntEnum):
+    """Enum for all possible Scenes."""
     MAIN_MENU = 0
     SP_WORLD = 1
     ONLINE_WORLD = 2
@@ -18,10 +19,12 @@ class Scene(IntEnum):
 
 
 class Menus:
+    """Dict for all possible Menus."""
     menus = {}
 
 
 class GameInfo:
+    """Holds global info about the game."""
     is_headless = False
 
     window_reference_size = None
@@ -61,6 +64,7 @@ class GameInfo:
 
 
 class Settings:
+    """Holds global settings."""
     instance = None
     protocol_version = "1.4"
 
@@ -79,6 +83,7 @@ class Settings:
         self.load()
 
     def load(self):
+        """Loads settings from json file."""
         try:
             with open(self.filename, "r") as f:
                 settings_text = f.read()
@@ -105,6 +110,7 @@ class Settings:
         self.highscore = hs
 
     def save(self):
+        """Saves settings to json file."""
         hs = scramble_int(self.highscore)
         hs_key = scramble_int(6942069)
 
@@ -124,6 +130,7 @@ class Settings:
 
 
 class Fonts:
+    """Holds all global fonts and their colors"""
     fps_font = None
     fps_color = None
 
@@ -144,6 +151,7 @@ class Fonts:
 
 
 def scramble_int(num):
+    """Turns int to unreadable & humanly unpredictable string."""
     s = str(num)
     b = [(int(c) * 11) + 169 for c in s]
     s = ""
@@ -158,6 +166,7 @@ def scramble_int(num):
 
 
 def unscramble_int(string):
+    """Creates int from unreadable & humanly unpredictable string."""
     b = bytes([ord(s) for s in string])
     s = b.decode("raw_unicode_escape")
     s = decode(s, "rot13")

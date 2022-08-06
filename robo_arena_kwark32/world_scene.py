@@ -17,6 +17,7 @@ if not GameInfo.is_headless:
 
 
 class WorldScene(OverlayWidget):
+    """Bass class for all graphical scenes with gameplay."""
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -105,6 +106,7 @@ class WorldScene(OverlayWidget):
             event.accept()
 
     def paintEvent(self, event):
+        """Updates the world sim & draws all graphical objects."""
         # TODO: Look into why this strange fix is needed
         if not hasattr(self, "first") or self.first or not self.main_widget.running:
             self.first = False
@@ -174,6 +176,7 @@ class WorldScene(OverlayWidget):
         self.world_sim.frame_times_since_ms += (time.time_ns() - self.world_sim.curr_time_ns) / 1000000
 
     def set_turret_rotation(self):
+        """Sets the turret rotation of the local robot to face the mouse."""
         if self.world_sim.player_input is not None and self.world_sim.local_player_robot is not None:
             robot_pos = self.world_sim.local_player_robot.sim_body.position.copy()
             mouse_pos = self.mouse_position.copy()
@@ -188,10 +191,12 @@ class WorldScene(OverlayWidget):
 
 
 class SPWorldScene(WorldScene):
+    """Graphical scene for singleplayer."""
     sim_class = SPWorldSim
 
 
 class OnlineWorldScene(WorldScene):
+    """Graphical scene for multiplayer client."""
     sim_class = OnlineWorldSim
 
     def __init__(self, parent):
@@ -201,6 +206,7 @@ class OnlineWorldScene(WorldScene):
 
 
 class ServerWorldScene(WorldScene):
+    """Graphical scene for multiplayer host (player + server)."""
     sim_class = ServerWorldSim
 
     def __init__(self, parent):

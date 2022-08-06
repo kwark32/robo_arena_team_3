@@ -6,6 +6,7 @@ from weapons import BulletInfo
 
 
 class ServerWorldSim(WorldSim):
+    """Additions/overrides for multiplayer server (graphical host or headless) world sim."""
     def __init__(self):
         super().__init__()
 
@@ -16,6 +17,7 @@ class ServerWorldSim(WorldSim):
         self.udp_socket.close()
 
     def fixed_update(self, delta_time, catchup_frame=False):
+        """Collects simulation state and sends it to all clients."""
         self.udp_socket.curr_time_ns = self.curr_time_ns
         self.set_seed()
 

@@ -13,6 +13,7 @@ from sound_manager import SoundManager
 
 
 class WorldSim:
+    """Base class for all mode-specific game simulations."""
     def __init__(self):
         self.robot_class = Robot
 
@@ -92,6 +93,7 @@ class WorldSim:
         dead_robots.clear()
 
     def fixed_update(self, delta_time, catchup_frame=False):
+        """Update all bullets, robots etc with a fixed delta time."""
         self.did_fixed_update = True
 
         self.catchup_frame = catchup_frame
@@ -136,6 +138,7 @@ class WorldSim:
         self.catchup_frame = False
 
     def update_times(self):
+        """Calculate current frame times."""
         last_world_time_ns = self.curr_world_time_ns
         self.curr_time_ns = time.time_ns()
         self.curr_world_time_ns = self.curr_time_ns - self.world_start_time_ns
@@ -154,6 +157,7 @@ class WorldSim:
             self._last_fps_show_time = self.curr_time_ns
 
     def update_world(self):
+        """Updates the world, only calling fixed_update when it is due."""
         self.did_fixed_update = False
 
         self.update_times()
@@ -180,10 +184,12 @@ class WorldSim:
         self.calc_fps()
 
     def set_seed(self):
+        """Sets the random seed for the current frame, to be in sync with the server (deterministic)"""
         GameInfo.current_frame_seed = self.world_start_time_ns + self.physics_frame_count
 
 
 class SPWorldSim(WorldSim):
+    """Game simulation for singleplayer."""
     def __init__(self):
         super().__init__()
 
@@ -206,6 +212,7 @@ class SPWorldSim(WorldSim):
         # self.create_enemy_robot(position=Vector(self.arena.size.x / 2 + 800, self.arena.size.y / 2 + 800))
 
     def fixed_update(self, delta_time, catchup_frame=False):
+        """Fixed update additions for singleplayer."""
         self.set_seed()
 
         if self.physics_frame_count > self.last_enemy_spawn_frame + self.enemy_spawn_delay:

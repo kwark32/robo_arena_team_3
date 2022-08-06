@@ -14,9 +14,11 @@ class RobotEffect:
         self.world_sim = None
 
     def apply(self, robot, delta_time=0):
+        """Applies the changes of the effect."""
         self.duration -= delta_time
 
     def revert(self, robot):
+        """Reverts the changes of the effect, if necessary."""
         pass
 
     def get_effect_info(self):
@@ -28,6 +30,7 @@ class RobotEffect:
         return self.effect_class(self.duration)
 
     def get_data_list(self, sub_list=None):
+        """Adds effect data to list for network optimization."""
         if sub_list is None:
             sub_list = []
 
@@ -37,6 +40,7 @@ class RobotEffect:
         return sub_list
 
     def set_from_data_list(self, data_list):
+        """Sets effect data from list, for network optimization."""
         pass
 
 
@@ -314,6 +318,7 @@ class DamageEffect(RobotEffect):
 
 
 class BulletResistanceEffect(RobotEffect):
+    """Increases bullet resistance on apply."""
     id = 12
 
     def __init__(self, duration=(FIXED_DELTA_TIME / 2), bullet_resistance_factor=1):

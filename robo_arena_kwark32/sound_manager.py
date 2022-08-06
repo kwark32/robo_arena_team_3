@@ -17,10 +17,12 @@ if not GameInfo.is_headless:
     from PyQt5.QtMultimedia import QSoundEffect
 
     class SFXLoaderWorker(QObject):
+        """Worker thread object for loading & starting sounds."""
         wake_worker = pyqtSignal()
 
         @pyqtSlot()
         def update(self):
+            """Checks all pending sounds and loads & starts them."""
             while len(SoundManager.instance.sfx_start_list) > 0:
                 SoundManager.instance.sfx_start_list_mutex.lock()
                 sound, name, pos = SoundManager.instance.sfx_start_list.pop(0)
@@ -39,6 +41,7 @@ if not GameInfo.is_headless:
 
 
 class SoundManager:
+    """Global class to start & manage all sounds/music."""
     instance = None
 
     def __init__(self):
@@ -66,6 +69,7 @@ class SoundManager:
             self.sfx_loader_thread.start()
 
     def update_sound(self, listener_pos=None):
+        """Moves started sound from loader/starter thread to main thread & updates volumes & music."""
         self.ready_sounds_mutex.lock()
         for i in range(len(self.ready_sounds)):
             sound = self.ready_sounds.pop(0)
@@ -116,6 +120,7 @@ class SoundManager:
         self.music.play()
 
     def set_sound_volumes(self):
+        """Sets sound effect volumes based on the distance to the local player."""
         if self.music is not None and self.music.isPlaying():
             self.music.setVolume(self.get_sound_volume(sfx_volume=False))
         elif self.music is not None:
@@ -138,6 +143,7 @@ class SoundManager:
             self.sounds.remove(s)
 
     def get_sound_volume(self, sfx_volume=True, pos=None):
+        """Gets volume of a sound effect based on the distance to the local player."""
         if sfx_volume:
             volume_setting = Settings.instance.master_volume * Settings.instance.sfx_volume
         else:
@@ -159,6 +165,7 @@ class SoundManager:
 
 
 class HeadlessSound(SoundManager):
+    """Empty placeholder class for headless server, overriding all methods with pass."""
     def update_sound(self, listener_pos=None):
         pass
 

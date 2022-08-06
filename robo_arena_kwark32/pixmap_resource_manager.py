@@ -10,6 +10,7 @@ loaded_pixmaps = {}
 
 
 def get_pixmap(name, copy=False):
+    """Caches pixmap and only returns a reference to the needed pixmap to avoid duplicate memory usage."""
     pixmap = loaded_pixmaps.get(name)
 
     if pixmap is None:

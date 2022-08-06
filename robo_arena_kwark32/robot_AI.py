@@ -8,6 +8,7 @@ from globals import GameInfo
 
 
 class RobotAI:
+    """Makes a robot act on its own with A* pathfinding & shooting."""
     def __init__(self, robot):
         self.robot = robot
         self.world_sim = robot.world_sim
@@ -24,6 +25,7 @@ class RobotAI:
         self.calculating_astar = False
 
     def update(self, delta_time):
+        """Calculates new path if necessary & sets robot input for currently needed actions."""
         # keep shooting if has target
         self.robot.input.shoot = self.target_robot is not None
 
@@ -113,11 +115,13 @@ class RobotAI:
 
 
 class WalkableTerrainCheck:
+    """Interface to implement a check for walkable terrain for the A* algorithm."""
     def get_walkable(self, x, y):
         return -1
 
 
 class DrivableTileCheck(WalkableTerrainCheck):
+    """Walkable check for this arena setup, checking if blocked & calculating cost otherwise."""
     def __init__(self, arena, robot):
         self.arena = arena
         self.robot = robot
@@ -145,6 +149,7 @@ class DrivableTileCheck(WalkableTerrainCheck):
 
 
 class Node:
+    """Node for the A* algorithm."""
     def __init__(self, parent=None, position=None):
         self.parent = parent
         self.position = position
@@ -158,7 +163,7 @@ class Node:
 
 
 def astar(tiles, arena_size, start, end, walkable_check):
-
+    """Calculates the shortest path from start to end, stopping after maximum iteration count."""
     # Create start and end node
     start_node = Node(None, start)
     start_node.g = start_node.h = start_node.f = 0

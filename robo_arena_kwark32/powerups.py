@@ -46,6 +46,7 @@ class PowerUp:
                   + " power up has 0 size or is missing at " + filename + ".png!")
 
     def apply(self, robot):
+        """Applies the power-ups' effect to the robot & removes the power-up from the dict."""
         robot.effects.append(self.effect)
         self.arena.power_ups.pop((self.index.x, self.index.y))
 
@@ -54,6 +55,7 @@ class PowerUp:
 
 
 class HealthPowerUp(PowerUp):
+    """Gives the robot health on apply."""
     name = "health"
     id = 1
     health_gain = 250
@@ -64,6 +66,7 @@ class HealthPowerUp(PowerUp):
 
 
 class SpeedPowerUp(PowerUp):
+    """Gives the robot speed boost on apply."""
     name = "speed"
     id = 2
     duration = 5
@@ -75,6 +78,7 @@ class SpeedPowerUp(PowerUp):
 
 
 class DamagePowerUp(PowerUp):
+    """Gives the robot damage bonus on apply."""
     name = "damage"
     id = 3
     duration = 10
@@ -86,6 +90,7 @@ class DamagePowerUp(PowerUp):
 
 
 class BulletResistancePowerUp(PowerUp):
+    """Gives the robot bullet resistance on apply."""
     name = "bullet_resistance"
     id = 4
     duration = 10
@@ -107,6 +112,7 @@ for name, obj in globals().copy().items():
 
 
 def compress_power_ups(power_up_dict):
+    """Add all power-up info to bytes list for network optimization."""
     byte_list = []
     for pu in power_up_dict.values():
         byte_list.append(pu.power_up_type.id)
@@ -116,6 +122,7 @@ def compress_power_ups(power_up_dict):
 
 
 def decompress_power_ups(power_up_bytes, arena):
+    """Set all power-up info from bytes list for network optimization."""
     if power_up_bytes is None or arena is None:
         return
 

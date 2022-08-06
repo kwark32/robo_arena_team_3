@@ -20,6 +20,7 @@ animated_tiles_texture_path = path.join("textures", "animated_tiles")
 
 
 class TileType:
+    """Holds information about the different tile types."""
     def __init__(self, name, has_collision=False, effect_class=None, has_animation=False):
         self.name = name
         self.has_collision = has_collision
@@ -65,6 +66,7 @@ tile_type_dict = {
 
 
 class Arena:
+    """Contains all info about tiles, power-ups and tile graphics/animations."""
     def __init__(self, tile_count):
         self.tile_count = tile_count.copy()
         self.tile_count.round()
@@ -222,7 +224,7 @@ class Arena:
             qp.restore()
 
     def calc_tile_anim_groups(self):
-        """Used for performance improvements."""
+        """Calculates positional groups of tile animations for performance improvements."""
         count = self.tile_count.copy()
         count.div(TILE_ANIM_GROUP_SIZE)
         count.floor()

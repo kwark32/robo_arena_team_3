@@ -58,7 +58,7 @@ def add_physics(arena, physics_world):
 
 
 def load_map(file, physics_world=None):
-    """Creates arena from json or png file."""
+    """Creates arena from json or png file, calling the respective sub-method."""
     if file.endswith("json"):
         arena = load_map_json(path.join(json_map_path, file))
     elif file.endswith("png"):

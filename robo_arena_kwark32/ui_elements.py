@@ -19,6 +19,7 @@ ui_element_texture_path = path.join("textures", "ui", "menu")
 
 # absolute base class
 class UIElement:
+    """Base class for UI elements, includes transform, texture & input handling."""
     selected_edge_top_right = None
 
     def __init__(self, main_widget, position, menu):
@@ -99,6 +100,7 @@ class UIElement:
         return texture, size
 
     def draw(self, qp):
+        """Draws the element with selection brackets if selected & should draw selection."""
         if self.is_selected and self.draw_selected:
             edge_offset = Vector(-15, 15)
             pos_rots = [(Vector(self.bottom_right_corner.x, self.top_left_corner.y), 0),
@@ -139,6 +141,7 @@ class UIElement:
 
 # base class
 class Slider(UIElement):
+    """Shows a header text & slider that can be dragged with the mouse dynamically."""
     header_offset_y = -30
     image_border = 10
 
@@ -186,6 +189,7 @@ class Slider(UIElement):
             print("ERROR: Fill texture has different size as empty slider texture!")
 
     def mouse_drag(self, position):
+        """Updates the slider while the mouse drags it."""
         pos_range = self.texture_size.x - Slider.image_border * 2
         pos_start = self.top_left_corner.x + Slider.image_border
 
@@ -205,6 +209,7 @@ class Slider(UIElement):
 
 # base class
 class TextField(UIElement):
+    """Shows a text field that can be written into with keyboard input."""
     def __init__(self, main_widget, position, menu, text_offset=Vector(0, 0), max_text_length=-1):
         super().__init__(main_widget, position, menu)
 
@@ -243,6 +248,7 @@ class TextField(UIElement):
                                round(self.top_left_corner.y + self.text_offset.y)), self.placeholder_text)
 
     def key_press(self, key):
+        """Adds the pressed key's character to the current text if valid."""
         character = chr(0)
         if int(key) < 256:
             character = chr(int(key))
@@ -259,10 +265,11 @@ class TextField(UIElement):
                     break
         else:
             self.add_character(character)
-
+        
         return True
 
     def add_character(self, character, use_shift=True):
+        """Adds the character (can change capital based on shift press) to the current text if valid."""
         char = None
         if (character == ' ' or character == '-' or character == '.' or '0' <= character <= '9'
                 or 'a' <= character.lower() <= 'z' or character == '_'):
@@ -310,6 +317,7 @@ class TextField(UIElement):
 
 # base class
 class Button(UIElement):
+    """Implements just the click input."""
     def __init__(self, main_widget, position, menu):
         super().__init__(main_widget, position, menu)
 
@@ -320,6 +328,7 @@ class Button(UIElement):
 
 # base class
 class UIImage(UIElement):
+    """Image element, ignoring all input & selection."""
     def __init__(self, main_widget, position, menu):
         super().__init__(main_widget, position, menu)
 
@@ -329,6 +338,7 @@ class UIImage(UIElement):
 
 # base class
 class UIText(UIElement):
+    """Text element without image, ignoring all inputs & selection."""
     def __init__(self, main_widget, position, menu):
         super().__init__(main_widget, position, menu)
 
@@ -356,6 +366,7 @@ class UIText(UIElement):
 
 # base class
 class Checkbox(UIElement):
+    """Checkbox element implementing a toggle on click with additional toggled filler texture."""
     header_offset_y = -60
 
     def __init__(self, main_widget, position, menu):
@@ -401,6 +412,7 @@ class Checkbox(UIElement):
 
 
 class Menu:
+    """Base class for all menus containing UI elements, has interface to forward input and calculate selection."""
     def __init__(self, main_widget, size, main_menu_scene, bg_texture_name):
         self.main_widget = main_widget
         self.size = size.copy()
@@ -454,6 +466,7 @@ class Menu:
         pass
 
     def update_ui(self, mouse_pos, curr_time_ns):
+        """Updates the current selection (if not currently dragging a slider)."""
         if not self.dragging:
             self.selected_element = None
             for element in self.elements:
@@ -465,6 +478,7 @@ class Menu:
                         element.unselect()
 
     def draw(self, qp):
+        """Draws the background and all UI elements."""
         # draw static menu background
         if self.bg_pixmap is not None:
             qp.save()

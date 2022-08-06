@@ -19,6 +19,7 @@ overlay_texture_path = path.join("textures", "ui", "overlay")
 
 
 class UIOverlay:
+    """In-game overlay for health bar & name tags."""
     def __init__(self):
         self.name_tag_font_metrics = QFontMetricsF(Fonts.name_tag_font)
 
@@ -59,6 +60,7 @@ class UIOverlay:
 
 
 class Scoreboard:
+    """Scoreboard for multiplayer, showing all players' kill count."""
     def __init__(self):
         self.score_list = None
 
@@ -67,6 +69,7 @@ class Scoreboard:
         self.font_metrics = QFontMetricsF(self.font)
 
     def set_scores(self, robots):
+        """Updates scores to draw from the robots."""
         scores = []
         for robot in robots:
             scores.append((robot.player_name, robot.kills))
@@ -76,6 +79,7 @@ class Scoreboard:
             self.score_list.append((name, str(score)))
 
     def draw(self, qp):
+        """Dynamically draws the scoreboard box & player names with scores."""
         if self.score_list is None:
             return
 
@@ -117,17 +121,18 @@ class Scoreboard:
 
 
 class GameOverMenu(Menu):
+    """Holds all UI elements & special functionality for the singleplayer game over menu/overlay."""
     class Image(UIImage):
         name = "game_over_image"
 
     class Score(UIText):
         name = "score"
 
-        def __init__(self, main_widget, position, menu, left_align=False, Highscore=False):
+        def __init__(self, main_widget, position, menu, left_align=False, is_highscore=False):
             super().__init__(main_widget, position, menu)
 
             self.left_align = left_align
-            if Highscore:
+            if is_highscore:
                 self.font_color = Fonts.highscore_color
             else:
                 self.font_color = Fonts.score_color
@@ -159,28 +164,28 @@ class GameOverMenu(Menu):
         pos = center_pos.copy()
         pos.x -= 500
         pos.y -= 20
-        self.player_score = GameOverMenu.Score(main_widget, pos, self, left_align=True, Highscore=is_highscore)
+        self.player_score = GameOverMenu.Score(main_widget, pos, self, left_align=True, is_highscore=is_highscore)
         self.player_score.text = "Score:"
         self.elements.append(self.player_score)
 
         pos = center_pos.copy()
         pos.x += 125
         pos.y -= 20
-        self.player_score = GameOverMenu.Score(main_widget, pos, self, left_align=True, Highscore=is_highscore)
+        self.player_score = GameOverMenu.Score(main_widget, pos, self, left_align=True, is_highscore=is_highscore)
         self.player_score.text = str(GameInfo.local_player_score)
         self.elements.append(self.player_score)
 
         pos = center_pos.copy()
         pos.x -= 500
         pos.y += 100
-        self.player_score = GameOverMenu.Score(main_widget, pos, self, left_align=True, Highscore=True)
+        self.player_score = GameOverMenu.Score(main_widget, pos, self, left_align=True, is_highscore=True)
         self.player_score.text = "Highscore:"
         self.elements.append(self.player_score)
 
         pos = center_pos.copy()
         pos.x += 125
         pos.y += 100
-        self.player_score = GameOverMenu.Score(main_widget, pos, self, left_align=True, Highscore=True)
+        self.player_score = GameOverMenu.Score(main_widget, pos, self, left_align=True, is_highscore=True)
         self.player_score.text = str(Settings.instance.highscore)
         self.elements.append(self.player_score)
 
@@ -197,6 +202,7 @@ Menus.menus["game_over_menu"] = GameOverMenu
 
 
 class OverlayWidget(QOpenGLWidget):
+    """Base class for all Scenes, can show any menu in front."""
     def __init__(self, parent):
         super().__init__(parent)
 
@@ -226,6 +232,7 @@ class OverlayWidget(QOpenGLWidget):
         self.setGeometry(0, 0, GameInfo.window_size.x, GameInfo.window_size.y)
 
     def switch_menu(self, menu_name):
+        """Switches the active menu to a new menu (or None)."""
         self.active_menu = None
         menu_class = Menus.menus.get(menu_name)
         if menu_class is not None:
@@ -267,6 +274,7 @@ class OverlayWidget(QOpenGLWidget):
                 self.active_menu.drag_element = None
 
     def draw(self, qp):
+        """Updates & draws the active menu"""
         self.curr_time_ns = time.time_ns()
 
         if self.active_menu is not None:

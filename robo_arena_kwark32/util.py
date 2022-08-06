@@ -6,6 +6,7 @@ from globals import GameInfo
 
 
 class Vector:
+    """2D vector class, used in most places where 2D vectors/x-y-values are needed."""
     def __init__(self, x, y):
         self.x = x
         self.y = y
@@ -163,6 +164,7 @@ def deg_to_rad(value):
 
 
 def is_object_on_screen(pos, radius=None):
+    """Checks if the object is within the screen + safety radius."""
     if CameraState.position is None:
         return True
     if radius is None:
@@ -175,6 +177,7 @@ def is_object_on_screen(pos, radius=None):
 
 
 def painter_transform_with_rot(qp, position, rotation):
+    """Transforms the painter qp to a given position & rotation."""
     qp.save()
     cam_pos = Vector(0, 0)
     if CameraState.position is not None:
@@ -190,6 +193,7 @@ def painter_transform_with_rot(qp, position, rotation):
 
 
 def draw_img_with_rot(qp, img, width, height, position, rotation):
+    """Transforms the painter qp & draws the image."""
     if not is_object_on_screen(position):
         return
     painter_transform_with_rot(qp, position, rotation)
@@ -198,6 +202,7 @@ def draw_img_with_rot(qp, img, width, height, position, rotation):
 
 
 def draw_text_with_rot(qp, text, width, height, position, rotation):
+    """Transforms the painter qp & draws the text."""
     if CameraState.scale.x != CameraState.scale.y:
         offset = (CameraState.scale.x - CameraState.scale.y) * GameInfo.window_reference_size.x * 0.5
         position = position.copy()

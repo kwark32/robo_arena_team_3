@@ -1,4 +1,5 @@
 class CameraState:
+    """Contains info about the camera & screen scaling."""
     position = None
     scale_factor = 1
     scale = None

@@ -29,6 +29,7 @@ if not GameInfo.is_headless:
     from PyQt5.QtCore import Qt, QResource
 
     class ArenaWindow(QOpenGLWidget):
+        """Top level Qt window to hold the active scene."""
         def __init__(self):
             super().__init__()
 
@@ -80,6 +81,7 @@ if not GameInfo.is_headless:
                 self.active_scene.resizeGL(w, h)
 
         def switch_scene(self, scene):
+            """Switches the active scene."""
             if self.active_scene is not None:
                 self.active_scene.clean_mem()
                 self.active_scene.hide()
@@ -130,6 +132,7 @@ else:
 
 
 def main():
+    """Main method to start the game and run the main loop."""
     if not GameInfo.is_headless:
         GameInfo.window_reference_size = Vector(1920, 1080)
         GameInfo.window_size = GameInfo.window_reference_size.copy()
@@ -184,11 +187,13 @@ def main():
 
 
 def update_graphics(app, window):
+    """Updates simulation & graphics (main loop content for graphical window)."""
     window.update()
     app.processEvents()
 
 
 def update_headless(world_sim):
+    """Updates just the simulation & sleeps until the next frame is due in 1-2ms."""
     time_safety_margin = 2000000  # 2ms
     while time.time_ns() - (FIXED_DELTA_TIME_NS - time_safety_margin) < world_sim.curr_time_ns:
         time.sleep(0.001)  # sleep 1ms at a time

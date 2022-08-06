@@ -24,6 +24,7 @@ animations_fps = {
 
 
 class Animation:
+    """Plays animation from pngs as pixmaps."""
     world_scene = None
 
     def __init__(self, name, position, rotation=0, single_vfx=True):
@@ -58,6 +59,7 @@ class Animation:
             self.play(False, Animation.world_scene.world_sim.physics_frame_count)
 
     def update(self, physics_frame):
+        """Updates animation to represent the current frame."""
         self._curr_frame = int((physics_frame - self._start_physics_frame) * FIXED_DELTA_TIME * self._fps)
 
         if self._curr_frame >= self._frame_count:

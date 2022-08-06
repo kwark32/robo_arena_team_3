@@ -265,7 +265,7 @@ class TextField(UIElement):
                     break
         else:
             self.add_character(character)
-        
+
         return True
 
     def add_character(self, character, use_shift=True):

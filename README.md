@@ -1,6 +1,9 @@
 # Robo Arena Team 3 (Die luftigen Kwarkbällchen und der UI Designer)
 
-#### Setup:
+#### Wheel Installation:
+  - Follow the instructions on the release Page: https://github.com/kwark32/robo_arena_team_3/releases
+
+#### Dev Setup:
   - Install pipenv:
   - - `pip3 install pipenv` or
   - - `sudo apt-get install pipenv` (on Linux)
